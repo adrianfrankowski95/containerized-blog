@@ -1,5 +1,3 @@
-using Blog.Services.Auth.API.Infrastructure.Repositories;
-using Blog.Services.Auth.API.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Blog.Services.Auth.API.Infrastructure;
