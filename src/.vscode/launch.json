@@ -1,0 +1,174 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "compounds": [
+        {
+            "name": "Debug All",
+            "configurations": [
+                "Debug Blogging.API",
+                "Debug Comments.API",
+                "Debug Users.API",
+                "Debug WebGateway.API",
+                "Debug Auth.API"
+            ]
+        },
+        {
+            "name": "Release All",
+            "configurations": [
+                "Release Blogging.API",
+                //"Release Comments.API",
+                ////"Release Users.API",
+                //"Release WebGateway.API"
+            ]
+        }
+    ],
+    "configurations": [
+        {
+            "name": "Debug Auth.API",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build Auth api",
+            "program": "${workspaceFolder}/Services/Auth/Auth.API/bin/Debug/net6.0/Auth.API.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/Services/Auth/Auth.API",
+            "stopAtEntry": false,
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+            },
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            },
+            "sourceFileMap": {
+                "/Views": "${workspaceFolder}/Views"
+            }
+        },
+        {
+            "name": "Release Auth.API",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build release Auth api",
+            "program": "${workspaceFolder}/Services/Auth/Auth.API/bin/Release/net6.0/Auth.API.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/Services/Auth/Auth.API",
+            "stopAtEntry": false,
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+            },
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Release"
+            },
+            "sourceFileMap": {
+                "/Views": "${workspaceFolder}/Views"
+            }
+        },
+        {
+            "name": "Debug Blogging.API",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build Blogging api",
+            "program": "${workspaceFolder}/Services/Blogging/Blogging.API/bin/Debug/net6.0/Blogging.API.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/Services/Blogging/Blogging.API",
+            "stopAtEntry": false,
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+            },
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            },
+            "sourceFileMap": {
+                "/Views": "${workspaceFolder}/Views"
+            }
+        },
+        {
+            "name": "Release Blogging.API",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build release Blogging api",
+            "program": "${workspaceFolder}/Services/Blogging/Blogging.API/bin/Release/net6.0/Blogging.API.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/Services/Blogging/Blogging.API",
+            "stopAtEntry": false,
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+            },
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Release"
+            },
+            "sourceFileMap": {
+                "/Views": "${workspaceFolder}/Views"
+            }
+        },
+        {
+            "name": "Debug Users.API",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build users api",
+            "program": "${workspaceFolder}/Services/Users/Users.API/bin/Debug/net6.0/Users.API.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/Services/Users/Users.API",
+            "stopAtEntry": false,
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+            },
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            },
+            "sourceFileMap": {
+                "/Views": "${workspaceFolder}/Views"
+            }
+        },
+        {
+            "name": "Debug Comments.API",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build comments api",
+            "program": "${workspaceFolder}/Services/Comments/Comments.API/bin/Debug/net6.0/Comments.API.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/Services/Comments/Comments.API",
+            "stopAtEntry": false,
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+            },
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            },
+            "sourceFileMap": {
+                "/Views": "${workspaceFolder}/Views"
+            }
+        },
+        {
+            "name": "Debug WebGateway.API",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build webgateway api",
+            "program": "${workspaceFolder}/Gateways/WebGateway.API/bin/Debug/net6.0/WebGateway.API.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/Gateways/WebGateway.API",
+            "stopAtEntry": false,
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+            },
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development"
+            },
+            "sourceFileMap": {
+                "/Views": "${workspaceFolder}/Views"
+            }
+        },
+        // {
+        //     "name": ".NET Core Attach",
+        //     "type": "coreclr",
+        //     "request": "attach"
+        // }
+    ]
+}
