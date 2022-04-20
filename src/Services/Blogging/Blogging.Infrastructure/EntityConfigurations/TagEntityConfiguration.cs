@@ -27,10 +27,6 @@ public class TagEntityConfiguration : IEntityTypeConfiguration<Tag>
                 j => j.ToTable("post_translations_tags", BloggingDbContext.DefaultSchema));
 
         builder
-            .Navigation(x => x.PostTranslations)
-            .UsePropertyAccessMode(PropertyAccessMode.Field);
-
-        builder
             .Property(x => x.Language)
             .HasConversion(x => x.Name, x => Language.FromName(x))
             .HasColumnType("varchar(50)");
