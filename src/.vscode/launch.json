@@ -9,7 +9,7 @@
             "configurations": [
                 "Debug Blogging.API",
                 "Debug Comments.API",
-                "Debug Users.API",
+                "Debug Identity.API",
                 "Debug WebGateway.API",
                 "Debug Auth.API"
             ]
@@ -19,7 +19,7 @@
             "configurations": [
                 "Release Blogging.API",
                 //"Release Comments.API",
-                ////"Release Users.API",
+                ////"Release Identity.API",
                 //"Release WebGateway.API"
             ]
         }
@@ -106,13 +106,13 @@
             }
         },
         {
-            "name": "Debug Users.API",
+            "name": "Debug Identity.API",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "build users api",
-            "program": "${workspaceFolder}/Services/Users/Users.API/bin/Debug/net6.0/Users.API.dll",
+            "preLaunchTask": "build Identity api",
+            "program": "${workspaceFolder}/Services/Identity/Identity.API/bin/Debug/net6.0/Identity.API.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/Services/Users/Users.API",
+            "cwd": "${workspaceFolder}/Services/Identity/Identity.API",
             "stopAtEntry": false,
             "serverReadyAction": {
                 "action": "openExternally",

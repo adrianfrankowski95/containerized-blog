@@ -29,7 +29,8 @@ services
     .AddSigningCertificatesManagement(config)
     .AddInfrastructureForOpenIddict(config)
     .AddConfiguredOpenIddict(config)
-    .AddCustomServices();
+    .AddCustomServices()
+    .AddAntiforgery();
 
 //await AuthContextSeed.SeedAsync(config);
 

@@ -13,9 +13,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Blogging", "Blogging", "{D3
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Blogging.API", "Services\Blogging\Blogging.API\Blogging.API.csproj", "{B4D18FFC-38E8-44C3-8CFA-D09AE1173CAD}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Users", "Users", "{84BCF21C-67D9-48DE-8C44-BC5DAFBE12BE}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Identity", "Identity", "{84BCF21C-67D9-48DE-8C44-BC5DAFBE12BE}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Users.API", "Services\Users\Users.API\Users.API.csproj", "{0798A9C9-B58A-43F3-B112-DC577D136136}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Identity.API", "Services\Identity\Identity.API\Identity.API.csproj", "{0798A9C9-B58A-43F3-B112-DC577D136136}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Gateways", "Gateways", "{D7E4609E-3FED-41EA-8BF7-B242D2900C61}"
 EndProject
