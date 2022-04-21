@@ -1,24 +1,19 @@
 using System.ComponentModel.DataAnnotations;
 using System.Net;
-using System.Net.Http.Headers;
 using System.Text.RegularExpressions;
 using Blog.Services.Auth.API.Config;
 using Blog.Services.Auth.API.Models;
-using Blog.Services.Auth.API.Services;
+using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Blog.Services.Auth.API.Controllers;
 
-[Authorize]
-[ApiController]
-[ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/[controller]")]
 public class AuthorizationController : ControllerBase
 {
     private readonly ILogger<AuthorizationController> _logger;
@@ -36,7 +31,7 @@ public class AuthorizationController : ControllerBase
     }
 
     [AllowAnonymous]
-    [HttpGet("authorize")]
+    [HttpPost("connect/authorize")]
     [ProducesResponseType((int)HttpStatusCode.OK)]
     [ProducesResponseType((int)HttpStatusCode.Unauthorized)]
     [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
@@ -44,34 +39,10 @@ public class AuthorizationController : ControllerBase
     {
         userCredentials = new("123@123.pl", "password", true);
 
-        if (string.IsNullOrWhiteSpace(userCredentials.Email)
-            || string.IsNullOrWhiteSpace(userCredentials.Password)
-            || !Regex.IsMatch(userCredentials.Email, @"^[^@\s]+@[^@\s]+\.[^@\s]+$", RegexOptions.IgnoreCase, TimeSpan.FromMilliseconds(250)))
-            return Unauthorized($"Invalid {nameof(userCredentials.Email)} or {nameof(userCredentials.Password)}");
+        var request = HttpContext.GetOpenIddictServerRequest() ??
+            throw new InvalidOperationException("Could not retrieve the Open ID Connect request");
 
-
-        //TODO: check with users microservice if credentials are valid
-        if (false)
-            return Unauthorized($"Invalid {nameof(userCredentials.Email)} or {nameof(userCredentials.Password)}");
-
-        UserIdentity userIdentity = new(Guid.NewGuid(), "xyz@xyz.pl", "admin", "Administrator", userCredentials.RememberMe);
-
-        try
-        {
-            var refreshTokenTask = _tokenManager.GenerateRefreshTokenAsync(userIdentity.UserId).ConfigureAwait(false);
-
-            string newAccessToken = _tokenManager.GenerateAccessToken(userIdentity);
-            string newRefreshToken = await refreshTokenTask;
-
-            Response.Headers.Authorization = JwtBearerDefaults.AuthenticationScheme + " " + newAccessToken;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Authorizing failed at {UtcNow}", DateTime.UtcNow);
-            return Problem();
-        }
-
-        return Ok(userIdentity);
+        var principal = HttpContext.AuthenticateAsync("xd");
     }
 
     [AllowAnonymous]

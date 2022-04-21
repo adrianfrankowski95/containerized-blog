@@ -206,37 +206,37 @@
             "problemMatcher": "$msCompile"
         },
         {
-            "label": "build users api",
+            "label": "build Identity api",
             "command": "dotnet",
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/Services/Users/Users.API/Users.API.csproj",
+                "${workspaceFolder}/Services/Identity/Identity.API/Identity.API.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
             "problemMatcher": "$msCompile"
         },
         {
-            "label": "publish users api",
+            "label": "publish Identity api",
             "command": "dotnet",
             "type": "process",
             "args": [
                 "publish",
-                "${workspaceFolder}/Services/Users/Users.API/Users.API.csproj",
+                "${workspaceFolder}/Services/Identity/Identity.API/Identity.API.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
             "problemMatcher": "$msCompile"
         },
         {
-            "label": "watch users api",
+            "label": "watch Identity api",
             "command": "dotnet",
             "type": "process",
             "args": [
                 "watch",
                 "run",
-                "${workspaceFolder}/Services/Users/Users.API/Users.API.csproj",
+                "${workspaceFolder}/Services/Identity/Identity.API/Identity.API.csproj",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
