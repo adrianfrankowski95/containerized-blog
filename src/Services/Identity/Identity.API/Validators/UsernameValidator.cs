@@ -2,7 +2,7 @@ using Microsoft.Extensions.Options;
 
 namespace Blog.Services.Identity.API.Core;
 
-public class UsernameValidator : IIdentityValidator<string>
+public class UsernameValidator : IUserValidator<string>
 {
     private readonly UsernameOptions _options;
 

@@ -9,5 +9,7 @@ public enum IdentityErrorCode
     ResettingPassword = 4,
     InvalidOrMissingSecurityStamp = 5,
     InvalidIdentifier = 6,
-    InvalidPassword = 7
+    InvalidPassword = 7,
+    InvalidUsername = 8,
+    InvalidEmail = 9
 }

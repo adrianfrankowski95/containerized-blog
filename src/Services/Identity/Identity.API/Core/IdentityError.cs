@@ -34,4 +34,10 @@ public class IdentityError
 
     public static IdentityError InvalidIdentifier
         => new(IdentityErrorCode.InvalidIdentifier, "Invalid Id");
+
+    public static IdentityError InvalidUsername
+        => new(IdentityErrorCode.InvalidUsername, "Invalid Username");
+
+    public static IdentityError InvalidEmail
+        => new(IdentityErrorCode.InvalidEmail, "Invalid Email");
 }
