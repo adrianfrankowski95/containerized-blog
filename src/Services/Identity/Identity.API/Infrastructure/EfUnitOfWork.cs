@@ -1,13 +1,14 @@
-using Blog.Services.Blogging.Domain.SeedWork;
+using Blog.Services.Identity.API.Core;
+using Blog.Services.Identity.API.Models;
 
 namespace Blog.Services.Blogging.Infrastructure;
 
 public class EfUnitOfWork : IUnitOfWork, IAsyncDisposable, IDisposable
 {
-    private readonly BloggingDbContext _ctx;
+    private readonly IdentityDbContext _ctx;
     private bool isDisposed;
 
-    public EfUnitOfWork(BloggingDbContext ctx)
+    public EfUnitOfWork(IdentityDbContext ctx)
     {
         _ctx = ctx ?? throw new ArgumentNullException(nameof(ctx));
     }

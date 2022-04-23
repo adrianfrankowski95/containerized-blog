@@ -1,21 +1,60 @@
 using NodaTime;
 
-namespace Blog.Services.Users.API.Models;
+namespace Blog.Services.Identity.API.Models;
 
 public class User
 {
+    //ef core
+    private User()
+    {
+
+    }
+
+    public User(
+        NonEmptyString username,
+        NonEmptyString email,
+        NonEmptyString passwordHash,
+        UserRole userRole,
+        bool receiveEmails,
+        Language language)
+    {
+        Id = Guid.NewGuid();
+
+        Username = username;
+        Email = email;
+        PasswordHash = passwordHash;
+        Role = userRole;
+        ReceiveEmails = receiveEmails;
+        Language = language;
+
+        CreatedAt = SystemClock.Instance.GetCurrentInstant();
+
+        EmailConfirmed = false;
+        LockedUntil = null;
+        LastLoginAt = null;
+        FailedLoginAttempts = new NonNegativeNumber(0);
+        SecurityStamp = Guid.NewGuid();
+        PasswordResetCode = null;
+    }
+
     public Guid Id { get; set; }
-    public string Username { get; set; }
-    public string Email { get; set; }
-    public bool EmailVerified { get; set; }
-    public string Password { get; set; }
-    public UserRole UserRole { get; set; }
+    public NonEmptyString Username { get; set; }
+    public NonEmptyString Email { get; set; }
+    public bool EmailConfirmed { get; set; }
+    public NonEmptyString PasswordHash { get; set; }
+    public UserRole Role { get; set; }
     public bool ReceiveEmails { get; set; }
     public Language Language { get; set; }
-    public Instant RegisteredAt { get; set; }
-    public Instant? BlockedUntil { get; set; }
-    public Instant? LastLogin { get; set; }
-    public Instant? UpdatedAt { get; set; }
+    public Instant CreatedAt { get; set; }
+    public Instant? LockedUntil { get; set; }
+    public Instant? SuspendedUntil { get; set; }
+    public Instant? LastLoginAt { get; set; }
+    public NonNegativeNumber FailedLoginAttempts { get; set; }
     public Guid SecurityStamp { get; set; }
-    public string? PasswordRecoveryCode { get; set; }
+    public string? PasswordResetCode { get; set; }
+    public bool IsResettingPassword => !string.IsNullOrWhiteSpace(PasswordResetCode);
+    public bool LockExists => LockedUntil is not null;
+    public bool IsCurrentlyLocked => LockExists && LockedUntil > SystemClock.Instance.GetCurrentInstant();
+    public bool SuspensionExists => SuspendedUntil is not null;
+    public bool IsCurrentlySuspended => SuspensionExists && SuspendedUntil > SystemClock.Instance.GetCurrentInstant();
 }

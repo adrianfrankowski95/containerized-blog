@@ -50,7 +50,7 @@ public abstract class PostBase : Entity<PostId>, IAggregateRoot, IValidatable
 
         Author = author;
         Status = PostStatus.Draft;
-        CreatedAt = SysTime.Now();
+        CreatedAt = SysTime.Now;
         HeaderImgUrl = headerImgUrl;
         Views = new();
         Likes = new();
@@ -107,7 +107,7 @@ public abstract class PostBase : Entity<PostId>, IAggregateRoot, IValidatable
         if (isChanged)
         {
             Editor = editor;
-            EditedAt = SysTime.Now();
+            EditedAt = SysTime.Now;
         }
 
         return isChanged;

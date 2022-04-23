@@ -55,7 +55,7 @@ public class PostBaseEntityConfiguration : IEntityTypeConfiguration<PostBase>
                     .HasMethod("hash");
                 a.Property(x => x.Name)
                     .HasColumnName("author_name")
-                    .HasColumnType("varchar(50)");
+                    .HasColumnType("varchar(32)");
                 a.Ignore(x => x.Role);
                 a.WithOwner();
             });
@@ -68,7 +68,7 @@ public class PostBaseEntityConfiguration : IEntityTypeConfiguration<PostBase>
                     .HasColumnName("editor_id");
                 e.Property(x => x.Name)
                     .HasColumnName("editor_name")
-                    .HasColumnType("varchar(50)");
+                    .HasColumnType("varchar(32)");
                 e.Ignore(x => x.Role);
                 e.WithOwner();
             });

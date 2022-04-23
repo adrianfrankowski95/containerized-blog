@@ -1,10 +1,16 @@
+using Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate;
 using NodaTime;
 
 namespace Blog.Services.Blogging.Infrastructure.Services;
 
 public class SysTime : ISysTime
 {
-    public IClock Clock => SystemClock.Instance;
+    private readonly IClock _clock;
 
-    public Instant Now() => Clock.GetCurrentInstant();
+    public SysTime(IClock clock)
+    {
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
+    }
+
+    public Instant Now => _clock.GetCurrentInstant();
 }
