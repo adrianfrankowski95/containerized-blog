@@ -4,7 +4,7 @@ using Microsoft.Extensions.Options;
 
 namespace Blog.Services.Identity.API.Core;
 
-public class UserValidator : IIdentityValidator<User, User>
+public class UserValidator : IUserValidator<User, User>
 {
     private readonly IUserRepository _userRepository;
     private readonly IOptionsMonitor<IdentityOptions> _options;

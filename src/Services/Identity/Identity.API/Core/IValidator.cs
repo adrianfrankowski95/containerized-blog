@@ -1,6 +1,5 @@
 namespace Blog.Services.Identity.API.Core;
 
-public interface IValidator<TItem, TResult>
+public interface IValidator<TItem>
 {
-    public abstract ValueTask<TResult> ValidateAsync(TItem item);
 }
