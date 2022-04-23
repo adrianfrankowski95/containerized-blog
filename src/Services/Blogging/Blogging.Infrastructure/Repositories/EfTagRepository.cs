@@ -12,8 +12,8 @@ public class EfTagRepository : ITagRepository
 
     public EfTagRepository(BloggingDbContext ctx, IUnitOfWork unitOfWork)
     {
-        _tags = ctx.Tags ?? throw new ArgumentNullException($"{nameof(BloggingDbContext)} cannot be null");
-        UnitOfWork = unitOfWork ?? throw new ArgumentNullException($"{nameof(IUnitOfWork)} cannot be null");
+        _tags = ctx.Tags ?? throw new ArgumentNullException(nameof(ctx));
+        UnitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
     }
 
     public Tag AddTag(Tag tag)

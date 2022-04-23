@@ -1,3 +1,4 @@
+using Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate;
 using Blog.Services.Blogging.Domain.Exceptions;
 using Blog.Services.Blogging.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
@@ -29,7 +30,7 @@ public class RequestManager : IRequestManager
 
         var request = exists ?
             throw new BloggingDomainException($"Request of type {typeof(TRequest).Name} with ID {requestId} already exists") :
-            new IdentifiedRequest(requestId, typeof(TRequest).Name, _sysTime.Now());
+            new IdentifiedRequest(requestId, typeof(TRequest).Name, _sysTime.Now);
 
         _ctx.Add(request);
 

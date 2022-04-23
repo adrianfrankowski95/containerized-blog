@@ -22,13 +22,15 @@ public class PostsController : ControllerBase
 {
     private readonly IPostQueries _postQueries;
     private readonly IMediator _mediator;
+    private readonly ISysTime _sysTime;
     private readonly ILogger<PostsController> _logger;
 
-    public PostsController(IPostQueries postQueries, ILogger<PostsController> logger, IMediator mediator)
+    public PostsController(IPostQueries postQueries, ILogger<PostsController> logger, IMediator mediator, ISysTime sysTime)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _postQueries = postQueries ?? throw new ArgumentNullException(nameof(postQueries));
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
+        _sysTime = sysTime ?? throw new ArgumentNullException(nameof(sysTime));
     }
 
     [HttpGet("view")]
@@ -37,7 +39,7 @@ public class PostsController : ControllerBase
     public async Task<ActionResult<IAsyncEnumerable<PaginatedPostPreviewsModel>>> GetPreviewsAsync(
            [FromQuery, Required] string lang, [FromQuery] int pageSize = 10, [FromQuery] Instant? cursor = null)
     {
-        cursor ??= SysTime.Now();
+        cursor ??= _sysTime.Now;
 
         Language language = Language.FromName(lang);
 
@@ -77,7 +79,7 @@ public class PostsController : ControllerBase
     public async Task<ActionResult<IAsyncEnumerable<PaginatedPostPreviewsModel>>> GetPreviewsWithCategoryAsync(
         [Required] string category, [FromQuery, Required] string lang, [FromQuery] int pageSize = 10, [FromQuery] Instant? cursor = null)
     {
-        cursor ??= SysTime.Now();
+        cursor ??= _sysTime.Now;
 
         Language language = Language.FromName(lang);
         PostCategory postCategory = PostCategory.FromName(category);

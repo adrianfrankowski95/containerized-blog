@@ -1,3 +1,6 @@
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using NodaTime;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -23,3 +26,14 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+
+static class ServiceCollectionExtensions
+{
+    public static IServiceCollection AddNodaTimeClock(this IServiceCollection services)
+    {
+        services.TryAddSingleton<IClock, SystemClock>();
+
+        return services;
+    }
+}

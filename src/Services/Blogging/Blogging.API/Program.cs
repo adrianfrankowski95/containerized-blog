@@ -7,6 +7,9 @@ using Microsoft.IdentityModel.Tokens;
 using Blog.Services.Blogging.API.Infrastructure.Services;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Blog.Services.Blogging.API.Extensions;
+using NodaTime;
+using Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate;
+using SysTime = Blog.Services.Blogging.API.Infrastructure.Services.SysTime;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +22,7 @@ var services = builder.Services;
 
 services
     .AddBloggingControllers(isDevelopment)
+    .AddNodaTime()
     .AddBloggingInfrastructure(config)
     .AddBloggingApplication(config)
     .AddCustomJwtAuthentication(config);
@@ -93,6 +97,14 @@ public static class ServiceCollectionExtensions
         services
             .AddHttpContextAccessor()
             .TryAddTransient<IIdentityService, IdentityService>();
+
+        return services;
+    }
+
+    public static IServiceCollection AddNodaTime(this IServiceCollection services)
+    {
+        services.TryAddSingleton<IClock, SystemClock>();
+        services.TryAddTransient<ISysTime, SysTime>();
 
         return services;
     }
