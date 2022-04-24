@@ -3,6 +3,7 @@ namespace Blog.Services.Identity.API.Core;
 public static class IdentityConstants
 {
     public const string AuthenticationScheme = "blog.identity";
+    public const string DefaultDbSchema = "identity";
     public static class ClaimTypes
     {
         public const string Id = "sub";

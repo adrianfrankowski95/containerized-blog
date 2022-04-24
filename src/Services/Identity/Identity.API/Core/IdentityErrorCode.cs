@@ -7,9 +7,11 @@ public enum IdentityErrorCode
     AccountSuspended = 2,
     UnconfirmedEmail = 3,
     ResettingPassword = 4,
-    InvalidOrMissingSecurityStamp = 5,
-    InvalidIdentifier = 6,
-    InvalidPassword = 7,
-    InvalidUsername = 8,
-    InvalidEmail = 9
+    InvalidIdentifier = 5,
+    InvalidEmailFormat = 6,
+    EmailDuplicated = 7,
+    InvalidUsernameFormat = 8,
+    UsernameDuplicated = 9,
+    InvalidPasswordFormat = 10,
+    PasswordOkNeedsRehash = 11
 }
