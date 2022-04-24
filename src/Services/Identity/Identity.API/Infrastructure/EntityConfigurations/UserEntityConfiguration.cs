@@ -1,3 +1,4 @@
+using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -8,7 +9,7 @@ public class UserEntityConfiguration : IEntityTypeConfiguration<User>
 {
     public void Configure(EntityTypeBuilder<User> builder)
     {
-        builder.ToTable("users", IdentityDbContext.DefaultSchema);
+        builder.ToTable("users", IdentityConstants.DefaultDbSchema);
 
         builder.HasKey(x => x.Id);
 

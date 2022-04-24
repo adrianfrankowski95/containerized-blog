@@ -1,26 +1,15 @@
-using Blog.Services.Identity.API.Infrastructure.Converters;
 using Microsoft.EntityFrameworkCore;
 
 namespace Blog.Services.Identity.API.Models;
 
-public class IdentityDbContext : DbContext
+public class IdentityDbContext<TUser> : DbContext where TUser : User
 {
-    public const string DefaultSchema = "identity";
-    public DbSet<User> Users { get; set; }
 
-    public IdentityDbContext(DbContextOptions<IdentityDbContext> options) : base(options)
+    public DbSet<TUser> Users { get; set; }
+
+    public IdentityDbContext(DbContextOptions<IdentityDbContext<TUser>> options) : base(options)
     {
 
     }
 
-    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
-    {
-        configurationBuilder
-            .Properties<NonEmptyString>()
-            .HaveConversion<NonEmptyStringConverter>();
-
-        configurationBuilder
-            .Properties<NonNegativeNumber>()
-            .HaveConversion<NonNegativeNumberConverter>();
-    }
 }

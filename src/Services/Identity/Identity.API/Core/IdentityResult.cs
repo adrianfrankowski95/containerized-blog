@@ -8,17 +8,12 @@ public class IdentityResult
 
     private IdentityResult(bool success) { Succeeded = success; }
 
-    private IdentityResult(IdentityError error) : this(false)
-    {
-        Errors = new[] { error };
-    }
-
     private IdentityResult(IEnumerable<IdentityError> errors) : this(false)
     {
         Errors = errors;
     }
 
-    public static IdentityResult Fail(IdentityError error) => new(error);
+    public static IdentityResult Fail(IdentityError error) => new(new[] { error });
     public static IdentityResult Fail(IEnumerable<IdentityError> errors) => new(errors);
     public static IdentityResult Success => _success;
 }

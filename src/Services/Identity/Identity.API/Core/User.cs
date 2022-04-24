@@ -32,7 +32,7 @@ public class User
         EmailConfirmed = false;
         LockedUntil = null;
         LastLoginAt = null;
-        FailedLoginAttempts = new NonNegativeNumber(0);
+        FailedLoginAttempts = 0;
         SecurityStamp = Guid.NewGuid();
         PasswordResetCode = null;
     }

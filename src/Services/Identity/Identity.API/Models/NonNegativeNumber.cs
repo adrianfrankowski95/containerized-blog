@@ -17,4 +17,6 @@ public record NonNegativeNumber
     public static bool operator <=(NonNegativeNumber a, int b) => a.Value <= b;
     public static bool operator ==(NonNegativeNumber a, int b) => a.Value == b;
     public static bool operator !=(NonNegativeNumber a, int b) => a.Value != b;
+    public static implicit operator int(NonNegativeNumber a) => a.Value;
+    public static implicit operator NonNegativeNumber(int a) => new(a);
 }

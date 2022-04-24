@@ -127,7 +127,7 @@ public class UserManager
         if (user.FailedLoginAttempts == 0)
             return;
 
-        user.FailedLoginAttempts = new(0);
+        user.FailedLoginAttempts = 0;
     }
 
     private static void LockUser(User user, int durationMinutes, ISysTime sysTime)

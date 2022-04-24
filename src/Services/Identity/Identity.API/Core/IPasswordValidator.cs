@@ -1,8 +1,6 @@
-using Blog.Services.Identity.API.Models;
-
 namespace Blog.Services.Identity.API.Core;
 
-public interface IPasswordValidator : IValidator<User>
+public interface IPasswordValidator
 {
     public ValueTask<IdentityResult> ValidateAsync(string password);
 }
