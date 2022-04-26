@@ -15,6 +15,9 @@ public class UsernameValidator<TUser> : IUserAttributeValidator<TUser> where TUs
     }
     public async ValueTask ValidateAsync(TUser user, ICollection<IdentityError> errors)
     {
+        if (user is null)
+            throw new ArgumentNullException(nameof(user));
+
         var username = user.Username;
 
         if (username is null || string.IsNullOrWhiteSpace(username))
