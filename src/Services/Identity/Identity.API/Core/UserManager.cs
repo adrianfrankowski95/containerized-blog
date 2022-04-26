@@ -1,11 +1,10 @@
 using System.Security.Claims;
-using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Infrastructure.Repositories;
-using Blog.Services.Identity.API.Models;
+using Blog.Services.Identity.API.Services;
 using Microsoft.Extensions.Options;
 using NodaTime;
 
-namespace Blog.Services.Identity.API.Services;
+namespace Blog.Services.Identity.API.Core;
 
 public class UserManager
 {
@@ -69,8 +68,6 @@ public class UserManager
         return IdentityResult.Success;
     }
 
-
-
     public async Task<IdentityResult> VerifyCredentialsAsync(string email, string password)
     {
         var user = await _users.FindByEmailAsync(email);
@@ -121,7 +118,6 @@ public class UserManager
         user.FailedLoginAttempts = ++user.FailedLoginAttempts;
     }
 
-    //true if change was made, false if no change was needed
     private static void ClearFailedLoginAttempts(User user)
     {
         if (user.FailedLoginAttempts == 0)
@@ -159,4 +155,9 @@ public class UserManager
     }
 
     private static Guid GenerateSecurityStamp() => Guid.NewGuid();
+
+    public static void UpdateSecurityStamp(User user)
+    {
+        user.SecurityStamp = GenerateSecurityStamp();
+    }
 }

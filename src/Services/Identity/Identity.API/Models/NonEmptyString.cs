@@ -15,4 +15,6 @@ public record NonEmptyString
     public override string ToString() => Value;
     public static implicit operator string(NonEmptyString a) => a.Value;
     public static implicit operator NonEmptyString(string a) => new(a);
+    public int Length => Value.Length;
+    public bool Any(Func<char, bool> predicate) => Value.Any(predicate);
 }

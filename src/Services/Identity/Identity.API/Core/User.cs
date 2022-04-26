@@ -1,11 +1,12 @@
+using Blog.Services.Identity.API.Models;
 using NodaTime;
 
-namespace Blog.Services.Identity.API.Models;
+namespace Blog.Services.Identity.API.Core;
 
 public class User
 {
     //ef core
-    private User()
+    protected User()
     {
 
     }
@@ -19,6 +20,7 @@ public class User
         Language language)
     {
         Id = Guid.NewGuid();
+        SecurityStamp = Guid.NewGuid();
 
         Username = username;
         Email = email;
@@ -29,11 +31,10 @@ public class User
 
         CreatedAt = SystemClock.Instance.GetCurrentInstant();
 
+        FailedLoginAttempts = 0;
         EmailConfirmed = false;
         LockedUntil = null;
         LastLoginAt = null;
-        FailedLoginAttempts = 0;
-        SecurityStamp = Guid.NewGuid();
         PasswordResetCode = null;
     }
 

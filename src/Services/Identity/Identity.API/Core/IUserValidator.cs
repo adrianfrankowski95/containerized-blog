@@ -1,6 +1,7 @@
 namespace Blog.Services.Identity.API.Core;
 
-public interface IUserValidator
+public interface IUserValidator<TUser> where TUser : User
 {
-    public ValueTask<IdentityResult> ValidateAsync(IUser user);
+    public IEnumerable<IUserAttributeValidator<TUser>> AttributeValidators { get; }
+    public IPasswordValidator<TUser> PasswordValidator { get; }
 }

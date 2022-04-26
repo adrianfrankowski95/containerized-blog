@@ -1,24 +1,23 @@
 using Blog.Services.Identity.API.Core;
-using Blog.Services.Identity.API.Models;
 
 namespace Blog.Services.Identity.API.Infrastructure.Repositories;
 
-public interface IUserRepository
+public interface IUserRepository<TUser> where TUser : User
 {
     public IUnitOfWork UnitOfWork { get; }
-    public void Add(User user);
+    public void Add(TUser user);
 
-    public void Delete(User user);
+    public void Delete(TUser user);
 
-    public void Update(User user);
+    public void Update(TUser user);
 
-    public Task<User?> FindByIdAsync(Guid userId);
+    public Task<TUser?> FindByIdAsync(Guid userId);
 
-    public Task<User?> FindByEmailAsync(string email);
+    public Task<IList<TUser>> FindByEmailAsync(string email);
 
-    public Task<User?> FindByUsername(string username);
+    public Task<TUser?> FindByUsername(string username);
 
-    public Task<List<User>> GetDistributionListAsync();
+    public IAsyncEnumerable<TUser> GetDistributionListAsync();
 
     public Task<Guid> GetUserSecurityStampAsync(Guid userId);
 }
