@@ -11,17 +11,19 @@ public class SecurityStampValidator<TUser> : IUserAttributeValidator<TUser> wher
         _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
     }
 
-    public async ValueTask<IdentityResult> ValidateAsync(TUser user)
+    public async ValueTask ValidateAsync(TUser user, ICollection<IdentityError> errors)
     {
         var securityStamp = user.SecurityStamp;
 
         if (securityStamp.Equals(default))
-            return IdentityResult.Fail(IdentityError.MissingSecurityStamp);
+        {
+            errors.Add(IdentityError.MissingSecurityStamp);
+            return;
+        }
 
         var currentSecurityStamp = await _userRepository.GetUserSecurityStampAsync(user.Id).ConfigureAwait(false);
 
-        return currentSecurityStamp.Equals(default) || securityStamp.Equals(currentSecurityStamp) ?
-            IdentityResult.Success :
-            IdentityResult.Fail(IdentityError.InvalidSecurityStamp);
+        if (currentSecurityStamp.Equals(default) || securityStamp.Equals(currentSecurityStamp))
+            errors.Add(IdentityError.InvalidSecurityStamp);
     }
 }

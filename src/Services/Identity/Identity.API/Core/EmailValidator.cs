@@ -14,19 +14,20 @@ public class EmailValidator<TUser> : IUserAttributeValidator<TUser> where TUser 
         _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         _options = options ?? throw new ArgumentNullException(nameof(options));
     }
-    public async ValueTask<IdentityResult> ValidateAsync(TUser user)
+    public async ValueTask ValidateAsync(TUser user, ICollection<IdentityError> errors)
     {
         var email = user.Email;
 
         if (email is null || string.IsNullOrWhiteSpace(email))
-            return IdentityResult.Fail(IdentityError.MissingEmail);
+        {
+            errors.Add(IdentityError.MissingEmail);
+            return;
+        }
 
         if (!new EmailAddressAttribute().IsValid(email))
-            return IdentityResult.Fail(IdentityError.InvalidEmailFormat);
+            errors.Add(IdentityError.InvalidEmailFormat);
 
         var opts = _options.CurrentValue;
-
-        List<IdentityError> errors = new();
 
         if (opts.RequireConfirmed && !user.EmailConfirmed)
             errors.Add(IdentityError.EmailUnconfirmed);
@@ -49,7 +50,5 @@ public class EmailValidator<TUser> : IUserAttributeValidator<TUser> where TUser 
                     errors.Add(IdentityError.EmailDuplicated);
             }
         }
-
-        return errors.Count == 0 ? IdentityResult.Success : IdentityResult.Fail(errors);
     }
 }
