@@ -13,25 +13,26 @@ public class UsernameValidator<TUser> : IUserAttributeValidator<TUser> where TUs
         _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         _options = options ?? throw new ArgumentNullException(nameof(options));
     }
-    public async ValueTask<IdentityResult> ValidateAsync(TUser user)
+    public async ValueTask ValidateAsync(TUser user, ICollection<IdentityError> errors)
     {
         var username = user.Username;
 
         if (username is null || string.IsNullOrWhiteSpace(username))
-            return IdentityResult.Fail(IdentityError.MissingUsername);
+        {
+            errors.Add(IdentityError.MissingUsername);
+            return;
+        }
 
         var opts = _options.CurrentValue;
 
         if (username.Length < opts.MinLength || username.Length > opts.MaxLength ||
             (!string.IsNullOrWhiteSpace(opts.AllowedCharacters) && username.Any(x => !opts.AllowedCharacters.Contains(x))))
-            return IdentityResult.Fail(IdentityError.InvalidUsernameFormat);
+            errors.Add(IdentityError.InvalidUsernameFormat);
 
         var owner = await _userRepository.FindByUsername(username).ConfigureAwait(false);
 
         if (owner is not null)
             if (!user.Id.Equals(owner.Id))
-                return IdentityResult.Fail(IdentityError.UsernameDuplicated);
-
-        return IdentityResult.Success;
+                errors.Add(IdentityError.UsernameDuplicated);
     }
 }
