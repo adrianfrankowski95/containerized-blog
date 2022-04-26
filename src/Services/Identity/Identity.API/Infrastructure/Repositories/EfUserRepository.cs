@@ -4,60 +4,60 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Blog.Services.Identity.API.Infrastructure.Repositories;
 
-public class EfUserRepository : IUserRepository
+public class EfUserRepository<TUser> : IUserRepository<TUser> where TUser : User
 {
-    private readonly DbSet<User> _users;
+    private readonly DbSet<TUser> _users;
     public IUnitOfWork UnitOfWork { get; }
 
-    public EfUserRepository(IdentityDbContext ctx, IUnitOfWork unitOfWork)
+    public EfUserRepository(IdentityDbContext<TUser> ctx, IUnitOfWork unitOfWork)
     {
         _users = ctx.Users ?? throw new ArgumentNullException(nameof(ctx));
         UnitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
     }
 
-    public void Add(User user)
+    public void Add(TUser user)
     {
         _users.Add(user);
     }
 
-    public void Delete(User user)
+    public void Delete(TUser user)
     {
         _users.Remove(user);
     }
 
-    public void Update(User user)
+    public void Update(TUser user)
     {
         _users.Update(user);
     }
 
-    public async Task<User?> FindByIdAsync(Guid userId)
+    public async Task<TUser?> FindByIdAsync(Guid userId)
     {
         return await _users
             .FindAsync(userId)
             .ConfigureAwait(false);
     }
 
-    public async Task<User?> FindByEmailAsync(string email)
+    public async Task<IList<TUser>> FindByEmailAsync(string email)
     {
         return await _users
-            .SingleOrDefaultAsync(x => x.Email.Equals(email))
+            .Where(x => x.Email.Equals(email))
+            .ToListAsync()
             .ConfigureAwait(false);
     }
 
-    public async Task<User?> FindByUsername(string username)
+    public async Task<TUser?> FindByUsername(string username)
     {
         return await _users
             .SingleOrDefaultAsync(x => x.Username.Equals(username))
             .ConfigureAwait(false);
     }
 
-    public async Task<List<User>> GetDistributionListAsync()
+    public IAsyncEnumerable<TUser> GetDistributionListAsync()
     {
-        return await _users
+        return _users
             .AsNoTracking()
             .Where(x => x.EmailConfirmed && x.ReceiveEmails)
-            .ToListAsync()
-            .ConfigureAwait(false);
+            .AsAsyncEnumerable();
     }
 
     public async Task<Guid> GetUserSecurityStampAsync(Guid userId)

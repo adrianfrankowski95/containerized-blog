@@ -3,15 +3,21 @@ namespace Blog.Services.Identity.API.Core;
 public enum IdentityErrorCode
 {
     InvalidCredentials = 0,
-    AccountLocked = 1,
-    AccountSuspended = 2,
-    UnconfirmedEmail = 3,
+    InvalidIdentifier = 1,
+    AccountLocked = 2,
+    AccountSuspended = 3,
     ResettingPassword = 4,
-    InvalidIdentifier = 5,
+    MissingEmail = 5,
     InvalidEmailFormat = 6,
     EmailDuplicated = 7,
-    InvalidUsernameFormat = 8,
-    UsernameDuplicated = 9,
-    InvalidPasswordFormat = 10,
-    PasswordOkNeedsRehash = 11
+    EmailUnconfirmed = 8,
+    MissingUsername = 9,
+    InvalidUsernameFormat = 10,
+    UsernameDuplicated = 11,
+    MissingPassword = 12,
+    InvalidPassword = 13,
+    InvalidPasswordFormat = 14,
+    PasswordOkNeedsRehash = 15,
+    MissingSecurityStamp = 16,
+    InvalidSecurityStamp = 17
 }

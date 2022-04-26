@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using Blog.Services.Identity.API.Models;
 
 namespace Blog.Services.Identity.API.Core;
 

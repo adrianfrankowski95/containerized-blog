@@ -3,12 +3,12 @@ using Blog.Services.Identity.API.Models;
 
 namespace Blog.Services.Blogging.Infrastructure;
 
-public class EfUnitOfWork : IUnitOfWork, IAsyncDisposable, IDisposable
+public class EfUnitOfWork<TUser> : IUnitOfWork, IAsyncDisposable, IDisposable where TUser : User
 {
-    private readonly IdentityDbContext _ctx;
+    private readonly IdentityDbContext<TUser> _ctx;
     private bool isDisposed;
 
-    public EfUnitOfWork(IdentityDbContext ctx)
+    public EfUnitOfWork(IdentityDbContext<TUser> ctx)
     {
         _ctx = ctx ?? throw new ArgumentNullException(nameof(ctx));
     }
