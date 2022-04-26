@@ -16,6 +16,9 @@ public class EmailValidator<TUser> : IUserAttributeValidator<TUser> where TUser 
     }
     public async ValueTask ValidateAsync(TUser user, ICollection<IdentityError> errors)
     {
+        if (user is null)
+            throw new ArgumentNullException(nameof(user));
+
         var email = user.Email;
 
         if (email is null || string.IsNullOrWhiteSpace(email))

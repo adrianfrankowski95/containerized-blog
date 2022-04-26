@@ -13,6 +13,9 @@ public class SecurityStampValidator<TUser> : IUserAttributeValidator<TUser> wher
 
     public async ValueTask ValidateAsync(TUser user, ICollection<IdentityError> errors)
     {
+        if (user is null)
+            throw new ArgumentNullException(nameof(user));
+
         var securityStamp = user.SecurityStamp;
 
         if (securityStamp.Equals(default))
