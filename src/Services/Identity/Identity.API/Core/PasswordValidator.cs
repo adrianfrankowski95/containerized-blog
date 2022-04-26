@@ -17,6 +17,9 @@ public class PasswordValidator<TUser> : IPasswordValidator<TUser> where TUser : 
     }
     public async ValueTask<IdentityResult> ValidateAsync(TUser user, string password)
     {
+        if (user is null)
+            throw new ArgumentNullException(nameof(user));
+
         var passwordHash = user.PasswordHash;
 
         if (string.IsNullOrWhiteSpace(password) || passwordHash is null || string.IsNullOrWhiteSpace(passwordHash))
