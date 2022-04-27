@@ -15,7 +15,7 @@ public class PasswordValidator<TUser> : IPasswordValidator<TUser> where TUser : 
         _options = options ?? throw new ArgumentNullException(nameof(options));
         _passwordHasher = passwordHasher ?? throw new ArgumentNullException(nameof(passwordHasher));
     }
-    public async ValueTask<IdentityResult> ValidateAsync(TUser user, string password)
+    public async ValueTask ValidateAsync(TUser user, string password, ICollection<IdentityError> errors)
     {
         if (user is null)
             throw new ArgumentNullException(nameof(user));
@@ -23,7 +23,10 @@ public class PasswordValidator<TUser> : IPasswordValidator<TUser> where TUser : 
         var passwordHash = user.PasswordHash;
 
         if (string.IsNullOrWhiteSpace(password) || passwordHash is null || string.IsNullOrWhiteSpace(passwordHash))
-            return IdentityResult.Fail(IdentityError.MissingPassword);
+        {
+            errors.Add(IdentityError.MissingPassword);
+            return;
+        }
 
         var opts = _options.CurrentValue;
 
@@ -33,29 +36,39 @@ public class PasswordValidator<TUser> : IPasswordValidator<TUser> where TUser : 
             (opts.RequireUpperCase && !password.Any(IsUppercase)) ||
             (opts.RequireDigit && !password.Any(IsDigit)) ||
             (opts.RequireNonAlphanumeric && !password.Any(IsNonAlphanumeric)))
-            return IdentityResult.Fail(IdentityError.InvalidPasswordFormat);
+        {
+            errors.Add(IdentityError.InvalidPasswordFormat);
+            return;
+        }
 
         var owner = await _userRepository.FindByIdAsync(user.Id).ConfigureAwait(false);
 
         if (owner is not null)
             if (!owner.PasswordHash.Equals(user.PasswordHash))
-                return IdentityResult.Fail(IdentityError.InvalidPassword);
+            {
+                errors.Add(IdentityError.InvalidPassword);
+                return;
+            }
 
         //if checked that provided password hash belongs to its owner, verify it
         if (!_passwordHasher.VerifyPassword(password, user.PasswordHash))
-            return IdentityResult.Fail(IdentityError.InvalidPassword);
+        {
+            errors.Add(IdentityError.InvalidPassword);
+            return;
+        }
 
         if (_passwordHasher.CheckPasswordNeedsRehash(user.PasswordHash))
-            return IdentityResult.Fail(IdentityError.PasswordOkNeedsRehash);
-
-        return IdentityResult.Success;
+        {
+            errors.Add(IdentityError.PasswordOkNeedsRehash);
+            return;
+        }
     }
 
-    public static bool IsDigit(char c) => c is >= '0' and <= '9';
+    private static bool IsDigit(char c) => c is >= '0' and <= '9';
 
-    public static bool IsUppercase(char c) => c is >= 'A' and <= 'Z';
+    private static bool IsUppercase(char c) => c is >= 'A' and <= 'Z';
 
-    public static bool IsLowercase(char c) => c is >= 'a' and <= 'z';
+    private static bool IsLowercase(char c) => c is >= 'a' and <= 'z';
 
-    public static bool IsNonAlphanumeric(char c) => !IsDigit(c) && !IsUppercase(c) && !IsLowercase(c);
+    private static bool IsNonAlphanumeric(char c) => !IsDigit(c) && !IsUppercase(c) && !IsLowercase(c);
 }
