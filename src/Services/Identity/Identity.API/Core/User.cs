@@ -53,9 +53,5 @@ public class User
     public NonNegativeNumber FailedLoginAttempts { get; set; }
     public Guid SecurityStamp { get; set; }
     public string? PasswordResetCode { get; set; }
-    public bool IsResettingPassword => !string.IsNullOrWhiteSpace(PasswordResetCode);
-    public bool LockExists => LockedUntil is not null;
-    public bool IsCurrentlyLocked => LockExists && LockedUntil > SystemClock.Instance.GetCurrentInstant();
-    public bool SuspensionExists => SuspendedUntil is not null;
-    public bool IsCurrentlySuspended => SuspensionExists && SuspendedUntil > SystemClock.Instance.GetCurrentInstant();
+    public Instant? PasswordResetCodeIssuedAt { get; set; }
 }

@@ -27,6 +27,6 @@ public class UserClaimsPrincipalFactory : IUserClaimsPrincipalFactory
         identity.AddClaim(new Claim(IdentityConstants.ClaimTypes.Language, user.Language.ToString()));
         identity.AddClaim(new Claim(IdentityConstants.ClaimTypes.SecurityStamp, user.SecurityStamp.ToString()));
 
-        return new ValueTask<ClaimsIdentity>(identity);
+        return ValueTask.FromResult(identity);
     }
 }

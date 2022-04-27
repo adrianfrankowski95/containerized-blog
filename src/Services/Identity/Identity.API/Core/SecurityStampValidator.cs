@@ -26,7 +26,7 @@ public class SecurityStampValidator<TUser> : IUserAttributeValidator<TUser> wher
 
         var currentSecurityStamp = await _userRepository.GetUserSecurityStampAsync(user.Id).ConfigureAwait(false);
 
-        if (!currentSecurityStamp.Equals(default) && !securityStamp.Equals(currentSecurityStamp))
+        if (!securityStamp.Equals(currentSecurityStamp))
             errors.Add(IdentityError.InvalidSecurityStamp);
     }
 }
