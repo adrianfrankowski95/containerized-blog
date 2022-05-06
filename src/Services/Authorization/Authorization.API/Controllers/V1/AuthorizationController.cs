@@ -17,12 +17,12 @@ namespace Blog.Services.Auth.API.Controllers;
 public class AuthorizationController : ControllerBase
 {
     private readonly ILogger<AuthorizationController> _logger;
-    private readonly TokensConfig _tokensOptions;
-    private readonly AuthConfig _authOptions;
+    private readonly TokensOptions _tokensOptions;
+    private readonly AuthOptions _authOptions;
 
     public AuthorizationController(
-        IOptions<TokensConfig> jwtOptions,
-        IOptions<AuthConfig> authOptions,
+        IOptions<TokensOptions> jwtOptions,
+        IOptions<AuthOptions> authOptions,
         ILogger<AuthorizationController> logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));

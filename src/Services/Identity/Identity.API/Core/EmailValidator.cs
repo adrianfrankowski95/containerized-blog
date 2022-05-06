@@ -1,10 +1,11 @@
 using System.ComponentModel.DataAnnotations;
 using Blog.Services.Identity.API.Infrastructure.Repositories;
+using Blog.Services.Identity.API.Models;
 using Microsoft.Extensions.Options;
 
 namespace Blog.Services.Identity.API.Core;
 
-public class EmailValidator<TUser> : IUserAttributeValidator<TUser> where TUser : User
+public class EmailValidator<TUser> : IUserAttributeValidator<TUser> where TUser : UserBase
 {
     private readonly IUserRepository<TUser> _userRepository;
     private readonly IOptionsMonitor<EmailOptions> _options;

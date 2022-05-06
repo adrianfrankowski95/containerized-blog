@@ -57,13 +57,6 @@ public class UserEntityConfiguration : IEntityTypeConfiguration<User>
             .HasColumnType("varchar(20)")
             .IsRequired(false);
 
-        builder
-            .Ignore(x => x.LockExists)
-            .Ignore(x => x.IsCurrentlyLocked)
-            .Ignore(x => x.SuspensionExists)
-            .Ignore(x => x.IsCurrentlySuspended)
-            .Ignore(x => x.IsResettingPassword);
-
 
         builder.UseXminAsConcurrencyToken();
     }

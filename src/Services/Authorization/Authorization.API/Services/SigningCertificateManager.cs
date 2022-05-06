@@ -7,35 +7,33 @@ namespace Blog.Services.Auth.API.Services;
 
 public class SigningCertificateManager : ISigningCertificateManager
 {
-    private readonly SigningCertificateConfig _config;
+    private readonly IOptionsMonitor<SigningCertificateOptions> _config;
 
-    public SigningCertificateManager(IOptions<SigningCertificateConfig> config)
+    public SigningCertificateManager(IOptionsMonitor<SigningCertificateOptions> config)
     {
-        _config = config.Value ?? throw new ArgumentNullException(nameof(config));
-
-        if (_config.ActiveCertificatesCount <= 0)
-            throw new ArgumentException($"Incorrect number of active signing certificates: {_config.ActiveCertificatesCount}");
+        _config = config ?? throw new ArgumentNullException(nameof(config));
     }
 
     public IEnumerable<X509Certificate2> GetOrGenerateCertificates()
     {
+        var count = _config.CurrentValue.ActiveCertificatesCount;
+
+        if (count <= 0)
+            throw new ArgumentException($"Incorrect number of active signing certificates: {count}");
+
         IEnumerable<X509Certificate2> certificates = LoadCertificatesFromStore();
 
+        var rotationInterval = _config.CurrentValue.RotationIntervalDays;
+
         List<X509Certificate2> validCertificates = certificates
-            .Where(x => DateTime.UtcNow.Subtract(x.NotAfter).TotalDays >= _config.RotationIntervalDays)
+            .Where(x => DateTime.UtcNow.Subtract(x.NotAfter).TotalDays >= rotationInterval)
             .ToList();
 
-        if (validCertificates.Count <= _config.ActiveCertificatesCount)
+        if (validCertificates.Count < count)
         {
-            int certificatesToGenerate = _config.ActiveCertificatesCount - validCertificates.Count;
+            int certificatesToGenerate = count - validCertificates.Count;
 
-            for (int i = 0; i < certificatesToGenerate; ++i)
-            {
-                var newCertificate = GenerateCertificate();
-                RegisterCertificate(newCertificate);
-
-                validCertificates.Add(newCertificate);
-            }
+            GenerateAndRegisterCertificates(certificatesToGenerate, validCertificates);
         }
 
         return validCertificates;
@@ -43,27 +41,42 @@ public class SigningCertificateManager : ISigningCertificateManager
 
     public IEnumerable<X509Certificate2> GenerateAndRegisterCertificates()
     {
-        List<X509Certificate2> certificates = new();
+        var count = _config.CurrentValue.ActiveCertificatesCount;
 
-        for (int i = 0; i < _config.ActiveCertificatesCount; ++i)
+        if (count <= 0)
+            throw new ArgumentException($"Incorrect number of active signing certificates: {count}");
+
+        List<X509Certificate2> certificates = new(count);
+        GenerateAndRegisterCertificates(count, certificates);
+
+        return certificates;
+    }
+
+
+    private void GenerateAndRegisterCertificates(int count, IList<X509Certificate2> certificates)
+    {
+        for (int i = 0; i < count; ++i)
         {
             var newCertificate = GenerateCertificate();
             RegisterCertificate(newCertificate);
 
             certificates.Add(newCertificate);
         }
-
-        return certificates;
     }
 
     private IEnumerable<X509Certificate2> LoadCertificatesFromStore()
     {
+        var subject = _config.CurrentValue.Subject;
+
+        if (string.IsNullOrWhiteSpace(subject))
+            throw new ArgumentNullException(nameof(_config.CurrentValue.Subject));
+
         using X509Store store = new(StoreName.Root, StoreLocation.CurrentUser);
         store.Open(OpenFlags.ReadOnly);
 
         var certificates = store.Certificates.Find(
                 findType: X509FindType.FindBySubjectDistinguishedName,
-                findValue: new X500DistinguishedName($"CN={_config.Subject}"),
+                findValue: new X500DistinguishedName($"CN={subject}"),
                 validOnly: true)
                 .OrderByDescending(x => x.NotAfter) ??
                 Enumerable.Empty<X509Certificate2>();
@@ -75,10 +88,15 @@ public class SigningCertificateManager : ISigningCertificateManager
 
     private X509Certificate2 GenerateCertificate()
     {
+        var subject = _config.CurrentValue.Subject;
+
+        if (string.IsNullOrWhiteSpace(subject))
+            throw new ArgumentNullException(nameof(_config.CurrentValue.Subject));
+
         using RSA rsa = RSA.Create(keySizeInBits: 2048);
 
-        var subject = new X500DistinguishedName($"CN={_config.Subject}");
-        var request = new CertificateRequest(subject, rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+        var distinguishedName = new X500DistinguishedName($"CN={subject}");
+        var request = new CertificateRequest(distinguishedName, rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
 
         request.CertificateExtensions.Add(new X509KeyUsageExtension(
             keyUsages: X509KeyUsageFlags.DigitalSignature,
@@ -94,7 +112,8 @@ public class SigningCertificateManager : ISigningCertificateManager
             key: request.PublicKey,
             critical: true));
 
-        var certificate = request.CreateSelfSigned(DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddYears(_config.ExpirationYears));
+        var certificate = request
+            .CreateSelfSigned(DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddYears(_config.CurrentValue.ExpirationYears));
 
         var certificateToExport = new X509Certificate2(
             rawData: certificate.Export(X509ContentType.Cert),

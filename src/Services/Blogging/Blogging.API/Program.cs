@@ -10,6 +10,7 @@ using Blog.Services.Blogging.API.Extensions;
 using NodaTime;
 using Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate;
 using SysTime = Blog.Services.Blogging.API.Infrastructure.Services.SysTime;
+using Blog.Services.Blogging.API.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -67,7 +68,12 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddCustomJwtAuthentication(this IServiceCollection services, IConfiguration config)
     {
-        var jwtOptions = config.GetRequiredSection("Jwt");
+        services.AddOptions<JwtOptions>()
+            .Bind(config.GetRequiredSection(JwtOptions.Section))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        var jwtConfig = config.GetRequiredSection(JwtOptions.Section);
 
         services
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -81,8 +87,8 @@ public static class ServiceCollectionExtensions
                     ValidateLifetime = true,
                     ValidateIssuer = true,
                     ValidateAudience = true,
-                    ValidIssuer = jwtOptions.GetValue<string>("Issuer"),
-                    ValidAudience = jwtOptions.GetValue<string>("Audience"),
+                    ValidIssuer = jwtConfig.GetValue<string>("Issuer"),
+                    ValidAudience = jwtConfig.GetValue<string>("Audience"),
                     NameClaimType = UserClaimTypes.Name,
                     RoleClaimType = UserClaimTypes.Role,
                     AuthenticationType = JwtBearerDefaults.AuthenticationScheme,
