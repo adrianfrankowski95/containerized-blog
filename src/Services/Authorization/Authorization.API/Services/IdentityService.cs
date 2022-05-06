@@ -9,11 +9,11 @@ public class IdentityService : IIdentityService
     public ClaimsIdentity CreateClaimsIdentityFromUserIdentity(UserIdentity userIdentity, string authenticationType)
     {
         return new ClaimsIdentity(new[] {
-            new Claim(Constants.UserClaims.Id, userIdentity.UserId.ToString()),
-            new Claim(Constants.UserClaims.Name, userIdentity.UserName),
-            new Claim(Constants.UserClaims.Email, userIdentity.Email),
-            new Claim(Constants.UserClaims.Role, userIdentity.UserRole),
-            new Claim(Constants.UserClaims.IsPersistent, userIdentity.IsPersistent.ToString())
+            new Claim(Constants.UserClaimTypes.Id, userIdentity.UserId.ToString()),
+            new Claim(Constants.UserClaimTypes.Name, userIdentity.UserName),
+            new Claim(Constants.UserClaimTypes.Email, userIdentity.Email),
+            new Claim(Constants.UserClaimTypes.Role, userIdentity.UserRole),
+            new Claim(Constants.UserClaimTypes.IsPersistent, userIdentity.IsPersistent.ToString())
         }, authenticationType);
     }
 
@@ -27,11 +27,11 @@ public class IdentityService : IIdentityService
                 return false;
 
             userIdentity = new UserIdentity(
-                    Guid.Parse(claimsPrincipal.FindFirstValue(Constants.UserClaims.Id)),
-                    claimsPrincipal.FindFirstValue(Constants.UserClaims.Email),
-                    claimsPrincipal.FindFirstValue(Constants.UserClaims.Name),
-                    claimsPrincipal.FindFirstValue(Constants.UserClaims.Role),
-                    bool.Parse(claimsPrincipal.FindFirstValue(Constants.UserClaims.IsPersistent)));
+                    Guid.Parse(claimsPrincipal.FindFirstValue(Constants.UserClaimTypes.Id)),
+                    claimsPrincipal.FindFirstValue(Constants.UserClaimTypes.Email),
+                    claimsPrincipal.FindFirstValue(Constants.UserClaimTypes.Name),
+                    claimsPrincipal.FindFirstValue(Constants.UserClaimTypes.Role),
+                    bool.Parse(claimsPrincipal.FindFirstValue(Constants.UserClaimTypes.IsPersistent)));
         }
         catch
         {

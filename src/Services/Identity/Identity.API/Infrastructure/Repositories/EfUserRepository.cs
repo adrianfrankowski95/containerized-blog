@@ -1,18 +1,15 @@
-using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace Blog.Services.Identity.API.Infrastructure.Repositories;
 
-public class EfUserRepository<TUser> : IUserRepository<TUser> where TUser : User
+public class EfUserRepository<TUser> : IUserRepository<TUser> where TUser : UserBase
 {
     private readonly DbSet<TUser> _users;
-    public IUnitOfWork UnitOfWork { get; }
 
-    public EfUserRepository(IdentityDbContext<TUser> ctx, IUnitOfWork unitOfWork)
+    public EfUserRepository(IdentityDbContext<TUser> ctx)
     {
         _users = ctx.Users ?? throw new ArgumentNullException(nameof(ctx));
-        UnitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
     }
 
     public void Add(TUser user)

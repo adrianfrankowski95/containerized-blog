@@ -11,12 +11,14 @@ public static class Constants
         public const string AuthApi = "blog.auth_api";
     }
 
-    public static class UserClaims
+    public static class UserClaimTypes
     {
-        public const string Id = "user_id";
+        public const string Id = "sub";
         public const string Role = "role";
         public const string Email = "email";
+        public const string EmailConfirmed = "email_confirmed";
         public const string Name = "name";
+        public const string SecurityStamp = "security_stamp";
         public const string IsPersistent = "persist";
     }
 }

@@ -1,16 +1,19 @@
 using Blog.Services.Identity.API.Core;
+using Blog.Services.Identity.API.Infrastructure.Repositories;
 using Blog.Services.Identity.API.Models;
 
 namespace Blog.Services.Blogging.Infrastructure;
 
-public class EfUnitOfWork<TUser> : IUnitOfWork, IAsyncDisposable, IDisposable where TUser : User
+public class EfUnitOfWork<TUser> : IUnitOfWork<TUser>, IAsyncDisposable, IDisposable where TUser : UserBase
 {
+    public IUserRepository<TUser> Users { get; }
     private readonly IdentityDbContext<TUser> _ctx;
     private bool isDisposed;
 
-    public EfUnitOfWork(IdentityDbContext<TUser> ctx)
+    public EfUnitOfWork(IdentityDbContext<TUser> ctx, IUserRepository<TUser> userRepository)
     {
         _ctx = ctx ?? throw new ArgumentNullException(nameof(ctx));
+        Users = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
     }
     public async Task CommitChangesAsync(CancellationToken cancellationToken = default)
     {

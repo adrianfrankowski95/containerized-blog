@@ -25,7 +25,7 @@ namespace Blog.Services.Authorization.API.Services
             var certificateManager = scope.ServiceProvider.GetRequiredService<ISigningCertificateManager>();
             var certificates = certificateManager.GenerateAndRegisterCertificates();
 
-            var options = scope.ServiceProvider.GetRequiredService<IOptions<OpenIddictServerOptions>>().Value;
+            var options = scope.ServiceProvider.GetRequiredService<IOptionsMonitor<OpenIddictServerOptions>>().CurrentValue;
 
             foreach (var cert in certificates)
             {

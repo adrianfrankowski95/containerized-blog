@@ -5,12 +5,14 @@ using Blog.Services.Auth.API.Services;
 using Blog.Services.Authorization.API.Models;
 using Blog.Services.Authorization.API.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using OpenIddict.Abstractions;
 using OpenIddict.Server;
 using Quartz;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,7 +22,9 @@ var config = GetConfiguration(isDevelopment);
 var services = builder.Services;
 
 // Add services to the container.
-services.AddSwaggerGen();
+services
+    .AddSwaggerGen()
+    .AddRazorPages();
 
 services
     .AddAuthControllers(isDevelopment)
@@ -29,8 +33,8 @@ services
     .AddSigningCertificatesManagement(config)
     .AddInfrastructureForOpenIddict(config)
     .AddConfiguredOpenIddict(config)
-    .AddCustomServices()
-    .AddAntiforgery();
+    .AddCustomServices();
+//.AddAntiforgery(); //added with Razor Pages
 
 //await AuthContextSeed.SeedAsync(config);
 
@@ -47,7 +51,7 @@ app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
-
+app.MapRazorPages();
 app.MapControllers();
 
 app.Run();
@@ -65,13 +69,19 @@ static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddCustomJwtAuthentication(this IServiceCollection services, IConfiguration config)
     {
-        services.AddOptions<AuthConfig>().Bind(config);
+        services.AddOptions<AuthOptions>()
+            .Bind(config)
+            .ValidateDataAnnotations()
+            .ValidateOnStart(); ;
 
-        services.AddOptions<TokensConfig>().Bind(config.GetRequiredSection(TokensConfig.Section));
+        services.AddOptions<TokensOptions>()
+            .Bind(config.GetRequiredSection(TokensOptions.Section))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
 
         services
             .AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
-            .Configure<IOptions<TokensConfig>, IOptions<AuthConfig>, IssuerSigningKey>((opts, jwtOptions, authOptions, signingKey) =>
+            .Configure<IOptions<TokensOptions>, IOptions<AuthOptions>, IssuerSigningKey>((opts, jwtOptions, authOptions, signingKey) =>
             {
                 var accessTokenOptions = jwtOptions.Value.AccessToken;
                 var authOpts = authOptions.Value;
@@ -107,34 +117,12 @@ static class ServiceCollectionExtensions
 
     public static IServiceCollection AddSigningCertificatesManagement(this IServiceCollection services, IConfiguration config)
     {
-        services.AddOptions<SigningCertificateConfig>()
-            .Bind(config.GetRequiredSection(SigningCertificateConfig.Section));
-
-        var signingCertificateConfig = config.GetRequiredSection(SigningCertificateConfig.Section)
-            .Get<SigningCertificateConfig>();
+        services.AddOptions<SigningCertificateOptions>()
+            .Bind(config.GetRequiredSection(SigningCertificateOptions.Section))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
 
         services.TryAddTransient<ISigningCertificateManager, SigningCertificateManager>();
-        services.TryAddTransient<OpenIddictSigningCredentialsRotator>();
-
-        services.Configure<QuartzOptions>(opts =>
-        {
-            opts.AddJob<OpenIddictSigningCredentialsRotator>(builder =>
-            {
-                builder.WithIdentity(OpenIddictSigningCredentialsRotator.Id)
-                    .WithDescription("Job for rotating Signing Certificates and adding them to OpenIddict collection");
-            });
-
-            opts.AddTrigger(builder =>
-            {
-                builder.ForJob(OpenIddictSigningCredentialsRotator.Id)
-                    .WithSimpleSchedule(opts =>
-                        opts
-                            .WithInterval(TimeSpan.FromDays(signingCertificateConfig.RotationIntervalDays))
-                            .RepeatForever())
-                    .WithDescription($"Trigger for {typeof(OpenIddictSigningCredentialsRotator).Name}")
-                    .StartAt(DateTimeOffset.UtcNow.AddDays(signingCertificateConfig.RotationIntervalDays));
-            });
-        });
 
         return services;
     }
@@ -155,21 +143,37 @@ static class ServiceCollectionExtensions
 
     public static IServiceCollection AddConfiguredOpenIddict(this IServiceCollection services, IConfiguration config)
     {
-        var tokensConfig = config.GetRequiredSection(TokensConfig.Section).Get<TokensConfig>();
-        var authConfig = config.Get<AuthConfig>();
+        services.AddOptions<AuthOptions>()
+            .Bind(config)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddOptions<TokensOptions>()
+            .Bind(config.GetRequiredSection(TokensOptions.Section))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
 
         services.AddOptions<OpenIddictServerOptions>()
                 .Configure<ISigningCertificateManager>((opts, certificateManager) =>
                 {
+                    if (certificateManager is null)
+                        throw new ArgumentNullException(nameof(certificateManager));
+
                     var certificates = certificateManager.GetOrGenerateCertificates();
+
+                    X509SecurityKey securityKey;
+                    SigningCredentials signingCredentials;
 
                     foreach (var cert in certificates)
                     {
-                        var securityKey = new X509SecurityKey(cert);
-                        var signingCredential = new SigningCredentials(securityKey, securityKey.PrivateKey.SignatureAlgorithm);
-                        opts.SigningCredentials.Add(signingCredential);
+                        securityKey = new X509SecurityKey(cert);
+                        signingCredentials = new SigningCredentials(securityKey, securityKey.PrivateKey.SignatureAlgorithm);
+                        opts.SigningCredentials.Add(signingCredentials);
                     }
                 });
+
+        var authConfig = config.Get<AuthOptions>();
+        var tokensConfig = config.GetRequiredSection(TokensOptions.Section).Get<TokensOptions>();
 
         services.AddOpenIddict()
                 .AddCore(opts =>
@@ -216,14 +220,64 @@ static class ServiceCollectionExtensions
                             OpenIddictConstants.Permissions.Prefixes.Scope + Constants.Scopes.EmailingApi,
                             OpenIddictConstants.Permissions.Prefixes.Scope + Constants.Scopes.UsersApi)
                         .RegisterClaims(
-                            Constants.UserClaims.Email,
-                            Constants.UserClaims.Id,
-                            Constants.UserClaims.Name,
-                            Constants.UserClaims.Role,
-                            Constants.UserClaims.IsPersistent
+                            Constants.UserClaimTypes.Email,
+                            Constants.UserClaimTypes.Id,
+                            Constants.UserClaimTypes.Name,
+                            Constants.UserClaimTypes.EmailConfirmed,
+                            Constants.UserClaimTypes.SecurityStamp,
+                            Constants.UserClaimTypes.Role,
+                            Constants.UserClaimTypes.IsPersistent
                         );
                 });
 
+        services.TryAddTransient<OpenIddictSigningCredentialsRotator>();
+
+        var signingCertificateConfig = config.GetRequiredSection(SigningCertificateOptions.Section)
+            .Get<SigningCertificateOptions>();
+
+        services.Configure<QuartzOptions>(opts =>
+        {
+            opts.AddJob<OpenIddictSigningCredentialsRotator>(builder =>
+            {
+                builder.WithIdentity(OpenIddictSigningCredentialsRotator.Id)
+                    .WithDescription("A job responsible for rotating Signing Certificates and adding them to OpenIddict collection");
+            });
+
+            opts.AddTrigger(builder =>
+            {
+                builder.ForJob(OpenIddictSigningCredentialsRotator.Id)
+                    .WithSimpleSchedule(opts =>
+                        opts
+                            .WithInterval(TimeSpan.FromDays(signingCertificateConfig.RotationIntervalDays))
+                            .RepeatForever())
+                    .WithDescription($"Trigger for {typeof(OpenIddictSigningCredentialsRotator).Name}")
+                    .StartAt(DateTimeOffset.UtcNow.AddDays(signingCertificateConfig.RotationIntervalDays));
+            });
+        });
+
         return services;
     }
-}
+
+    public static IServiceCollection AddConfiguredIdentity(this IServiceCollection services, IConfiguration config)
+    {
+        services.AddIdentity<User, UserRole>()
+            .AddDefaultTokenProviders()
+            .AddEntityFrameworkStores();
+
+        services.AddOptions<IdentityOptions>()
+            .Bind(config.GetRequiredSection("IdentityOptions"))
+            .Configure<AuthOptions>((opts, authConfig) =>
+            {
+                opts.ClaimsIdentity.EmailClaimType = Constants.UserClaimTypes.Email;
+                opts.ClaimsIdentity.RoleClaimType = Constants.UserClaimTypes.Role;
+                opts.ClaimsIdentity.SecurityStampClaimType = Constants.UserClaimTypes.SecurityStamp;
+                opts.ClaimsIdentity.UserIdClaimType = Constants.UserClaimTypes.Id;
+                opts.ClaimsIdentity.UserNameClaimType = Constants.UserClaimTypes.Name;
+                opts.Lockout.AllowedForNewUsers = true;
+                opts.SignIn.RequireConfirmedPhoneNumber = false;
+                opts.Stores.ProtectPersonalData = true;
+                opts.Tokens.AuthenticatorIssuer = authConfig.Issuer;
+            });
+
+        return services;
+    }

@@ -1,33 +1,34 @@
 using System.Security.Claims;
 using Blog.Services.Identity.API.Infrastructure.Repositories;
+using Blog.Services.Identity.API.Models;
 using Blog.Services.Identity.API.Services;
 using Microsoft.Extensions.Options;
 using NodaTime;
 
 namespace Blog.Services.Identity.API.Core;
 
-public class UserManager
+public class UserManager<TUser> where TUser : UserBase
 {
-    private readonly IUserRepository _users;
-    private readonly SecurityOptions _options;
+    private readonly IUnitOfWork<TUser> _unitOfWork;
+    private readonly IOptionsMonitor<SecurityOptions> _options;
     private readonly ISysTime _sysTime;
     private readonly IPasswordHasher _passwordHasher;
 
     public UserManager(
-        IUserRepository userRepository,
+        IUnitOfWork<TUser> unitOfWork,
         IPasswordHasher passwordHasher,
-        IOptionsMonitor<IdentityOptions> options,
+        IOptionsMonitor<SecurityOptions> options,
         ISysTime sysTime)
     {
-        _users = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
-        _options = options.CurrentValue.Security ?? throw new ArgumentNullException(nameof(options));
+        _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
+        _options = options ?? throw new ArgumentNullException(nameof(options));
         _sysTime = sysTime ?? throw new ArgumentNullException(nameof(sysTime));
         _passwordHasher = passwordHasher ?? throw new ArgumentNullException(nameof(passwordHasher));
     }
 
     public async Task<IdentityResult> LoginAsync(string email, string password)
     {
-        var user = await _users.FindByEmailAsync(email);
+        var user = await _unitOfWork.Users.FindByEmailAsync(email);
 
         if (user is null)
             return IdentityResult.Fail(IdentityError.InvalidCredentials);
@@ -46,7 +47,7 @@ public class UserManager
             else
                 AddFailedLoginAttempt(user);
 
-            await _users.UnitOfWork.CommitChangesAsync().ConfigureAwait(false);
+            await _unitOfWork.UnitOfWork.CommitChangesAsync().ConfigureAwait(false);
             return IdentityResult.Fail(IdentityError.InvalidCredentials);
         }
 
@@ -63,14 +64,14 @@ public class UserManager
         ClearFailedLoginAttempts(user);
         SetNewLastLoginTime(user, _sysTime);
 
-        await _users.UnitOfWork.CommitChangesAsync().ConfigureAwait(false);
+        await _unitOfWork.CommitChangesAsync().ConfigureAwait(false);
 
         return IdentityResult.Success;
     }
 
     public async Task<IdentityResult> VerifyCredentialsAsync(string email, string password)
     {
-        var user = await _users.FindByEmailAsync(email);
+        var user = await _unitOfWork.Users.FindByEmailAsync(email);
 
         if (user is null || !VerifyPassword(password, user.PasswordHash.ToString()))
             return IdentityResult.Fail(IdentityError.InvalidCredentials);
@@ -96,29 +97,24 @@ public class UserManager
             securityStampGuid.Equals(default))
             return IdentityResult.Fail(IdentityError.InvalidOrMissingSecurityStamp);
 
-        var currentStamp = await _users.GetUserSecurityStampAsync(userGuid).ConfigureAwait(false);
+        var currentStamp = await _unitOfWork.GetUserSecurityStampAsync(userGuid).ConfigureAwait(false);
 
         if (!securityStamp.Equals(currentStamp))
             return IdentityResult.Fail(IdentityError.InvalidOrMissingSecurityStamp);
 
         return IdentityResult.Success;
     }
-    private static void SetNewLastLoginTime(User user, ISysTime sysTime)
+    public void SetLastLoginAt(TUser user)
     {
-        user.LastLoginAt = sysTime.Now;
+        user.LastLoginAt = _sysTime.Now;
     }
 
-    private static void SetNewSecurityStamp(User user)
-    {
-        user.SecurityStamp = GenerateSecurityStamp();
-    }
-
-    private static void AddFailedLoginAttempt(User user)
+    public static void AddFailedLoginAttempt(TUser user)
     {
         user.FailedLoginAttempts = ++user.FailedLoginAttempts;
     }
 
-    private static void ClearFailedLoginAttempts(User user)
+    public static void ClearFailedLoginAttempts(TUser user)
     {
         if (user.FailedLoginAttempts == 0)
             return;
@@ -126,38 +122,47 @@ public class UserManager
         user.FailedLoginAttempts = 0;
     }
 
-    private static void LockUser(User user, int durationMinutes, ISysTime sysTime)
+    public void LockUser(TUser user)
     {
-        if (user.IsCurrentlyLocked)
+        var lockDuration = _options.CurrentValue.AccountLockDurationMinutes;
+
+        if (IsLocked(user))
             throw new InvalidOperationException("User is already locked");
 
-        user.LockedUntil = sysTime.Now.Plus(Duration.FromMinutes(durationMinutes));
+        user.LockedUntil = _sysTime.Now.Plus(Duration.FromMinutes(lockDuration));
     }
 
-    //true if change was made, false if no change was needed
-    private static bool ClearLock(User user)
-    {
-        if (!user.LockExists)
-            return false;
+    public bool IsLocked(TUser user) => user.LockedUntil is not null && user.LockedUntil > _sysTime.Now;
 
-        user.LockedUntil = null;
-        return true;
+    public static void ClearLock(TUser user) => user.LockedUntil = null;
+
+    private string GeneratePasswordResetCode(int length)
+    {
+        var allowedChars = _options.CurrentValue.PasswordResetCodeAllowedCharacters;
+
+        if (string.IsNullOrEmpty(allowedChars))
+            throw new ArgumentNullException(nameof(allowedChars));
+
+        var rnd = Random.Shared;
+        var code = new char[length];
+
+        for (int i = 0; i < length; ++i)
+        {
+            code[i] = allowedChars[rnd.Next(0, allowedChars.Length - 1)];
+        }
+
+        return new string(code);
     }
-
-    private static string GeneratePasswordResetCode(int length, ISysTime sysTime)
+    public void SetPasswordResetCode(TUser user)
     {
-        var rand = new Random((int)sysTime.Now.ToUnixTimeTicks());
-
-        byte[] randomBytes = new byte[length * 2]; //1 string takes 2 bytes
-        rand.NextBytes(randomBytes);
-
-        return Convert.ToBase64String(randomBytes);
+        var length = _options.CurrentValue.PasswordResetCodeLength;
+        user.PasswordResetCode = GeneratePasswordResetCode(length);
     }
 
     private static Guid GenerateSecurityStamp() => Guid.NewGuid();
+    public static void SetSecurityStamp(TUser user)
+         => user.SecurityStamp = GenerateSecurityStamp();
 
-    public static void UpdateSecurityStamp(User user)
-    {
-        user.SecurityStamp = GenerateSecurityStamp();
-    }
+    public async Task CommitChangesAsync(CancellationToken cancellationToken = default)
+        => await _unitOfWork.CommitChangesAsync(cancellationToken);
 }

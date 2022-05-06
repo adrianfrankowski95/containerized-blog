@@ -1,6 +1,8 @@
+using Blog.Services.Identity.API.Models;
+
 namespace Blog.Services.Identity.API.Core;
 
-public class UserValidator<TUser> : IUserValidator<TUser> where TUser : User
+public class UserValidator<TUser> : IUserValidator<TUser> where TUser : UserBase
 {
     public IEnumerable<IUserAttributeValidator<TUser>> AttributeValidators { get; }
     public IEnumerable<IPasswordValidator<TUser>> PasswordValidators { get; }

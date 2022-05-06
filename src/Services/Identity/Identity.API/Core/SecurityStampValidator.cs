@@ -1,8 +1,9 @@
 using Blog.Services.Identity.API.Infrastructure.Repositories;
+using Blog.Services.Identity.API.Models;
 
 namespace Blog.Services.Identity.API.Core;
 
-public class SecurityStampValidator<TUser> : IUserAttributeValidator<TUser> where TUser : User
+public class SecurityStampValidator<TUser> : IUserAttributeValidator<TUser> where TUser : UserBase
 {
     private readonly IUserRepository<TUser> _userRepository;
 

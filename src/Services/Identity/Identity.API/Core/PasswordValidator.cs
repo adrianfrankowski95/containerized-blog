@@ -1,9 +1,10 @@
 using Blog.Services.Identity.API.Infrastructure.Repositories;
+using Blog.Services.Identity.API.Models;
 using Microsoft.Extensions.Options;
 
 namespace Blog.Services.Identity.API.Core;
 
-public class PasswordValidator<TUser> : IPasswordValidator<TUser> where TUser : User
+public class PasswordValidator<TUser> : IPasswordValidator<TUser> where TUser : UserBase
 {
     private readonly IUserRepository<TUser> _userRepository;
     private readonly IOptionsMonitor<PasswordOptions> _options;
@@ -51,17 +52,10 @@ public class PasswordValidator<TUser> : IPasswordValidator<TUser> where TUser : 
             }
 
         //if checked that provided password hash belongs to its owner, verify it
-        if (!_passwordHasher.VerifyPassword(password, user.PasswordHash))
-        {
+        if (!_passwordHasher.VerifyPassword(password, passwordHash))
             errors.Add(IdentityError.InvalidPassword);
-            return;
-        }
-
-        if (_passwordHasher.CheckPasswordNeedsRehash(user.PasswordHash))
-        {
+        else if (_passwordHasher.CheckPasswordNeedsRehash(passwordHash))
             errors.Add(IdentityError.PasswordOkNeedsRehash);
-            return;
-        }
     }
 
     private static bool IsDigit(char c) => c is >= '0' and <= '9';

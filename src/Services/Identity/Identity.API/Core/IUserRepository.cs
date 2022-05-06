@@ -1,10 +1,10 @@
 using Blog.Services.Identity.API.Core;
+using Blog.Services.Identity.API.Models;
 
 namespace Blog.Services.Identity.API.Infrastructure.Repositories;
 
-public interface IUserRepository<TUser> where TUser : User
+public interface IUserRepository<TUser> where TUser : UserBase
 {
-    public IUnitOfWork UnitOfWork { get; }
     public void Add(TUser user);
 
     public void Delete(TUser user);
