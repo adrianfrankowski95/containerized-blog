@@ -9,6 +9,7 @@ public static class Constants
         public const string UsersApi = "blog.users_api";
         public const string CommentsApi = "blog.comments_api";
         public const string AuthApi = "blog.auth_api";
+        public static string[] List() => new[] { BloggingApi, EmailingApi, UsersApi, CommentsApi, AuthApi };
     }
 
     public static class UserClaimTypes
@@ -20,5 +21,6 @@ public static class Constants
         public const string Name = "name";
         public const string SecurityStamp = "security_stamp";
         public const string IsPersistent = "persist";
+        public static string[] List() => new[] { Id, Role, Email, EmailConfirmed, Name, SecurityStamp, IsPersistent };
     }
 }

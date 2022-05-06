@@ -40,6 +40,8 @@ public class BloggingDbContext : DbContext
         modelBuilder.ApplyConfiguration(new TagEntityConfiguration());
 
         modelBuilder.ApplyConfiguration(new IdentifiedRequestEntityConfiguration());
+
+        base.OnModelCreating(modelBuilder);
     }
 
     public bool HasActiveTransaction => _transaction is not null;

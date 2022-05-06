@@ -30,5 +30,7 @@ public class AuthDbContext : DbContext
             .ApplyConfiguration(new OpenIddictEntityFrameworkCoreAuthorizationConfiguration())
             .ApplyConfiguration(new OpenIddictEntityFrameworkCoreScopeConfiguration())
             .ApplyConfiguration(new OpenIddictEntityFrameworkCoreTokenConfiguration());
+
+        base.OnModelCreating(modelBuilder);
     }
 }

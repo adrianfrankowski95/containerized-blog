@@ -212,22 +212,11 @@ static class ServiceCollectionExtensions
                         .SetConfigurationEndpointUris("/.well-known/openid-configuration")
                         .SetCryptographyEndpointUris("/.well-known/openid-configuration/jwks")
                         .RegisterScopes(
-                            OpenIddictConstants.Scopes.OpenId,
-                            OpenIddictConstants.Scopes.Profile,
-                            OpenIddictConstants.Permissions.Prefixes.Scope + Constants.Scopes.BloggingApi,
-                            OpenIddictConstants.Permissions.Prefixes.Scope + Constants.Scopes.AuthApi,
-                            OpenIddictConstants.Permissions.Prefixes.Scope + Constants.Scopes.CommentsApi,
-                            OpenIddictConstants.Permissions.Prefixes.Scope + Constants.Scopes.EmailingApi,
-                            OpenIddictConstants.Permissions.Prefixes.Scope + Constants.Scopes.UsersApi)
-                        .RegisterClaims(
-                            Constants.UserClaimTypes.Email,
-                            Constants.UserClaimTypes.Id,
-                            Constants.UserClaimTypes.Name,
-                            Constants.UserClaimTypes.EmailConfirmed,
-                            Constants.UserClaimTypes.SecurityStamp,
-                            Constants.UserClaimTypes.Role,
-                            Constants.UserClaimTypes.IsPersistent
-                        );
+                            Constants.Scopes.List().Select(scope => OpenIddictConstants.Permissions.Prefixes.Scope + scope)
+                            .Append(OpenIddictConstants.Scopes.OpenId)
+                            .Append(OpenIddictConstants.Scopes.Profile)
+                            .ToArray())
+                        .RegisterClaims(Constants.UserClaimTypes.List());
                 });
 
         services.TryAddTransient<OpenIddictSigningCredentialsRotator>();
@@ -261,8 +250,8 @@ static class ServiceCollectionExtensions
     public static IServiceCollection AddConfiguredIdentity(this IServiceCollection services, IConfiguration config)
     {
         services.AddIdentity<User, UserRole>()
-            .AddDefaultTokenProviders()
-            .AddEntityFrameworkStores();
+            .AddEntityFrameworkStores<AuthDbContext>()
+            .AddDefaultTokenProviders();
 
         services.AddOptions<IdentityOptions>()
             .Bind(config.GetRequiredSection("IdentityOptions"))
@@ -281,3 +270,4 @@ static class ServiceCollectionExtensions
 
         return services;
     }
+}
