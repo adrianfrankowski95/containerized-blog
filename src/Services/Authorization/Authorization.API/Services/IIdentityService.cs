@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using Blog.Services.Auth.API.Models;
+using Blog.Services.Authorization.API.Models;
 
 namespace Blog.Services.Auth.API.Services;
 
