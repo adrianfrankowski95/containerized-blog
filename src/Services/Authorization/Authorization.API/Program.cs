@@ -6,13 +6,13 @@ using Blog.Services.Authorization.API.Models;
 using Blog.Services.Authorization.API.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using OpenIddict.Abstractions;
 using OpenIddict.Server;
 using Quartz;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -254,7 +254,7 @@ static class ServiceCollectionExtensions
             .AddDefaultTokenProviders();
 
         services.AddOptions<IdentityOptions>()
-            .Bind(config.GetRequiredSection("IdentityOptions"))
+            .Bind(config.GetRequiredSection("Identity"))
             .Configure<AuthOptions>((opts, authConfig) =>
             {
                 opts.ClaimsIdentity.EmailClaimType = Constants.UserClaimTypes.Email;
@@ -262,9 +262,6 @@ static class ServiceCollectionExtensions
                 opts.ClaimsIdentity.SecurityStampClaimType = Constants.UserClaimTypes.SecurityStamp;
                 opts.ClaimsIdentity.UserIdClaimType = Constants.UserClaimTypes.Id;
                 opts.ClaimsIdentity.UserNameClaimType = Constants.UserClaimTypes.Name;
-                opts.Lockout.AllowedForNewUsers = true;
-                opts.SignIn.RequireConfirmedPhoneNumber = false;
-                opts.Stores.ProtectPersonalData = true;
                 opts.Tokens.AuthenticatorIssuer = authConfig.Issuer;
             });
 
