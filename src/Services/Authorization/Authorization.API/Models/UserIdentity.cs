@@ -1,4 +1,4 @@
-namespace Blog.Services.Auth.API.Models;
+namespace Blog.Services.Authorization.API.Models;
 
 public record UserIdentity
 {

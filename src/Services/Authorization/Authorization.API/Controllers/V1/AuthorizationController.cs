@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Net;
 using System.Text.RegularExpressions;
 using Blog.Services.Auth.API.Config;
-using Blog.Services.Auth.API.Models;
+using Blog.Services.Authorization.API.Models;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
