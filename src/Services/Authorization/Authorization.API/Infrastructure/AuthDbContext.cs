@@ -1,10 +1,11 @@
 using Blog.Services.Auth.API.Infrastructure.EntityConfigurations;
 using Blog.Services.Auth.API.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace Blog.Services.Auth.API.Infrastructure;
 
-public class AuthDbContext : DbContext
+public class AuthDbContext : IdentityDbContext
 {
     public const string DefaultSchema = "auth";
     //public DbSet<UserRefreshToken> UserRefreshTokens { get; set; }
@@ -24,13 +25,12 @@ public class AuthDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
         //modelBuilder.ApplyConfiguration(new UserRefreshTokenEntityConfiguration());
         modelBuilder
             .ApplyConfiguration(new OpenIddictEntityFrameworkCoreApplicationConfiguration())
             .ApplyConfiguration(new OpenIddictEntityFrameworkCoreAuthorizationConfiguration())
             .ApplyConfiguration(new OpenIddictEntityFrameworkCoreScopeConfiguration())
             .ApplyConfiguration(new OpenIddictEntityFrameworkCoreTokenConfiguration());
-
-        base.OnModelCreating(modelBuilder);
     }
 }

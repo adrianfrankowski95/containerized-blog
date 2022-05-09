@@ -249,7 +249,12 @@ static class ServiceCollectionExtensions
 
     public static IServiceCollection AddConfiguredIdentity(this IServiceCollection services, IConfiguration config)
     {
-        services.AddIdentity<User, UserRole>()
+        services.AddOptions<AuthOptions>()
+            .Bind(config)
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddIdentity<ApplicationUser, UserRole>()
             .AddEntityFrameworkStores<AuthDbContext>()
             .AddDefaultTokenProviders();
 
