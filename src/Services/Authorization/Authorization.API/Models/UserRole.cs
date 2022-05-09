@@ -1,19 +1,19 @@
+using Microsoft.AspNetCore.Identity;
+
 namespace Blog.Services.Authorization.API.Models;
 
-public sealed class UserRole
+public sealed class UserRole : IdentityRole<int>
 {
-    public int Value { get; }
-    public string Name { get; }
-    private UserRole(int value, string name)
+    private UserRole(int id, string name)
     {
-        Value = value;
+        Id = id;
         Name = name;
     }
 
-    public static readonly UserRole Reader = new(0, nameof(Reader).ToLowerInvariant());
-    public static readonly UserRole Moderator = new(1, nameof(Moderator).ToLowerInvariant());
-    public static readonly UserRole Blogger = new(2, nameof(Blogger).ToLowerInvariant());
-    public static readonly UserRole Administrator = new(3, nameof(Administrator).ToLowerInvariant());
+    public static readonly UserRole Reader = new(0, Constants.UserRoleTypes.Reader);
+    public static readonly UserRole Moderator = new(1, Constants.UserRoleTypes.Moderator);
+    public static readonly UserRole Blogger = new(2, Constants.UserRoleTypes.Blogger);
+    public static readonly UserRole Administrator = new(3, Constants.UserRoleTypes.Administrator);
 
     public static UserRole GetDefault() => Reader;
 
@@ -37,16 +37,16 @@ public sealed class UserRole
         return role;
     }
 
-    public static UserRole FromValue(int value)
+    public static UserRole FromId(int id)
     {
-        if (value == null)
-            throw new ArgumentNullException(nameof(value));
+        if (id == null)
+            throw new ArgumentNullException(nameof(id));
 
         var role = List()
-            .SingleOrDefault(r => r.Value == value);
+            .SingleOrDefault(r => r.Id == id);
 
         if (role is null)
-            throw new InvalidOperationException($"Possible {nameof(UserRole)} values: {string.Join(',', List().Select(r => r.Value))}. Provided value: {value}");
+            throw new InvalidOperationException($"Possible {nameof(UserRole)} IDs: {string.Join(',', List().Select(r => r.Id))}. Provided ID: {id}");
 
         return role;
     }
