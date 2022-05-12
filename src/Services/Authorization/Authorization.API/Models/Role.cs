@@ -6,9 +6,6 @@ public sealed class Role : IdentityRole<Guid>
 {
     public int Value { get; }
 
-    //ef core
-    protected Role() { }
-
     private Role(int value, string name)
     {
         Id = Guid.NewGuid();
@@ -56,5 +53,18 @@ public sealed class Role : IdentityRole<Guid>
             throw new InvalidOperationException($"Possible {nameof(Role)} values: {string.Join(',', List().Select(r => r.Value))}. Provided value: {value}");
 
         return role;
+    }
+
+    public override bool Equals(object? obj)
+    {
+
+        if (ReferenceEquals(obj, this))
+            return true;
+
+        if (obj is null || obj is not Role role)
+            return false;
+
+
+        return ()
     }
 }
