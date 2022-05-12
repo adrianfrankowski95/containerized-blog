@@ -10,8 +10,8 @@ public sealed class UserRoleClaim : IdentityRoleClaim<int>
         Name = name;
     }
 
-    public static readonly UserRoleClaim Reader = new(0, Constants.UserRoleClaimTypes.Reader);
-    public static readonly UserRoleClaim Moderator = new(1, Constants.UserRoleClaimTypes.Moderator);
+    public static readonly UserRoleClaim Reader = new(0, Constants.UserRoleTypes.Reader);
+    public static readonly UserRoleClaim Moderator = new(1, Constants.UserRoleTypes.Moderator);
     public static readonly UserRoleClaim Blogger = new(2, Constants.UserRoleClaimTypes.Blogger);
     public static readonly UserRoleClaim Administrator = new(3, Constants.UserRoleClaimTypes.Administrator);
 

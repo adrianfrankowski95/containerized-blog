@@ -4,7 +4,7 @@ namespace Blog.Services.Auth.API.Infrastructure;
 
 public static class InfrastructureInstaller
 {
-    public static IServiceCollection AddInfrastructureForOpenIddict(this IServiceCollection services, IConfiguration config)
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration config)
     {
         string connectionString = config.GetConnectionString("AuthPostgresDb");
 
