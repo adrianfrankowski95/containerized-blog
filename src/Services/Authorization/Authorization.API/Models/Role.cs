@@ -57,14 +57,21 @@ public sealed class Role : IdentityRole<Guid>
 
     public override bool Equals(object? obj)
     {
-
         if (ReferenceEquals(obj, this))
             return true;
 
         if (obj is null || obj is not Role role)
             return false;
 
+        bool equalValue = role.Value.Equals(Value);
+        bool equalName = string.Equals(role.Name, Name, StringComparison.OrdinalIgnoreCase);
 
-        return ()
+        if (equalValue && !equalName)
+            throw new InvalidDataException($"Same value ({Value}) with different names: {role.Name}, {Name}");
+
+        if (!equalValue && equalName)
+            throw new InvalidDataException($"Same name ({Name}) with different values: {role.Value}, {Value}");
+
+        return equalName && equalValue;
     }
 }
