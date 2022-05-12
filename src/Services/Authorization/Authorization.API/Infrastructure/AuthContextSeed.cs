@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 
-namespace Blog.Services.Auth.API.Infrastructure;
+namespace Blog.Services.Authorization.API.Infrastructure.EntityConfigurations;
 
 public static class AuthContextSeed
 {

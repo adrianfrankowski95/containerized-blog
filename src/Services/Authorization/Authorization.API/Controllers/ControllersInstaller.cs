@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc.Versioning;
 using NodaTime.Serialization.SystemTextJson;
 
-namespace Blog.Services.Auth.API.Controllers;
+namespace Blog.Services.Authorization.API.Controllers;
 
 public static class ControllersInstaller
 {

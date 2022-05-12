@@ -12,7 +12,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Blog.Services.Auth.API.Controllers;
+namespace Blog.Services.Authorization.API.Controllers;
 
 public class AuthorizationController : ControllerBase
 {

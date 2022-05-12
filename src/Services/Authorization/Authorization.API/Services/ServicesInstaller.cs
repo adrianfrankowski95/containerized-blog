@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace Blog.Services.Auth.API.Services;
+namespace Blog.Services.Authorization.API.Services;
 
 public static class ServicesInstaller
 {
