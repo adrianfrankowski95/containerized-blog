@@ -16,8 +16,7 @@ public class User : IdentityUser<Guid>
     {
         UserName = userName;
     }
-
-    public Role Role { get; set; } = Role.GetDefault();
+    
     public bool ReceiveEmails { get; set; }
     public Language? Language { get; set; }
     public Instant CreatedAt { get; set; }
