@@ -31,7 +31,7 @@ services
     //.AddCustomJwtAuthentication(config)
     .AddConfiguredQuartz()
     .AddSigningCertificatesManagement(config)
-    .AddInfrastructureForOpenIddict(config)
+    .AddInfrastructure(config)
     .AddConfiguredOpenIddict(config)
     .AddCustomServices();
 //.AddAntiforgery(); //added with Razor Pages
@@ -254,7 +254,7 @@ static class ServiceCollectionExtensions
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
-        services.AddIdentity<ApplicationUser, UserRole>()
+        services.AddIdentity<User, Role>()
             .AddEntityFrameworkStores<AuthDbContext>()
             .AddDefaultTokenProviders();
 
