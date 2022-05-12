@@ -1,12 +1,10 @@
-using Blog.Services.Auth.API.Config;
-using Blog.Services.Auth.API.Controllers;
-using Blog.Services.Auth.API.Infrastructure;
-using Blog.Services.Auth.API.Services;
+using Blog.Services.Authorization.API.Config;
+using Blog.Services.Authorization.API.Controllers;
+using Blog.Services.Authorization.API.Infrastructure.EntityConfigurations;
 using Blog.Services.Authorization.API.Models;
 using Blog.Services.Authorization.API.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;

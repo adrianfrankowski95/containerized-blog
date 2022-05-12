@@ -1,6 +1,6 @@
 using System.Security.Cryptography.X509Certificates;
 
-namespace Blog.Services.Auth.API.Services;
+namespace Blog.Services.Authorization.API.Services;
 
 public interface ISigningCertificateManager
 {

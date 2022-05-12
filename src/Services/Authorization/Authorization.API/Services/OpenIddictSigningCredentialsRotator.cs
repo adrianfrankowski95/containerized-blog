@@ -1,4 +1,3 @@
-using Blog.Services.Auth.API.Services;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using OpenIddict.Server;

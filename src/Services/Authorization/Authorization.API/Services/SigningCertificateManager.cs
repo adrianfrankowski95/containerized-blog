@@ -1,9 +1,9 @@
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
-using Blog.Services.Auth.API.Config;
+using Blog.Services.Authorization.API.Config;
 using Microsoft.Extensions.Options;
 
-namespace Blog.Services.Auth.API.Services;
+namespace Blog.Services.Authorization.API.Services;
 
 public class SigningCertificateManager : ISigningCertificateManager
 {

@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Blog.Services.Auth.API.Config;
+namespace Blog.Services.Authorization.API.Config;
 
 public class TokensOptions
 {

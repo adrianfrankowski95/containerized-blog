@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using Blog.Services.Authorization.API.Models;
 
-namespace Blog.Services.Auth.API.Services;
+namespace Blog.Services.Authorization.API.Services;
 
 public class IdentityService : IIdentityService
 {
