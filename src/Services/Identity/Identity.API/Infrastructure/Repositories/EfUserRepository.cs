@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Blog.Services.Identity.API.Infrastructure.Repositories;
 
-public class EfUserRepository<TUser> : IUserRepository<TUser> where TUser : UserBase
+public class EfUserRepository<TUser> : IUserRepository<TUser> where TUser : User
 {
     private readonly DbSet<TUser> _users;
 
@@ -34,15 +34,14 @@ public class EfUserRepository<TUser> : IUserRepository<TUser> where TUser : User
             .ConfigureAwait(false);
     }
 
-    public async Task<IList<TUser>> FindByEmailAsync(string email)
+    public async Task<TUser?> FindByEmailAsync(string email)
     {
         return await _users
-            .Where(x => x.Email.Equals(email))
-            .ToListAsync()
+            .SingleOrDefaultAsync(x => x.Email.Equals(email))
             .ConfigureAwait(false);
     }
 
-    public async Task<TUser?> FindByUsername(string username)
+    public async Task<TUser?> FindByUsernameAsync(string username)
     {
         return await _users
             .SingleOrDefaultAsync(x => x.Username.Equals(username))
@@ -57,7 +56,7 @@ public class EfUserRepository<TUser> : IUserRepository<TUser> where TUser : User
             .AsAsyncEnumerable();
     }
 
-    public async Task<Guid> GetUserSecurityStampAsync(Guid userId)
+    public async Task<Guid> GetSecurityStampAsync(Guid userId)
     {
         return await _users
             .AsNoTracking()

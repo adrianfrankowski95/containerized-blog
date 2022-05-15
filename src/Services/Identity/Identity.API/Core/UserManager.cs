@@ -7,134 +7,87 @@ using NodaTime;
 
 namespace Blog.Services.Identity.API.Core;
 
-public class UserManager<TUser> where TUser : UserBase
+public class UserManager<TUser> where TUser : User
 {
     private readonly IUnitOfWork<TUser> _unitOfWork;
     private readonly IOptionsMonitor<SecurityOptions> _options;
     private readonly ISysTime _sysTime;
     private readonly IPasswordHasher _passwordHasher;
+    private readonly IUserValidator<TUser> _userValidator;
+    private readonly IPasswordValidator<TUser> _passwordValidator;
+    private readonly IUserClaimsPrincipalFactory<TUser> _claimsPrincipalFactory;
 
     public UserManager(
         IUnitOfWork<TUser> unitOfWork,
         IPasswordHasher passwordHasher,
         IOptionsMonitor<SecurityOptions> options,
+        IUserValidator<TUser> userValidator,
+        IPasswordValidator<TUser> passwordValidator,
+        IUserClaimsPrincipalFactory<TUser> claimsPrincipalFactory,
         ISysTime sysTime)
     {
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
         _options = options ?? throw new ArgumentNullException(nameof(options));
         _sysTime = sysTime ?? throw new ArgumentNullException(nameof(sysTime));
         _passwordHasher = passwordHasher ?? throw new ArgumentNullException(nameof(passwordHasher));
+        _userValidator = userValidator ?? throw new ArgumentNullException(nameof(userValidator));
+        _passwordValidator = passwordValidator ?? throw new ArgumentNullException(nameof(passwordValidator));
+        _claimsPrincipalFactory = claimsPrincipalFactory ?? throw new ArgumentNullException(nameof(claimsPrincipalFactory));
     }
 
-    public async Task<IdentityResult> LoginAsync(string email, string password)
+    public Task<TUser?> FindByEmailAsync(string email)
+        => _unitOfWork.Users.FindByEmailAsync(email);
+
+    public ValueTask<IdentityResult> ValidateUserAsync(TUser user)
+        => _userValidator.ValidateAsync(user);
+
+    public ValueTask<IdentityResult> ValidatePasswordAsync(string password)
+        => _passwordValidator.ValidateAsync(password);
+
+    public async ValueTask<IdentityResult> UpdatePasswordHashAsync(TUser user, string password, bool validatePassword = true)
     {
-        var user = await _unitOfWork.Users.FindByEmailAsync(email);
+        IdentityResult result = null!;
 
-        if (user is null)
-            return IdentityResult.Fail(IdentityError.InvalidCredentials);
+        if (validatePassword)
+            result = await ValidatePasswordAsync(password);
 
-        if (user.IsCurrentlyLocked)
-            return IdentityResult.Fail(IdentityError.AccountLocked);
-
-        //if user exists and provided wrong password - add a failed login attempt
-        //or lock if maximum allowed login attempts are exceeded
-        //then return invalid credentials error
-        if (!VerifyPassword(password, user.PasswordHash.ToString()))
+        if (!validatePassword || result == IdentityResult.Success)
         {
-            if (user.FailedLoginAttempts >= _options.MaxAllowedLoginAttempts)
-                LockUser(user, _options.AccountLockDurationMinutes, _sysTime);
-
-            else
-                AddFailedLoginAttempt(user);
-
-            await _unitOfWork.UnitOfWork.CommitChangesAsync().ConfigureAwait(false);
-            return IdentityResult.Fail(IdentityError.InvalidCredentials);
+            user.PasswordHash = _passwordHasher.HashPassword(password);
+            await UpdateUserAsync(user).ConfigureAwait(false);
         }
 
-        if (user.IsCurrentlySuspended)
-            return IdentityResult.Fail(IdentityError.AccountSuspended);
-
-        if (!user.EmailConfirmed)
-            return IdentityResult.Fail(IdentityError.UnconfirmedEmail);
-
-        if (user.IsResettingPassword)
-            return IdentityResult.Fail(IdentityError.ResettingPassword);
-
-        //validation sucessful
-        ClearFailedLoginAttempts(user);
-        SetNewLastLoginTime(user, _sysTime);
-
-        await _unitOfWork.CommitChangesAsync().ConfigureAwait(false);
-
-        return IdentityResult.Success;
+        return validatePassword ? result : IdentityResult.Success;
     }
 
-    public async Task<IdentityResult> VerifyCredentialsAsync(string email, string password)
+    public PasswordVerificationResult VerifyPassword(TUser user, string password)
     {
-        var user = await _unitOfWork.Users.FindByEmailAsync(email);
+        if (string.IsNullOrWhiteSpace(password))
+            return PasswordVerificationResult.Fail;
 
-        if (user is null || !VerifyPassword(password, user.PasswordHash.ToString()))
-            return IdentityResult.Fail(IdentityError.InvalidCredentials);
-
-        return IdentityResult.Success;
+        return _passwordHasher.VerifyPassword(password, user.PasswordHash);
     }
 
-    public bool VerifyPassword(string password, string passwordHash)
-        => _passwordHasher.VerifyPassword(password, passwordHash);
-
-    public string HashPassword(string password) => _passwordHasher.HashPassword(password);
-
-    public async Task<IdentityResult> VerfifySecurityStamp(ClaimsPrincipal claimsPrincipal)
+    public Task UpdateLastLoginAndClearAttemptsAsync(TUser user)
     {
-        var userId = claimsPrincipal.FindFirstValue(IdentityConstants.ClaimTypes.Id);
+        user.FailedLoginAttempts = 0;
+        user.LastLoginAt = _sysTime.Now;
 
-        if (string.IsNullOrWhiteSpace(userId) || !Guid.TryParse(userId, out Guid userGuid))
-            return IdentityResult.Fail(IdentityError.InvalidIdentifier);
-
-        var securityStamp = claimsPrincipal.FindFirstValue(IdentityConstants.ClaimTypes.SecurityStamp);
-
-        if (string.IsNullOrWhiteSpace(securityStamp) || !Guid.TryParse(securityStamp, out Guid securityStampGuid) ||
-            securityStampGuid.Equals(default))
-            return IdentityResult.Fail(IdentityError.InvalidOrMissingSecurityStamp);
-
-        var currentStamp = await _unitOfWork.GetUserSecurityStampAsync(userGuid).ConfigureAwait(false);
-
-        if (!securityStamp.Equals(currentStamp))
-            return IdentityResult.Fail(IdentityError.InvalidOrMissingSecurityStamp);
-
-        return IdentityResult.Success;
+        return UpdateUserAsync(user);
     }
-    public void SetLastLoginAt(TUser user)
+
+    public Task UpdateLastLoginAsync(TUser user)
     {
         user.LastLoginAt = _sysTime.Now;
+
+        return UpdateUserAsync(user);
     }
 
-    public static void AddFailedLoginAttempt(TUser user)
+    public Task AddFailedLoginAttemptAsync(TUser user)
     {
         user.FailedLoginAttempts = ++user.FailedLoginAttempts;
+        return UpdateUserAsync(user);
     }
-
-    public static void ClearFailedLoginAttempts(TUser user)
-    {
-        if (user.FailedLoginAttempts == 0)
-            return;
-
-        user.FailedLoginAttempts = 0;
-    }
-
-    public void LockUser(TUser user)
-    {
-        var lockDuration = _options.CurrentValue.AccountLockDurationMinutes;
-
-        if (IsLocked(user))
-            throw new InvalidOperationException("User is already locked");
-
-        user.LockedUntil = _sysTime.Now.Plus(Duration.FromMinutes(lockDuration));
-    }
-
-    public bool IsLocked(TUser user) => user.LockedUntil is not null && user.LockedUntil > _sysTime.Now;
-
-    public static void ClearLock(TUser user) => user.LockedUntil = null;
 
     private string GeneratePasswordResetCode(int length)
     {
@@ -153,16 +106,29 @@ public class UserManager<TUser> where TUser : UserBase
 
         return new string(code);
     }
-    public void SetPasswordResetCode(TUser user)
+    public async Task<string> ResetPasswordAsync(TUser user)
     {
         var length = _options.CurrentValue.PasswordResetCodeLength;
-        user.PasswordResetCode = GeneratePasswordResetCode(length);
+
+        var code = GeneratePasswordResetCode(length);
+
+        user.PasswordResetCode = code;
+        user.PasswordResetCodeIssuedAt = _sysTime.Now;
+        user.SecurityStamp = GenerateSecurityStamp();
+
+        await UpdateUserAsync(user).ConfigureAwait(false);
+
+        return code;
     }
 
     private static Guid GenerateSecurityStamp() => Guid.NewGuid();
-    public static void SetSecurityStamp(TUser user)
-         => user.SecurityStamp = GenerateSecurityStamp();
 
-    public async Task CommitChangesAsync(CancellationToken cancellationToken = default)
-        => await _unitOfWork.CommitChangesAsync(cancellationToken);
+    public Task UpdateUserAsync(TUser user, CancellationToken cancellationToken = default)
+    {
+        _unitOfWork.Users.Update(user);
+        return _unitOfWork.CommitChangesAsync(cancellationToken);
+    }
+
+    public ValueTask<ClaimsPrincipal> CreateUserPrincipalAsync(TUser user)
+        => _claimsPrincipalFactory.CreateAsync(user);
 }

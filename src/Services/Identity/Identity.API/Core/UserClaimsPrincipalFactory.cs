@@ -3,9 +3,9 @@ using Blog.Services.Identity.API.Models;
 
 namespace Blog.Services.Identity.API.Core;
 
-public class UserClaimsPrincipalFactory : IUserClaimsPrincipalFactory<IdentityUser>
+public class UserClaimsPrincipalFactory : IUserClaimsPrincipalFactory<User>
 {
-    public async ValueTask<ClaimsPrincipal> CreateAsync(IdentityUser user)
+    public async ValueTask<ClaimsPrincipal> CreateAsync(User user)
     {
         if (user is null)
             throw new ArgumentNullException(nameof(user));
@@ -13,7 +13,7 @@ public class UserClaimsPrincipalFactory : IUserClaimsPrincipalFactory<IdentityUs
         return new ClaimsPrincipal(await GenerateClaimsAsync(user).ConfigureAwait(false));
     }
 
-    public ValueTask<ClaimsIdentity> GenerateClaimsAsync(IdentityUser user)
+    public ValueTask<ClaimsIdentity> GenerateClaimsAsync(User user)
     {
         if (user is null)
             throw new ArgumentNullException(nameof(user));
@@ -31,7 +31,7 @@ public class UserClaimsPrincipalFactory : IUserClaimsPrincipalFactory<IdentityUs
         identity.AddClaim(new Claim(IdentityConstants.ClaimTypes.SecurityStamp, user.SecurityStamp.ToString()));
 
         if (user.Language is not null)
-            identity.AddClaim(new Claim(IdentityConstants.ClaimTypes.Language, user.Language.ToString()!));
+            identity.AddClaim(new Claim(IdentityConstants.ClaimTypes.Language, user.Language.ToString()));
 
         return ValueTask.FromResult(identity);
     }

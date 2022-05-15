@@ -14,10 +14,10 @@ public sealed class Role : IdentityRole<Guid>
         Name = name;
     }
 
-    public static readonly Role Reader = new(0, Constants.UserRoleTypes.Reader);
-    public static readonly Role Moderator = new(1, Constants.UserRoleTypes.Moderator);
-    public static readonly Role Blogger = new(2, Constants.UserRoleTypes.Blogger);
-    public static readonly Role Administrator = new(3, Constants.UserRoleTypes.Administrator);
+    public static readonly Role Reader = new(0, nameof(Reader).ToLowerInvariant());
+    public static readonly Role Moderator = new(1, nameof(Moderator).ToLowerInvariant());
+    public static readonly Role Blogger = new(2, nameof(Blogger).ToLowerInvariant());
+    public static readonly Role Administrator = new(3, nameof(Administrator).ToLowerInvariant());
 
     public static Role GetDefault() => Reader;
 

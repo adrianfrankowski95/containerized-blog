@@ -16,12 +16,10 @@ public class User : IdentityUser<Guid>
     {
         UserName = userName;
     }
-    
+
     public bool ReceiveEmails { get; set; }
     public Language? Language { get; set; }
     public Instant CreatedAt { get; set; }
     public Instant? SuspensionEnd { get; set; }
     public Instant? LastLoginAt { get; set; }
-    public string? PasswordResetCode { get; set; }
-    public Instant? PasswordResetCodeIssuedAt { get; set; }
 }

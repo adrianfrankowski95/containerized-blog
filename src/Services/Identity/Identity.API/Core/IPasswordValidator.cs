@@ -2,7 +2,7 @@ using Blog.Services.Identity.API.Models;
 
 namespace Blog.Services.Identity.API.Core;
 
-public interface IPasswordValidator<TUser> where TUser : UserBase
+public interface IPasswordValidator<TUser> where TUser : User
 {
-    public ValueTask ValidateAsync(TUser user, string password, ICollection<IdentityError> errors);
+    public ValueTask<IdentityResult> ValidateAsync(string password);
 }

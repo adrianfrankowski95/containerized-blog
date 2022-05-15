@@ -1,9 +1,8 @@
-using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Models;
 
 namespace Blog.Services.Identity.API.Infrastructure.Repositories;
 
-public interface IUserRepository<TUser> where TUser : UserBase
+public interface IUserRepository<TUser> where TUser : User
 {
     public void Add(TUser user);
 
@@ -13,11 +12,11 @@ public interface IUserRepository<TUser> where TUser : UserBase
 
     public Task<TUser?> FindByIdAsync(Guid userId);
 
-    public Task<IList<TUser>> FindByEmailAsync(string email);
+    public Task<TUser?> FindByEmailAsync(string email);
 
-    public Task<TUser?> FindByUsername(string username);
+    public Task<TUser?> FindByUsernameAsync(string username);
 
     public IAsyncEnumerable<TUser> GetDistributionListAsync();
 
-    public Task<Guid> GetUserSecurityStampAsync(Guid userId);
+    public Task<Guid> GetSecurityStampAsync(Guid userId);
 }
