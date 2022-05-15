@@ -3,7 +3,7 @@ using Blog.Services.Identity.API.Models;
 
 namespace Blog.Services.Identity.API.Core;
 
-public class SecurityStampValidator<TUser> : IUserAttributeValidator<TUser> where TUser : UserBase
+public class SecurityStampValidator<TUser> : IUserAttributeValidator<TUser> where TUser : User
 {
     private readonly IUserRepository<TUser> _userRepository;
 

@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Blog.Services.Identity.API.Models;
 
-public class IdentityDbContext<TUser> : DbContext where TUser : UserBase
+public class IdentityDbContext<TUser> : DbContext where TUser : User
 {
     public DbSet<TUser> Users { get; set; }
 

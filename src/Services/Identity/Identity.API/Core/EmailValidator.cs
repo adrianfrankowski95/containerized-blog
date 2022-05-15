@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 
 namespace Blog.Services.Identity.API.Core;
 
-public class EmailValidator<TUser> : IUserAttributeValidator<TUser> where TUser : UserBase
+public class EmailValidator<TUser> : IUserAttributeValidator<TUser> where TUser : User
 {
     private readonly IUserRepository<TUser> _userRepository;
     private readonly IOptionsMonitor<EmailOptions> _options;
@@ -36,23 +36,10 @@ public class EmailValidator<TUser> : IUserAttributeValidator<TUser> where TUser 
         if (opts.RequireConfirmed && !user.EmailConfirmed)
             errors.Add(IdentityError.EmailUnconfirmed);
 
-        if (opts.RequireUnique)
-        {
-            var owners = await _userRepository.FindByEmailAsync(email).ConfigureAwait(false);
+        var owner = await _userRepository.FindByEmailAsync(email).ConfigureAwait(false);
 
-            if (owners is not null && owners.Count > 0)
-            {
-                //if there is only 1 owner, check if this is a provided user
-                if (owners.Count == 1)
-                {
-                    var owner = owners.First();
+        if (owner is not null && !user.Id.Equals(owner.Id))
+            errors.Add(IdentityError.EmailDuplicated);
 
-                    if (!user.Id.Equals(owner.Id))
-                        errors.Add(IdentityError.EmailDuplicated);
-                }
-                else
-                    errors.Add(IdentityError.EmailDuplicated);
-            }
-        }
     }
 }

@@ -25,4 +25,37 @@ public class UserManager : UserManager<User>
             services,
             logger)
     { }
+
+    public override async Task<IdentityResult> AddToRoleAsync(User user, string role)
+    {
+
+        ThrowIfDisposed();
+        var userRoleStore = GetUserRoleStore();
+        if (user == null)
+        {
+            throw new ArgumentNullException(nameof(user));
+        }
+
+        var normalizedRole = NormalizeKey(role);
+        if (await userRoleStore.IsInRoleAsync(user, normalizedRole, CancellationToken))
+        {
+            return await UserAlreadyInRoleError(user, role);
+        }
+        await userRoleStore.AddToRoleAsync(user, normalizedRole, CancellationToken);
+        return await UpdateUserAsync(user);
+    }
+
+    private IUserRoleStore<User> GetUserRoleStore()
+    {
+        if (Store is not IUserRoleStore<User> cast)
+        {
+            throw new NotSupportedException(Resources.StoreNotIUserRoleStore);
+        }
+        return cast;
+    }
+
+    public virtual string NormalizeKey(string key)
+        {
+            return (KeyNormalizer == null) ? key : KeyNormalizer.Normalize(key);
+        }
 }

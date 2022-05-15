@@ -47,5 +47,5 @@ public abstract class Enumeration
         return equalType && equalValue && equalName;
     }
 
-    public override int GetHashCode() => Value;
+    public override int GetHashCode() => Value.GetHashCode();
 }

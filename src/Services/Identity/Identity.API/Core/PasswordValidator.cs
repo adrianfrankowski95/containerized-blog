@@ -4,7 +4,7 @@ using Microsoft.Extensions.Options;
 
 namespace Blog.Services.Identity.API.Core;
 
-public class PasswordValidator<TUser> : IPasswordValidator<TUser> where TUser : UserBase
+public class PasswordValidator<TUser> : IPasswordValidator<TUser> where TUser : User
 {
     private readonly IUserRepository<TUser> _userRepository;
     private readonly IOptionsMonitor<PasswordOptions> _options;
@@ -16,46 +16,35 @@ public class PasswordValidator<TUser> : IPasswordValidator<TUser> where TUser : 
         _options = options ?? throw new ArgumentNullException(nameof(options));
         _passwordHasher = passwordHasher ?? throw new ArgumentNullException(nameof(passwordHasher));
     }
-    public async ValueTask ValidateAsync(TUser user, string password, ICollection<IdentityError> errors)
+    public ValueTask<IdentityResult> ValidateAsync(string password)
     {
-        if (user is null)
-            throw new ArgumentNullException(nameof(user));
-
-        var passwordHash = user.PasswordHash;
-
-        if (string.IsNullOrWhiteSpace(password) || passwordHash is null || string.IsNullOrWhiteSpace(passwordHash))
-        {
-            errors.Add(IdentityError.MissingPassword);
-            return;
-        }
+        if (string.IsNullOrWhiteSpace(password))
+            throw new ArgumentNullException(nameof(password));
 
         var opts = _options.CurrentValue;
 
+        var errors = new List<IdentityError>();
+
         //validate password format
-        if (password.Length < opts.MinLength ||
-            (opts.RequireLowerCase && !password.Any(IsLowercase)) ||
-            (opts.RequireUpperCase && !password.Any(IsUppercase)) ||
-            (opts.RequireDigit && !password.Any(IsDigit)) ||
-            (opts.RequireNonAlphanumeric && !password.Any(IsNonAlphanumeric)))
-        {
-            errors.Add(IdentityError.InvalidPasswordFormat);
-            return;
-        }
+        if (password.Length < opts.MinLength)
+            errors.Add(IdentityError.PasswordTooShort);
 
-        var owner = await _userRepository.FindByIdAsync(user.Id).ConfigureAwait(false);
+        if (opts.RequireLowerCase && !password.Any(IsLowercase))
+            errors.Add(IdentityError.PasswordWithoutLowerCase);
 
-        if (owner is not null)
-            if (!owner.PasswordHash.Equals(user.PasswordHash))
-            {
-                errors.Add(IdentityError.InvalidPassword);
-                return;
-            }
+        if (opts.RequireUpperCase && !password.Any(IsUppercase))
+            errors.Add(IdentityError.PasswordWithoutUpperCase);
 
-        //if checked that provided password hash belongs to its owner, verify it
-        if (!_passwordHasher.VerifyPassword(password, passwordHash))
-            errors.Add(IdentityError.InvalidPassword);
-        else if (_passwordHasher.CheckPasswordNeedsRehash(passwordHash))
-            errors.Add(IdentityError.PasswordOkNeedsRehash);
+        if (opts.RequireDigit && !password.Any(IsDigit))
+            errors.Add(IdentityError.PasswordWithoutDigit);
+
+        if (opts.RequireNonAlphanumeric && !password.Any(IsNonAlphanumeric))
+            errors.Add(IdentityError.PasswordWithoutNonAlphanumeric);
+
+        return
+            ValueTask.FromResult(errors.Count == 0 ?
+                IdentityResult.Success :
+                IdentityResult.Fail(errors));
     }
 
     private static bool IsDigit(char c) => c is >= '0' and <= '9';

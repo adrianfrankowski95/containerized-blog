@@ -2,22 +2,31 @@ using NodaTime;
 
 namespace Blog.Services.Identity.API.Models;
 
-public abstract class UserBase
+public class User
 {
     //ef core
-    protected UserBase()
+    protected User() : base()
     {
 
     }
 
-    public UserBase(NonEmptyString username, NonEmptyString email, NonEmptyString passwordHash)
+    public User(
+        NonEmptyString username,
+        NonEmptyString email,
+        NonEmptyString passwordHash,
+        bool receiveEmails,
+        Language? language = null)
     {
         Id = Guid.NewGuid();
         SecurityStamp = Guid.NewGuid();
 
         Username = username;
         Email = email;
+        ReceiveEmails = receiveEmails;
         PasswordHash = passwordHash;
+
+        Role = Role.GetDefault();
+        Language = language ?? Language.GetDefault();
 
         CreatedAt = SystemClock.Instance.GetCurrentInstant();
 
@@ -32,13 +41,15 @@ public abstract class UserBase
     public NonEmptyString Username { get; set; }
     public NonEmptyString Email { get; set; }
     public bool EmailConfirmed { get; set; }
-    public bool ReceiveEmails { get; set; }
     public NonEmptyString PasswordHash { get; set; }
+    public Role Role { get; set; }
+    public bool ReceiveEmails { get; set; }
+    public Language? Language { get; set; }
     public Instant CreatedAt { get; set; }
     public Instant? LockedUntil { get; set; }
     public Instant? SuspendedUntil { get; set; }
     public Instant? LastLoginAt { get; set; }
-    public NonNegativeNumber FailedLoginAttempts { get; set; }
+    public NonNegativeInt FailedLoginAttempts { get; set; }
     public Guid SecurityStamp { get; set; }
     public string? PasswordResetCode { get; set; }
     public Instant? PasswordResetCodeIssuedAt { get; set; }

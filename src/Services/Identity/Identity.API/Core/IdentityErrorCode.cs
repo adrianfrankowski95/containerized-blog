@@ -14,10 +14,12 @@ public enum IdentityErrorCode
     MissingUsername = 9,
     InvalidUsernameFormat = 10,
     UsernameDuplicated = 11,
-    MissingPassword = 12,
-    InvalidPassword = 13,
-    InvalidPasswordFormat = 14,
-    PasswordOkNeedsRehash = 15,
     MissingSecurityStamp = 16,
-    InvalidSecurityStamp = 17
+    InvalidSecurityStamp = 17,
+    PasswordTooShort = 18,
+    PasswordWithoutLowerCase = 19,
+    PasswordWithoutUpperCase = 20,
+    PasswordWithoutDigit = 21,
+    PasswordWithoutNonAlphanumeric = 22
+
 }

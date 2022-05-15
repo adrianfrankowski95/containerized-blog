@@ -4,7 +4,7 @@ using Microsoft.Extensions.Options;
 
 namespace Blog.Services.Identity.API.Core;
 
-public class UsernameValidator<TUser> : IUserAttributeValidator<TUser> where TUser : UserBase
+public class UsernameValidator<TUser> : IUserAttributeValidator<TUser> where TUser : User
 {
     private readonly IUserRepository<TUser> _userRepository;
     private readonly IOptionsMonitor<UsernameOptions> _options;
@@ -33,10 +33,9 @@ public class UsernameValidator<TUser> : IUserAttributeValidator<TUser> where TUs
             (!string.IsNullOrWhiteSpace(opts.AllowedCharacters) && username.Any(x => !opts.AllowedCharacters.Contains(x))))
             errors.Add(IdentityError.InvalidUsernameFormat);
 
-        var owner = await _userRepository.FindByUsername(username).ConfigureAwait(false);
+        var owner = await _userRepository.FindByUsernameAsync(username).ConfigureAwait(false);
 
-        if (owner is not null)
-            if (!user.Id.Equals(owner.Id))
-                errors.Add(IdentityError.UsernameDuplicated);
+        if (owner is not null && !user.Id.Equals(owner.Id))
+            errors.Add(IdentityError.UsernameDuplicated);
     }
 }

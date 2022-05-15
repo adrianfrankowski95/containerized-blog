@@ -23,13 +23,4 @@ public static class Constants
         public const string IsPersistent = "persist";
         public static string[] List() => new[] { Id, Role, Email, EmailConfirmed, Name, SecurityStamp, IsPersistent };
     }
-
-    public static class UserRoleTypes
-    {
-        public const string Reader = "reader";
-        public const string Blogger = "blogger";
-        public const string Moderator = "moderator";
-        public const string Administrator = "administrator";
-        public static string[] List() => new[] { Reader, Blogger, Moderator, Administrator };
-    }
 }

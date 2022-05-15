@@ -5,15 +5,13 @@ using Microsoft.Extensions.Options;
 
 namespace Blog.Services.Identity.API.Core;
 
-public class UserStatusValidator<TUser> : IUserAttributeValidator<TUser> where TUser : UserBase
+public class UserStatusValidator<TUser> : IUserAttributeValidator<TUser> where TUser : User
 {
-    private readonly IUserRepository<TUser> _userRepository;
     private readonly IOptionsMonitor<SecurityOptions> _options;
     private readonly ISysTime _sysTime;
 
-    public UserStatusValidator(IUserRepository<TUser> userRepository, IOptionsMonitor<SecurityOptions> options, ISysTime sysTime)
+    public UserStatusValidator(IOptionsMonitor<SecurityOptions> options, ISysTime sysTime)
     {
-        _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         _options = options ?? throw new ArgumentNullException(nameof(options));
         _sysTime = sysTime ?? throw new ArgumentNullException(nameof(sysTime));
     }
