@@ -30,9 +30,6 @@ public class UserClaimsPrincipalFactory : IUserClaimsPrincipalFactory<User>
         identity.AddClaim(new Claim(IdentityConstants.ClaimTypes.Role, user.Role.ToString()));
         identity.AddClaim(new Claim(IdentityConstants.ClaimTypes.SecurityStamp, user.SecurityStamp.ToString()));
 
-        if (user.Language is not null)
-            identity.AddClaim(new Claim(IdentityConstants.ClaimTypes.Language, user.Language.ToString()));
-
         return ValueTask.FromResult(identity);
     }
 }

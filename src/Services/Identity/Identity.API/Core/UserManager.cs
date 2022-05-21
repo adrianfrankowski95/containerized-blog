@@ -81,6 +81,19 @@ public class UserManager<TUser> where TUser : User
         return UpdateUserAsync(user);
     }
 
+    public Task SuspendAsync(TUser user, Instant suspendUntil)
+    {
+        ThrowIfNull(user);
+
+        if (suspendUntil < _sysTime.Now)
+            throw new InvalidOperationException("Suspended until date must not be in the past");
+
+        user.SuspendedUntil = suspendUntil;
+        user.SecurityStamp = GenerateSecurityStamp();
+
+        return UpdateUserAsync(user);
+    }
+
     public Task AddFailedLoginAttemptAsync(TUser user)
     {
         ThrowIfNull(user);
@@ -106,7 +119,21 @@ public class UserManager<TUser> where TUser : User
     public bool IsLocked(TUser user)
     {
         ThrowIfNull(user);
-        return user.LockedUntil is not null && user.LockedUntil > _sysTime.Now;
+
+        return _options.CurrentValue.EnableLoginAttemptsLock &&
+            user.LockedUntil is not null && user.LockedUntil > _sysTime.Now;
+    }
+
+    public bool IsSuspended(TUser user)
+    {
+        ThrowIfNull(user);
+        return user.SuspendedUntil is not null && user.SuspendedUntil > _sysTime.Now;
+    }
+
+    public bool IsResettingPassword(TUser user)
+    {
+        ThrowIfNull(user);
+        return user.PasswordResetCode is not null;
     }
 
     public Task LockAsync(TUser user)
@@ -115,6 +142,9 @@ public class UserManager<TUser> where TUser : User
 
         if (IsLocked(user))
             throw new InvalidOperationException("User is already locked");
+
+        if (!_options.CurrentValue.EnableLoginAttemptsLock)
+            throw new InvalidOperationException("User lock is not enabled");
 
         var lockDuration = _options.CurrentValue.AccountLockDurationMinutes;
 

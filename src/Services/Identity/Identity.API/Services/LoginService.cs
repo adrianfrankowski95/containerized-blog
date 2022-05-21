@@ -1,5 +1,6 @@
 using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Models;
+using Microsoft.Extensions.Options;
 using NodaTime;
 
 namespace Blog.Services.Identity.API.Services;
@@ -7,13 +8,15 @@ namespace Blog.Services.Identity.API.Services;
 public class LoginService<TUser> : ILoginService where TUser : User
 {
     private readonly UserManager<TUser> _userManager;
+    private readonly IOptionsMonitor<SecurityOptions> _options;
 
-    public LoginService(UserManager<TUser> userManager)
+    public LoginService(UserManager<TUser> userManager, IOptionsMonitor<SecurityOptions> options)
     {
         _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
+        _options = options ?? throw new ArgumentNullException(nameof(options));
     }
 
-    public async Task<IdentityResult> LoginAsync(HttpContext context, string email, string password, bool rememberMe)
+    public async Task<IdentityResult> LoginAsync(string email, string password)
     {
         if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
             return IdentityResult.Fail(IdentityError.InvalidCredentials);
@@ -25,8 +28,8 @@ public class LoginService<TUser> : ILoginService where TUser : User
 
         var passwordVerificationResult = _userManager.VerifyPassword(user, password);
 
-        if (passwordVerificationResult is PasswordVerificationResult.SuccessNeedsRehash ||
-            passwordVerificationResult is PasswordVerificationResult.Success)
+        if (passwordVerificationResult is PasswordVerificationResult.Success ||
+            passwordVerificationResult is PasswordVerificationResult.SuccessNeedsRehash)
         {
             if (passwordVerificationResult is PasswordVerificationResult.SuccessNeedsRehash)
                 await _userManager.UpdatePasswordHashAsync(user, password, false).ConfigureAwait(false);
@@ -44,10 +47,13 @@ public class LoginService<TUser> : ILoginService where TUser : User
         }
         else if (passwordVerificationResult is PasswordVerificationResult.Fail)
         {
-            if (_userManager.HasMaxFailedLoginAttempts(user) && !_userManager.IsLocked(user))
-                await _userManager.LockAsync(user).ConfigureAwait(false);
-            else
-                await _userManager.AddFailedLoginAttemptAsync(user).ConfigureAwait(false);
+            if (_options.CurrentValue.EnableLoginAttemptsLock)
+            {
+                if (_userManager.HasMaxFailedLoginAttempts(user) && !_userManager.IsLocked(user))
+                    await _userManager.LockAsync(user).ConfigureAwait(false);
+                else
+                    await _userManager.AddFailedLoginAttemptAsync(user).ConfigureAwait(false);
+            }
 
             return IdentityResult.Fail(IdentityError.InvalidCredentials);
         }

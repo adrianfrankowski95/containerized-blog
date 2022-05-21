@@ -15,14 +15,14 @@ public class SignInManager<TUser> : ISignInManager<TUser> where TUser : User
         _userClaimsFactory = userClaimsFactory ?? throw new ArgumentNullException(nameof(userClaimsFactory));
     }
 
-    public async Task SignInAsync(HttpContext context, TUser user, bool isPersistent)
+    public async Task SignInAsync(HttpContext context, TUser user, bool isPersistent, string? redirectUri = null)
     {
         var principal = await _userClaimsFactory.CreateAsync(user).ConfigureAwait(false);
 
         await context.SignInAsync(
             IdentityConstants.AuthenticationScheme,
             principal,
-            new AuthenticationProperties() { IsPersistent = isPersistent });
+            new AuthenticationProperties() { IsPersistent = isPersistent, RedirectUri = redirectUri });
     }
 
     public async Task SignOutAsync(HttpContext context)
