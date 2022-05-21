@@ -14,21 +14,14 @@ public class User
         NonEmptyString username,
         NonEmptyString email,
         NonEmptyString passwordHash,
-        bool receiveEmails,
-        Language? language = null)
+        bool receiveEmails)
     {
         Id = Guid.NewGuid();
-        SecurityStamp = Guid.NewGuid();
 
         Username = username;
         Email = email;
         ReceiveEmails = receiveEmails;
         PasswordHash = passwordHash;
-
-        Role = Role.GetDefault();
-        Language = language ?? Language.GetDefault();
-
-        CreatedAt = SystemClock.Instance.GetCurrentInstant();
 
         FailedLoginAttempts = 0;
         EmailConfirmed = false;
@@ -44,7 +37,6 @@ public class User
     public NonEmptyString PasswordHash { get; set; }
     public Role Role { get; set; }
     public bool ReceiveEmails { get; set; }
-    public Language? Language { get; set; }
     public Instant CreatedAt { get; set; }
     public Instant? LockedUntil { get; set; }
     public Instant? SuspendedUntil { get; set; }

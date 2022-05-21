@@ -37,15 +37,8 @@ public class UserEntityConfiguration : IEntityTypeConfiguration<User>
             .Property(x => x.Role)
             .HasColumnType("varchar(25)")
             .HasConversion(
-                x => x.ToString().ToLowerInvariant(),
-                x => Enum.Parse<UserRole>(x));
-
-        builder
-            .Property(x => x.Language)
-            .HasColumnType("varchar(50)")
-            .HasConversion(
-                x => x.ToString().ToLowerInvariant(),
-                x => Enum.Parse<Language>(x));
+                x => x.Name,
+                x => Role.FromName(x));
 
         builder
             .Property(x => x.PasswordHash)
