@@ -13,6 +13,9 @@ public class UserValidator<TUser> : IUserValidator<TUser> where TUser : User
 
     public async ValueTask<IdentityResult> ValidateAsync(TUser user)
     {
+        if (user is null)
+            throw new ArgumentNullException(nameof(user));
+
         IList<IdentityError> errors = new List<IdentityError>();
 
         foreach (var validator in UserAttributeValidators)

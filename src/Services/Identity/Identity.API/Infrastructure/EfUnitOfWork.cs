@@ -4,7 +4,7 @@ using Blog.Services.Identity.API.Models;
 
 namespace Blog.Services.Blogging.Infrastructure;
 
-public class EfUnitOfWork<TUser> : IUnitOfWork<TUser>, IAsyncDisposable, IDisposable where TUser : UserBase
+public class EfUnitOfWork<TUser> : IUnitOfWork<TUser>, IAsyncDisposable, IDisposable where TUser : User
 {
     public IUserRepository<TUser> Users { get; }
     private readonly IdentityDbContext<TUser> _ctx;

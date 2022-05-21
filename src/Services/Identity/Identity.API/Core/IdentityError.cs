@@ -67,4 +67,17 @@ public class IdentityError
 
     public static IdentityError PasswordWithoutNonAlphanumeric
         => new(IdentityErrorCode.PasswordWithoutNonAlphanumeric, "Password must contain non-alphanumeric character");
+
+    public override bool Equals(object? obj)
+    {
+        if (obj is null || obj is not IdentityError error)
+            return false;
+
+        if (ReferenceEquals(this, error))
+            return true;
+
+        return ErrorCode.Equals(error.ErrorCode);
+    }
+
+    public override int GetHashCode() => ErrorCode.GetHashCode();
 }
