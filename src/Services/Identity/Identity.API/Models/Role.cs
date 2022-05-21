@@ -16,8 +16,6 @@ public sealed class Role
     public static readonly Role Blogger = new(2, nameof(Blogger).ToLowerInvariant());
     public static readonly Role Administrator = new(3, nameof(Administrator).ToLowerInvariant());
 
-    public static Role GetDefault() => Reader;
-
     public static IEnumerable<Role> List() => new[] {
         Reader,
         Moderator,
