@@ -1,3 +1,4 @@
+using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Infrastructure;
 using Blog.Services.Identity.API.Models;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -13,6 +14,17 @@ var config = GetConfiguration(isDevelopment);
 builder.Services
     .AddIdentityInfrastructure<User>(config)
     .AddControllers();
+
+builder.Services
+    .AddAuthentication(opts =>
+        {
+            opts.DefaultAuthenticateScheme = IdentityConstants.AuthenticationScheme;
+            opts.RequireAuthenticatedSignIn = true;
+        })
+    .AddCookie(IdentityConstants.AuthenticationScheme, opts =>
+    {
+        opts.Cookie.
+    });
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

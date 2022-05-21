@@ -7,13 +7,12 @@ namespace Blog.Services.Identity.API.Core;
 
 public class UserStatusValidator<TUser> : IUserAttributeValidator<TUser> where TUser : User
 {
-    private readonly IOptionsMonitor<SecurityOptions> _options;
-    private readonly ISysTime _sysTime;
+    private readonly UserManager<TUser> _userManager;
 
-    public UserStatusValidator(IOptionsMonitor<SecurityOptions> options, ISysTime sysTime)
+    public UserStatusValidator(UserManager<TUser> userManager)
     {
-        _options = options ?? throw new ArgumentNullException(nameof(options));
-        _sysTime = sysTime ?? throw new ArgumentNullException(nameof(sysTime));
+        _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
+
     }
 
     public ValueTask ValidateAsync(TUser user, ICollection<IdentityError> errors)
@@ -21,19 +20,17 @@ public class UserStatusValidator<TUser> : IUserAttributeValidator<TUser> where T
         if (user is null)
             throw new ArgumentNullException(nameof(user));
 
-        var opts = _options.CurrentValue;
-
-        if (user.SuspendedUntil is not null && user.SuspendedUntil > _sysTime.Now)
+        if (_userManager.IsSuspended(user))
         {
             errors.Add(IdentityError.AccountSuspended);
         }
 
-        if (opts.EnableLoginAttemptsLock && user.LockedUntil is not null && user.LockedUntil > _sysTime.Now)
+        if (_userManager.IsLocked(user))
         {
             errors.Add(IdentityError.AccountLocked);
         }
 
-        if (user.PasswordResetCode is not null)
+        if (_userManager.IsResettingPassword(user))
         {
             errors.Add(IdentityError.ResettingPassword);
         }
