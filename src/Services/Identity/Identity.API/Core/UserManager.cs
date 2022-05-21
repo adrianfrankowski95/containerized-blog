@@ -85,7 +85,33 @@ public class UserManager<TUser> where TUser : User
 
     public Task AddFailedLoginAttemptAsync(TUser user)
     {
+        var maxAttempts = _options.CurrentValue.MaxAllowedLoginAttempts;
+
+        if (user.FailedLoginAttempts >= maxAttempts)
+            throw new InvalidOperationException("User already has maximum number of failed attempts");
+
         user.FailedLoginAttempts = ++user.FailedLoginAttempts;
+        return UpdateUserAsync(user);
+    }
+
+    public bool HasMaxFailedLoginAttempts(TUser user)
+    {
+        var maxAttempts = _options.CurrentValue.MaxAllowedLoginAttempts;
+
+        return user.FailedLoginAttempts >= maxAttempts;
+    }
+
+    public bool IsLocked(TUser user)
+        => user.LockedUntil is not null && user.LockedUntil > _sysTime.Now;
+
+    public Task LockAsync(TUser user)
+    {
+        if (IsLocked(user))
+            throw new InvalidOperationException("User is already locked");
+
+        var lockDuration = _options.CurrentValue.AccountLockDurationMinutes;
+
+        user.LockedUntil = _sysTime.Now.Plus(Duration.FromMinutes(lockDuration));
         return UpdateUserAsync(user);
     }
 
