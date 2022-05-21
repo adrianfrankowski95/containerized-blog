@@ -23,27 +23,31 @@ public class LoginService<TUser> : ILoginService where TUser : User
         if (user is null)
             return IdentityResult.Fail(IdentityError.InvalidCredentials);
 
-        var userValidationResult = await _userManager.ValidateUserAsync(user);
-        if (!userValidationResult.Succeeded)
-            return userValidationResult;
-
         var passwordVerificationResult = _userManager.VerifyPassword(user, password);
-
-        if (passwordVerificationResult is PasswordVerificationResult.SuccessNeedsRehash)
-            await _userManager.UpdatePasswordHashAsync(user, password, false);
 
         if (passwordVerificationResult is PasswordVerificationResult.SuccessNeedsRehash ||
             passwordVerificationResult is PasswordVerificationResult.Success)
         {
-            var passwordValidationResult = await _userManager.ValidatePasswordAsync(password);
+            if (passwordVerificationResult is PasswordVerificationResult.SuccessNeedsRehash)
+                await _userManager.UpdatePasswordHashAsync(user, password, false).ConfigureAwait(false);
+
+            var userValidationResult = await _userManager.ValidateUserAsync(user).ConfigureAwait(false);
+            if (!userValidationResult.Succeeded)
+                return userValidationResult;
+
+            var passwordValidationResult = await _userManager.ValidatePasswordAsync(password).ConfigureAwait(false);
             if (!passwordValidationResult.Succeeded)
                 return passwordValidationResult;
 
             await _userManager.UpdateLastLoginAndClearAttemptsAsync(user).ConfigureAwait(false);
             return IdentityResult.Success;
         }
-
-        await _userManager.AddFailedLoginAttemptAsync(user).ConfigureAwait(false);
-        return IdentityResult.Fail(IdentityError.InvalidCredentials);
+        else if (passwordVerificationResult is PasswordVerificationResult.Fail)
+        {
+            await _userManager.AddFailedLoginAttemptAsync(user).ConfigureAwait(false);
+            return IdentityResult.Fail(IdentityError.InvalidCredentials);
+        }
+        else
+            throw new NotSupportedException("Unhandled password verification result");
     }
 }
