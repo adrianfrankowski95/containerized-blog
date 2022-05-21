@@ -44,7 +44,11 @@ public class LoginService<TUser> : ILoginService where TUser : User
         }
         else if (passwordVerificationResult is PasswordVerificationResult.Fail)
         {
-            await _userManager.AddFailedLoginAttemptAsync(user).ConfigureAwait(false);
+            if (_userManager.HasMaxFailedLoginAttempts(user) && !_userManager.IsLocked(user))
+                await _userManager.LockAsync(user).ConfigureAwait(false);
+            else
+                await _userManager.AddFailedLoginAttemptAsync(user).ConfigureAwait(false);
+
             return IdentityResult.Fail(IdentityError.InvalidCredentials);
         }
         else
