@@ -22,12 +22,6 @@ public class User
         Email = email;
         ReceiveEmails = receiveEmails;
         PasswordHash = passwordHash;
-
-        FailedLoginAttempts = 0;
-        EmailConfirmed = false;
-        LockedUntil = null;
-        LastLoginAt = null;
-        PasswordResetCode = null;
     }
 
     public Guid Id { get; set; }

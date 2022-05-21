@@ -1,3 +1,4 @@
+using Blog.Services.Identity.API.Infrastructure.EntityConfigurations;
 using Microsoft.EntityFrameworkCore;
 
 namespace Blog.Services.Identity.API.Models;
@@ -11,4 +12,10 @@ public class IdentityDbContext<TUser> : DbContext where TUser : User
 
     }
 
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder
+            .ApplyConfiguration(new UserEntityConfiguration())
+            .ApplyConfiguration(new RoleEntityConfiguration());
+    }
 }

@@ -41,6 +41,12 @@ public class UserEntityConfiguration : IEntityTypeConfiguration<User>
                 x => Role.FromName(x));
 
         builder
+            .HasOne(x => x.Role)
+            .WithMany()
+            .IsRequired()
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder
             .Property(x => x.PasswordHash)
             .HasColumnType("varchar(128)")
             .IsRequired();
@@ -48,6 +54,10 @@ public class UserEntityConfiguration : IEntityTypeConfiguration<User>
         builder
             .Property(x => x.PasswordResetCode)
             .HasColumnType("varchar(20)")
+            .IsRequired(false);
+
+        builder
+            .Property(x => x.PasswordResetCodeIssuedAt)
             .IsRequired(false);
 
 
