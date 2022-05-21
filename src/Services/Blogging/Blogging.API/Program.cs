@@ -64,6 +64,7 @@ static IConfiguration GetConfiguration(bool isDevelopment)
                 .AddJsonFile(configFileName, optional: false, reloadOnChange: true)
                 .Build();
 }
+
 public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddCustomJwtAuthentication(this IServiceCollection services, IConfiguration config)

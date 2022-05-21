@@ -1,11 +1,19 @@
+using Blog.Services.Identity.API.Infrastructure;
+using Blog.Services.Identity.API.Models;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using NodaTime;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var isDevelopment = builder.Environment.IsDevelopment();
+
+var config = GetConfiguration(isDevelopment);
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services
+    .AddIdentityInfrastructure<User>(config)
+    .AddControllers();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -13,7 +21,7 @@ builder.Services.AddSwaggerGen();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+if (isDevelopment)
 {
     app.UseSwagger();
     app.UseSwaggerUI();
@@ -27,6 +35,16 @@ app.MapControllers();
 
 app.Run();
 
+
+static IConfiguration GetConfiguration(bool isDevelopment)
+{
+    string configFileName = isDevelopment ? "appsettings.Development.json" : "appsettings.json";
+
+    return new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile(configFileName, optional: false, reloadOnChange: true)
+                .Build();
+}
 
 static class ServiceCollectionExtensions
 {

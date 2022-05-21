@@ -2,7 +2,7 @@ using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Infrastructure.Repositories;
 using Blog.Services.Identity.API.Models;
 
-namespace Blog.Services.Blogging.Infrastructure;
+namespace Blog.Services.Identity.API.Infrastructure;
 
 public class EfUnitOfWork<TUser> : IUnitOfWork<TUser>, IAsyncDisposable, IDisposable where TUser : User
 {
