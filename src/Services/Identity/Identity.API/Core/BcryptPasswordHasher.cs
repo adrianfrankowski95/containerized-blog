@@ -33,6 +33,7 @@ public class BcryptPasswordHasher : IPasswordHasher
 
     public string HashPassword(string password)
         => BCrypt.Net.BCrypt.EnhancedHashPassword(password, _options.CurrentValue.HashWorkFactor, HashType.SHA512);
+
     private bool CheckPasswordNeedsRehash(string passwordHash)
         => BCrypt.Net.BCrypt.PasswordNeedsRehash(passwordHash, _options.CurrentValue.HashWorkFactor);
 

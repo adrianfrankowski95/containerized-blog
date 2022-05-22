@@ -3,11 +3,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Blog.Services.Identity.API.Models;
 
-public class IdentityDbContext<TUser> : DbContext where TUser : User
+public class IdentityDbContext<TUser, TRole> : DbContext
+    where TUser : User
+    where TRole : Role
 {
     public DbSet<TUser> Users { get; set; }
 
-    public IdentityDbContext(DbContextOptions<IdentityDbContext<TUser>> options) : base(options)
+    public IdentityDbContext(DbContextOptions<IdentityDbContext<TUser, TRole>> options) : base(options)
     {
 
     }
@@ -15,7 +17,7 @@ public class IdentityDbContext<TUser> : DbContext where TUser : User
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder
-            .ApplyConfiguration(new UserEntityConfiguration())
-            .ApplyConfiguration(new RoleEntityConfiguration());
+            .ApplyConfiguration(new UserEntityConfiguration<TUser>())
+            .ApplyConfiguration(new RoleEntityConfiguration<TRole>());
     }
 }

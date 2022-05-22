@@ -5,9 +5,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Blog.Services.Identity.API.Infrastructure.EntityConfigurations;
 
-public class UserEntityConfiguration : IEntityTypeConfiguration<User>
+public class UserEntityConfiguration<TUser> : IEntityTypeConfiguration<TUser> where TUser : User
 {
-    public void Configure(EntityTypeBuilder<User> builder)
+    public void Configure(EntityTypeBuilder<TUser> builder)
     {
         builder.ToTable("users", IdentityConstants.DefaultDbSchema);
 

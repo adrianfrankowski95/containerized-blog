@@ -10,18 +10,13 @@ public class User
 
     }
 
-    public User(
-        NonEmptyString username,
-        NonEmptyString email,
-        NonEmptyString passwordHash,
-        bool receiveEmails)
+    public User(NonEmptyString username, NonEmptyString email, bool receiveEmails)
     {
         Id = Guid.NewGuid();
 
         Username = username;
         Email = email;
         ReceiveEmails = receiveEmails;
-        PasswordHash = passwordHash;
     }
 
     public Guid Id { get; set; }

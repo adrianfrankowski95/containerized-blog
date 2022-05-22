@@ -1,6 +1,6 @@
 namespace Blog.Services.Identity.API.Models;
 
-public sealed class Role
+public class Role
 {
     public int Value { get; }
     public NonEmptyString Name { get; }

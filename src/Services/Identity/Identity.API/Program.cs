@@ -12,8 +12,10 @@ var config = GetConfiguration(isDevelopment);
 // Add services to the container.
 
 builder.Services
-    .AddIdentityInfrastructure<User>(config)
+    .AddIdentityInfrastructure<User, Role>(config)
     .AddControllers();
+
+builder.Services.AddRazorPages();
 
 builder.Services
     .AddAuthentication(opts =>
@@ -23,7 +25,10 @@ builder.Services
         })
     .AddCookie(IdentityConstants.AuthenticationScheme, opts =>
     {
-        opts.Cookie.
+        opts.Cookie.HttpOnly = true;
+        opts.Cookie.IsEssential = true;
+        opts.Cookie.SameSite = SameSiteMode.Strict;
+        opts.Cookie.SecurePolicy = CookieSecurePolicy.Always;
     });
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -41,9 +46,11 @@ if (isDevelopment)
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapRazorPages();
 
 app.Run();
 

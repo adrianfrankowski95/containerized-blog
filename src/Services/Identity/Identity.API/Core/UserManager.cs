@@ -152,13 +152,19 @@ public class UserManager<TUser> where TUser : User
         return UpdateUserAsync(user);
     }
 
-    public async Task<IdentityResult> CreateUserAsync(TUser user)
+    public async Task<IdentityResult> CreateUserAsync(TUser user, string password)
     {
         ThrowIfNull(user);
+
+        if (string.IsNullOrWhiteSpace(password))
+            throw new ArgumentNullException(nameof(password));
 
         user.SecurityStamp = GenerateSecurityStamp();
         user.Role = Role.Reader;
         user.CreatedAt = _sysTime.Now;
+
+        user.PasswordHash = _passwordHasher.HashPassword(password);
+
         user.FailedLoginAttempts = 0;
         user.EmailConfirmed = false;
         user.LockedUntil = null;

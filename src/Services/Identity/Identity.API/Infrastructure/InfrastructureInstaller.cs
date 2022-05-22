@@ -11,12 +11,13 @@ namespace Blog.Services.Identity.API.Infrastructure;
 
 public static class InfrastructureInstaller
 {
-    public static IServiceCollection AddIdentityInfrastructure<TUser>(this IServiceCollection services, IConfiguration config)
+    public static IServiceCollection AddIdentityInfrastructure<TUser, TRole>(this IServiceCollection services, IConfiguration config)
         where TUser : User
+        where TRole : Role
     {
         string connectionString = config.GetConnectionString("IdentityPostgresDb");
 
-        services.AddDbContextPool<IdentityDbContext<TUser>>(opts =>
+        services.AddDbContextPool<IdentityDbContext<TUser, TRole>>(opts =>
         {
             opts.UseNpgsql(connectionString, opts =>
             {
