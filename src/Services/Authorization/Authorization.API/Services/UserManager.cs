@@ -1,5 +1,5 @@
 using Blog.Services.Authorization.API.Models;
-using Microsoft.AspNetCore.Identity;
+;
 using Microsoft.Extensions.Options;
 
 namespace Blog.Services.Authorization.API.Services;
@@ -55,7 +55,7 @@ public class UserManager : UserManager<User>
     }
 
     public virtual string NormalizeKey(string key)
-        {
-            return (KeyNormalizer == null) ? key : KeyNormalizer.Normalize(key);
-        }
+    {
+        return (KeyNormalizer == null) ? key : KeyNormalizer.Normalize(key);
+    }
 }

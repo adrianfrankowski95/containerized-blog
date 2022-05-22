@@ -4,13 +4,15 @@ using Blog.Services.Identity.API.Models;
 
 namespace Blog.Services.Identity.API.Infrastructure;
 
-public class EfUnitOfWork<TUser> : IUnitOfWork<TUser>, IAsyncDisposable, IDisposable where TUser : User
+public class EfUnitOfWork<TUser, TRole> : IUnitOfWork<TUser>, IAsyncDisposable, IDisposable
+    where TUser : User
+    where TRole : Role
 {
     public IUserRepository<TUser> Users { get; }
-    private readonly IdentityDbContext<TUser> _ctx;
+    private readonly IdentityDbContext<TUser, TRole> _ctx;
     private bool isDisposed;
 
-    public EfUnitOfWork(IdentityDbContext<TUser> ctx, IUserRepository<TUser> userRepository)
+    public EfUnitOfWork(IdentityDbContext<TUser, TRole> ctx, IUserRepository<TUser> userRepository)
     {
         _ctx = ctx ?? throw new ArgumentNullException(nameof(ctx));
         Users = userRepository ?? throw new ArgumentNullException(nameof(userRepository));

@@ -4,7 +4,7 @@ using Blog.Services.Authorization.API.Infrastructure.EntityConfigurations;
 using Blog.Services.Authorization.API.Models;
 using Blog.Services.Authorization.API.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
+;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;

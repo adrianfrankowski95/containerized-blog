@@ -11,7 +11,6 @@ public static class IdentityConstants
         public const string Email = "email";
         public const string EmailConfirmed = "email_confirmed";
         public const string Role = "role";
-        public const string Language = "language";
         public const string SecurityStamp = "security_stamp";
     }
 }

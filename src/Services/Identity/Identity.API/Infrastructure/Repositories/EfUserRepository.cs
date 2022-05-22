@@ -3,11 +3,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Blog.Services.Identity.API.Infrastructure.Repositories;
 
-public class EfUserRepository<TUser> : IUserRepository<TUser> where TUser : User
+public class EfUserRepository<TUser, TRole> : IUserRepository<TUser>
+    where TUser : User
+    where TRole : Role
 {
     private readonly DbSet<TUser> _users;
 
-    public EfUserRepository(IdentityDbContext<TUser> ctx)
+    public EfUserRepository(IdentityDbContext<TUser, TRole> ctx)
     {
         _users = ctx.Users ?? throw new ArgumentNullException(nameof(ctx));
     }

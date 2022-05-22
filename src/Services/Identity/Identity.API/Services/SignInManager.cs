@@ -2,7 +2,6 @@ using System.Security.Claims;
 using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Models;
 using Microsoft.AspNetCore.Authentication;
-using NodaTime;
 
 namespace Blog.Services.Identity.API.Services;
 
@@ -25,10 +24,9 @@ public class SignInManager<TUser> : ISignInManager<TUser> where TUser : User
             new AuthenticationProperties() { IsPersistent = isPersistent, RedirectUri = redirectUri });
     }
 
-    public async Task SignOutAsync(HttpContext context)
-    {
-        await context.SignOutAsync(IdentityConstants.AuthenticationScheme);
-    }
+    public Task SignOutAsync(HttpContext context)
+     => context.SignOutAsync(IdentityConstants.AuthenticationScheme);
+
 
     public bool IsSignedIn(ClaimsPrincipal principal)
         => principal.Identities is not null &&
