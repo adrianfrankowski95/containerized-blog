@@ -5,9 +5,9 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Blog.Services.Identity.API.Infrastructure.EntityConfigurations;
 
-public class RoleEntityConfiguration : IEntityTypeConfiguration<Role>
+public class RoleEntityConfiguration<TRole> : IEntityTypeConfiguration<TRole> where TRole : Role
 {
-    public void Configure(EntityTypeBuilder<Role> builder)
+    public void Configure(EntityTypeBuilder<TRole> builder)
     {
         builder.ToTable("roles", IdentityConstants.DefaultDbSchema);
 
@@ -17,8 +17,6 @@ public class RoleEntityConfiguration : IEntityTypeConfiguration<Role>
 
         builder.Property(x => x.Name).IsRequired();
         builder.HasIndex(x => x.Name).HasMethod("hash").IsUnique();
-
-        builder.HasMany<User>().WithOne(x => x.Role).IsRequired().OnDelete(DeleteBehavior.Restrict);
 
         builder.UseXminAsConcurrencyToken();
     }
