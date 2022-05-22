@@ -4,18 +4,21 @@ using Blog.Services.Identity.API.Models;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using NodaTime;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 var isDevelopment = builder.Environment.IsDevelopment();
 
 var config = GetConfiguration(isDevelopment);
+
 // Add services to the container.
 
+builder.Services.AddRazorPages();
+
 builder.Services
+    .AddNodaTimeClock()
     .AddIdentityInfrastructure<User, Role>(config)
     .AddControllers();
-
-builder.Services.AddRazorPages();
 
 builder.Services
     .AddAuthentication(opts =>
@@ -45,6 +48,7 @@ if (isDevelopment)
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles(); //html, css, images, js in wwwroot folder
 
 app.UseAuthentication();
 app.UseAuthorization();

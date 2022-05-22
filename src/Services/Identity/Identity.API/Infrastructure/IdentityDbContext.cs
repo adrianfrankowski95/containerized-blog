@@ -1,7 +1,8 @@
 using Blog.Services.Identity.API.Infrastructure.EntityConfigurations;
+using Blog.Services.Identity.API.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace Blog.Services.Identity.API.Models;
+namespace Blog.Services.Identity.API.Infrastructure;
 
 public class IdentityDbContext<TUser, TRole> : DbContext
     where TUser : User

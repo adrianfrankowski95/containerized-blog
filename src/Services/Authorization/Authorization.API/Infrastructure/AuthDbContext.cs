@@ -1,6 +1,6 @@
 using Blog.Services.Authorization.API.Models;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+;
+.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace Blog.Services.Authorization.API.Infrastructure.EntityConfigurations;

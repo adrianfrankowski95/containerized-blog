@@ -27,8 +27,8 @@ public static class InfrastructureInstaller
         });
 
         services.TryAddSingleton<IClock, SystemClock>();
-        services.TryAddScoped<IUserRepository<TUser>, EfUserRepository<TUser>>();
-        services.TryAddScoped<IUnitOfWork<TUser>, EfUnitOfWork<TUser>>();
+        services.TryAddScoped<IUserRepository<TUser>, EfUserRepository<TUser, TRole>>();
+        services.TryAddScoped<IUnitOfWork<TUser>, EfUnitOfWork<TUser, TRole>>();
 
         return services;
     }
