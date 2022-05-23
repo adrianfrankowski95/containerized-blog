@@ -52,7 +52,7 @@ public class UserManager<TUser> where TUser : User
     public string GetUsername(ClaimsPrincipal principal)
         => principal.FindFirstValue(IdentityConstants.ClaimTypes.Username);
 
-    public async ValueTask<IdentityResult> UpdatePasswordHashAsync(TUser user, string password, bool validatePassword = true)
+    public async Task<IdentityResult> UpdatePasswordHashAsync(TUser user, string password, bool validatePassword = true)
     {
         ThrowIfNull(user);
 
@@ -61,6 +61,8 @@ public class UserManager<TUser> where TUser : User
             var result = await ValidatePasswordAsync(password).ConfigureAwait(false);
             if (!result.Succeeded)
                 return result;
+
+            user.SecurityStamp = GenerateSecurityStamp(); //generate security stamp, verifying password means it's a new one
         }
 
         user.PasswordHash = _passwordHasher.HashPassword(password);
@@ -137,7 +139,7 @@ public class UserManager<TUser> where TUser : User
         return user.PasswordResetCode is not null;
     }
 
-    public Task<IdentityResult> LockAsync(TUser user)
+    private Task<IdentityResult> LockAsync(TUser user)
     {
         ThrowIfNull(user);
 
@@ -162,11 +164,8 @@ public class UserManager<TUser> where TUser : User
         if (string.IsNullOrWhiteSpace(password))
             throw new ArgumentNullException(nameof(password));
 
-        user.SecurityStamp = GenerateSecurityStamp();
         user.Role = Role.Reader;
         user.CreatedAt = _sysTime.Now;
-
-        user.PasswordHash = _passwordHasher.HashPassword(password);
 
         user.FailedLoginAttempts = 0;
         user.LockedUntil = null;
@@ -180,7 +179,7 @@ public class UserManager<TUser> where TUser : User
         user.EmailConfirmationCode = emailConfirmationCode;
         user.EmailConfirmationCodeIssuedAt = _sysTime.Now;
 
-        return AddUserAsync(user);
+        return UpdatePasswordHashAsync(user, password);
     }
 
     public Task<IdentityResult> UpdateRoleAsync(TUser user, Role role)
@@ -218,18 +217,21 @@ public class UserManager<TUser> where TUser : User
         return UpdateUserAsync(user, true);
     }
 
-    public ValueTask<IdentityResult> ConfirmEmailAsync(TUser user, Guid emailConfirmationCode)
+    public Task<IdentityResult> ConfirmEmailAsync(TUser user, Guid emailConfirmationCode)
     {
         ThrowIfNull(user);
 
         if (user.EmailConfirmed)
-            return ValueTask.FromResult(IdentityResult.Fail(IdentityError.EmailAlreadyConfirmed));
+            return Task.FromResult(IdentityResult.Fail(IdentityError.EmailAlreadyConfirmed));
 
         if (emailConfirmationCode == default)
             throw new ArgumentNullException(nameof(emailConfirmationCode));
 
         if (user.EmailConfirmationCode is null)
-            return ValueTask.FromResult(IdentityResult.Fail(IdentityError.MissingEmailConfirmationCode));
+            return Task.FromResult(IdentityResult.Fail(IdentityError.MissingEmailConfirmationCode));
+
+        if (!user.EmailConfirmationCode.Equals(emailConfirmationCode))
+            return Task.FromResult(IdentityResult.Fail(IdentityError.InvalidEmailConfirmationCode));
 
         if (user.EmailConfirmationCodeIssuedAt is null)
             throw new ArgumentNullException(nameof(user.EmailConfirmationCodeIssuedAt));
@@ -237,16 +239,16 @@ public class UserManager<TUser> where TUser : User
         var validityPeriod = _emailOptions.CurrentValue.EmailConfirmationCodeValidityPeriod;
 
         if (_sysTime.Now > user.EmailConfirmationCodeIssuedAt.Value.Plus(Duration.FromTimeSpan(validityPeriod)))
-            return ValueTask.FromResult(IdentityResult.Fail(IdentityError.ExpiredEmailConfirmationCode));
+            return Task.FromResult(IdentityResult.Fail(IdentityError.ExpiredEmailConfirmationCode));
 
         user.EmailConfirmed = true;
         user.EmailConfirmationCode = null;
         user.EmailConfirmationCodeIssuedAt = null;
 
-        return new ValueTask<IdentityResult>(UpdateUserAsync(user));
+        return UpdateUserAsync(user);
     }
 
-    public async ValueTask<IdentityResult> UpdatePasswordAsync(TUser user, string newPassword, string passwordResetCode)
+    public Task<IdentityResult> ResetPasswordAsync(TUser user, string newPassword, string passwordResetCode)
     {
         ThrowIfNull(user);
 
@@ -257,7 +259,10 @@ public class UserManager<TUser> where TUser : User
             throw new ArgumentNullException(nameof(passwordResetCode));
 
         if (user.PasswordResetCode is null)
-            return IdentityResult.Fail(IdentityError.MissingPasswordResetCode);
+            return Task.FromResult(IdentityResult.Fail(IdentityError.MissingPasswordResetCode));
+
+        if (!string.Equals(user.PasswordResetCode, passwordResetCode, StringComparison.Ordinal))
+            return Task.FromResult(IdentityResult.Fail(IdentityError.InvalidPasswordResetCode));
 
         if (user.PasswordResetCodeIssuedAt is null)
             throw new ArgumentNullException(nameof(user.PasswordResetCodeIssuedAt));
@@ -265,20 +270,34 @@ public class UserManager<TUser> where TUser : User
         var validityPeriod = _securityOptions.CurrentValue.PasswordResetCodeValidityPeriod;
 
         if (_sysTime.Now > user.PasswordResetCodeIssuedAt.Value.Plus(Duration.FromTimeSpan(validityPeriod)))
-            return IdentityResult.Fail(IdentityError.ExpiredEmailConfirmationCode);
+            return Task.FromResult(IdentityResult.Fail(IdentityError.ExpiredEmailConfirmationCode));
 
-        var result = await ValidatePasswordAsync(newPassword).ConfigureAwait(false);
-
-        if (!result.Succeeded)
-            return result;
-
-
-        user.PasswordHash = _passwordHasher.HashPassword(newPassword);
         user.PasswordResetCode = null;
         user.PasswordResetCodeIssuedAt = null;
-        user.SecurityStamp = GenerateSecurityStamp();
 
-        return await UpdateUserAsync(user).ConfigureAwait(false);
+        return UpdatePasswordHashAsync(user, newPassword);
+    }
+
+    public Task<IdentityResult> UpdatePasswordAsync(TUser user, string newPassword, string oldPassword)
+    {
+        ThrowIfNull(user);
+
+        if (IsResettingPassword(user))
+            throw new InvalidOperationException("User cannot change his password during resetting");
+
+        if (string.IsNullOrWhiteSpace(newPassword))
+            throw new ArgumentNullException(nameof(newPassword));
+
+        if (string.IsNullOrWhiteSpace(oldPassword))
+            throw new ArgumentNullException(nameof(oldPassword));
+
+        var passwordVerificationResult = VerifyPassword(user, oldPassword);
+
+        if (passwordVerificationResult != PasswordVerificationResult.Success ||
+            passwordVerificationResult != PasswordVerificationResult.SuccessNeedsRehash)
+            return Task.FromResult(IdentityResult.Fail(IdentityError.InvalidCredentials));
+
+        return UpdatePasswordHashAsync(user, newPassword);
     }
 
     private string GeneratePasswordResetCode(int length)
@@ -331,24 +350,6 @@ public class UserManager<TUser> where TUser : User
             return result;
 
         _unitOfWork.Users.Update(user);
-        await _unitOfWork.CommitChangesAsync(cancellationToken);
-
-        return IdentityResult.Success;
-    }
-
-    public async Task<IdentityResult> AddUserAsync(TUser user, CancellationToken cancellationToken = default)
-    {
-        ThrowIfNull(user);
-
-        var result = await ValidateUserAsync(user).ConfigureAwait(false);
-
-        bool successOrUnconfirmedEmail = result.Succeeded ||
-            (result.Errors.Count() == 1 && result.Errors.Single().Equals(IdentityError.EmailUnconfirmed));
-
-        if (!successOrUnconfirmedEmail)
-            return result;
-
-        _unitOfWork.Users.Add(user);
         await _unitOfWork.CommitChangesAsync(cancellationToken);
 
         return IdentityResult.Success;

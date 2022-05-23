@@ -93,13 +93,13 @@ public class ResetPasswordModel : PageModel
         }
 
         var user = await _userManager.FindByEmailAsync(Input.Email);
-        if (user == null)
+        if (user is null)
         {
             // Don't reveal that the user does not exist
             return RedirectToPage("./ResetPasswordConfirmation");
         }
 
-        var result = await _userManager.ResetPasswordAsync(user, Input.Code, Input.Password);
+        var result = await _userManager.ResetPasswordAsync(user, Input.Password, Input.Code);
         if (result.Succeeded)
         {
             return RedirectToPage("./ResetPasswordConfirmation");
@@ -107,7 +107,7 @@ public class ResetPasswordModel : PageModel
 
         foreach (var error in result.Errors)
         {
-            ModelState.AddModelError(string.Empty, error.Description);
+            ModelState.AddModelError(string.Empty, error.ErrorDescription);
         }
         return Page();
     }
