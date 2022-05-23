@@ -3,6 +3,8 @@
 #nullable disable
 
 
+using Blog.Services.Identity.API.Models;
+using Blog.Services.Identity.API.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -10,10 +12,10 @@ namespace Blog.Services.Identity.API.Pages.Account;
 
 public class LogoutModel : PageModel
 {
-    private readonly SignInManager<IdentityUser> _signInManager;
+    private readonly SignInManager<User> _signInManager;
     private readonly ILogger<LogoutModel> _logger;
 
-    public LogoutModel(SignInManager<IdentityUser> signInManager, ILogger<LogoutModel> logger)
+    public LogoutModel(SignInManager<User> signInManager, ILogger<LogoutModel> logger)
     {
         _signInManager = signInManager;
         _logger = logger;
@@ -21,7 +23,7 @@ public class LogoutModel : PageModel
 
     public async Task<IActionResult> OnPost(string returnUrl = null)
     {
-        await _signInManager.SignOutAsync();
+        await _signInManager.SignOutAsync(HttpContext);
         _logger.LogInformation("User logged out.");
         if (returnUrl != null)
         {

@@ -5,6 +5,9 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text;
 using System.Text.Encodings.Web;
+using Blog.Services.Identity.API.Core;
+using Blog.Services.Identity.API.Models;
+using Blog.Services.Identity.API.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
@@ -13,13 +16,13 @@ namespace Blog.Services.Identity.API.Pages.Account.Manage;
 
 public class EmailModel : PageModel
 {
-    private readonly UserManager<IdentityUser> _userManager;
-    private readonly SignInManager<IdentityUser> _signInManager;
+    private readonly UserManager<User> _userManager;
+    private readonly SignInManager<User> _signInManager;
     private readonly IEmailSender _emailSender;
 
     public EmailModel(
-        UserManager<IdentityUser> userManager,
-        SignInManager<IdentityUser> signInManager,
+        UserManager<User> userManager,
+        SignInManager<User> signInManager,
         IEmailSender emailSender)
     {
         _userManager = userManager;
@@ -69,7 +72,7 @@ public class EmailModel : PageModel
         public string NewEmail { get; set; }
     }
 
-    private async Task LoadAsync(IdentityUser user)
+    private async Task LoadAsync(User user)
     {
         var email = await _userManager.GetEmailAsync(user);
         Email = email;

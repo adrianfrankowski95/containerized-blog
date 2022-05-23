@@ -24,6 +24,19 @@ public class UserEntityConfiguration<TUser> : IEntityTypeConfiguration<TUser> wh
             .IsUnique();
 
         builder
+            .Property(x => x.Name)
+            .HasColumnType("varchar(50)")
+            .IsRequired();
+
+        builder
+            .Property(x => x.LastName)
+            .HasColumnType("varchar(100)")
+            .IsRequired();
+
+        builder
+            .Ignore(x => x.FullName);
+
+        builder
             .Property(x => x.Email)
             .HasColumnType("varchar(50)")
             .IsRequired();
@@ -60,6 +73,13 @@ public class UserEntityConfiguration<TUser> : IEntityTypeConfiguration<TUser> wh
             .Property(x => x.PasswordResetCodeIssuedAt)
             .IsRequired(false);
 
+        builder
+            .Property(x => x.EmailConfirmationCode)
+            .IsRequired(false);
+
+        builder
+            .Property(x => x.EmailConfirmationCodeIssuedAt)
+            .IsRequired(false);
 
         builder.UseXminAsConcurrencyToken();
     }

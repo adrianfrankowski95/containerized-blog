@@ -49,11 +49,11 @@ public class Role
 
     public override bool Equals(object? obj)
     {
-        if (ReferenceEquals(obj, this))
-            return true;
-
         if (obj is null || obj is not Role role)
             return false;
+
+        if (ReferenceEquals(obj, this))
+            return true;
 
         bool equalValue = role.Value.Equals(Value);
         bool equalName = string.Equals(role.Name, Name, StringComparison.OrdinalIgnoreCase);

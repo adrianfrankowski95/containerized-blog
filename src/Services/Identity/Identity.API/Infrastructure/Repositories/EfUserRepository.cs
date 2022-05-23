@@ -19,7 +19,7 @@ public class EfUserRepository<TUser, TRole> : IUserRepository<TUser>
         _users.Add(user);
     }
 
-    public void Delete(TUser user)
+    public void Remove(TUser user)
     {
         _users.Remove(user);
     }
@@ -54,7 +54,7 @@ public class EfUserRepository<TUser, TRole> : IUserRepository<TUser>
     {
         return _users
             .AsNoTracking()
-            .Where(x => x.EmailConfirmed && x.ReceiveEmails)
+            .Where(x => x.EmailConfirmed && x.ReceiveAdditionalEmails)
             .AsAsyncEnumerable();
     }
 
