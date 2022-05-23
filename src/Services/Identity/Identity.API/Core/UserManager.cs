@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using Blog.Services.Identity.API.Infrastructure.Repositories;
 using Blog.Services.Identity.API.Models;
 using Blog.Services.Identity.API.Services;
 using Microsoft.Extensions.Options;
@@ -10,7 +9,8 @@ namespace Blog.Services.Identity.API.Core;
 public class UserManager<TUser> where TUser : User
 {
     private readonly IUnitOfWork<TUser> _unitOfWork;
-    private readonly IOptionsMonitor<SecurityOptions> _options;
+    private readonly IOptionsMonitor<SecurityOptions> _securityOptions;
+    private readonly IOptionsMonitor<EmailOptions> _emailOptions;
     private readonly ISysTime _sysTime;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IUserValidator<TUser> _userValidator;
@@ -20,14 +20,16 @@ public class UserManager<TUser> where TUser : User
     public UserManager(
         IUnitOfWork<TUser> unitOfWork,
         IPasswordHasher passwordHasher,
-        IOptionsMonitor<SecurityOptions> options,
+        IOptionsMonitor<SecurityOptions> securityOptions,
+        IOptionsMonitor<EmailOptions> emailOptions,
         IUserValidator<TUser> userValidator,
         IPasswordValidator<TUser> passwordValidator,
         IUserClaimsPrincipalFactory<TUser> claimsPrincipalFactory,
         ISysTime sysTime)
     {
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
-        _options = options ?? throw new ArgumentNullException(nameof(options));
+        _securityOptions = securityOptions ?? throw new ArgumentNullException(nameof(securityOptions));
+        _emailOptions = emailOptions ?? throw new ArgumentNullException(nameof(emailOptions));
         _sysTime = sysTime ?? throw new ArgumentNullException(nameof(sysTime));
         _passwordHasher = passwordHasher ?? throw new ArgumentNullException(nameof(passwordHasher));
         _userValidator = userValidator ?? throw new ArgumentNullException(nameof(userValidator));
@@ -38,27 +40,31 @@ public class UserManager<TUser> where TUser : User
     public Task<TUser?> FindByEmailAsync(string email)
         => _unitOfWork.Users.FindByEmailAsync(email);
 
+    public Task<TUser?> FindByIdAsync(Guid userId)
+        => _unitOfWork.Users.FindByIdAsync(userId);
+
     public ValueTask<IdentityResult> ValidateUserAsync(TUser user)
         => _userValidator.ValidateAsync(user);
 
     public ValueTask<IdentityResult> ValidatePasswordAsync(string password)
         => _passwordValidator.ValidateAsync(password);
 
+    public string GetUsername(ClaimsPrincipal principal)
+        => principal.FindFirstValue(IdentityConstants.ClaimTypes.Username);
+
     public async ValueTask<IdentityResult> UpdatePasswordHashAsync(TUser user, string password, bool validatePassword = true)
     {
         ThrowIfNull(user);
-        IdentityResult result = null!;
 
         if (validatePassword)
-            result = await ValidatePasswordAsync(password);
-
-        if (!validatePassword || result.Equals(IdentityResult.Success))
         {
-            user.PasswordHash = _passwordHasher.HashPassword(password);
-            await UpdateUserAsync(user).ConfigureAwait(false);
+            var result = await ValidatePasswordAsync(password).ConfigureAwait(false);
+            if (!result.Succeeded)
+                return result;
         }
 
-        return validatePassword ? result : IdentityResult.Success;
+        user.PasswordHash = _passwordHasher.HashPassword(password);
+        return await UpdateUserAsync(user).ConfigureAwait(false);
     }
 
     public PasswordVerificationResult VerifyPassword(TUser user, string password)
@@ -71,7 +77,7 @@ public class UserManager<TUser> where TUser : User
         return _passwordHasher.VerifyPassword(password, user.PasswordHash);
     }
 
-    public Task UpdateLastLoginAndClearAttemptsAsync(TUser user)
+    public Task<IdentityResult> UpdateLastLoginAndClearAttemptsAsync(TUser user)
     {
         ThrowIfNull(user);
 
@@ -81,7 +87,7 @@ public class UserManager<TUser> where TUser : User
         return UpdateUserAsync(user);
     }
 
-    public Task SuspendAsync(TUser user, Instant suspendUntil)
+    public Task<IdentityResult> SuspendAsync(TUser user, Instant suspendUntil)
     {
         ThrowIfNull(user);
 
@@ -94,16 +100,17 @@ public class UserManager<TUser> where TUser : User
         return UpdateUserAsync(user);
     }
 
-    public Task AddFailedLoginAttemptAsync(TUser user)
+    public Task<IdentityResult> AddFailedLoginAttemptAsync(TUser user)
     {
         ThrowIfNull(user);
 
-        var maxAttempts = _options.CurrentValue.MaxAllowedLoginAttempts;
+        var maxAttempts = _securityOptions.CurrentValue.MaxAllowedLoginAttempts;
 
         if (user.FailedLoginAttempts >= maxAttempts)
             throw new InvalidOperationException("User already has maximum number of failed attempts");
 
         user.FailedLoginAttempts = ++user.FailedLoginAttempts;
+
         return UpdateUserAsync(user);
     }
 
@@ -111,7 +118,7 @@ public class UserManager<TUser> where TUser : User
     {
         ThrowIfNull(user);
 
-        var maxAttempts = _options.CurrentValue.MaxAllowedLoginAttempts;
+        var maxAttempts = _securityOptions.CurrentValue.MaxAllowedLoginAttempts;
 
         return user.FailedLoginAttempts >= maxAttempts;
     }
@@ -120,7 +127,7 @@ public class UserManager<TUser> where TUser : User
     {
         ThrowIfNull(user);
 
-        return _options.CurrentValue.EnableLoginAttemptsLock &&
+        return _securityOptions.CurrentValue.EnableLoginAttemptsLock &&
             user.LockedUntil is not null && user.LockedUntil > _sysTime.Now;
     }
 
@@ -136,23 +143,23 @@ public class UserManager<TUser> where TUser : User
         return user.PasswordResetCode is not null;
     }
 
-    public Task LockAsync(TUser user)
+    public Task<IdentityResult> LockAsync(TUser user)
     {
         ThrowIfNull(user);
 
         if (IsLocked(user))
             throw new InvalidOperationException("User is already locked");
 
-        if (!_options.CurrentValue.EnableLoginAttemptsLock)
+        if (!_securityOptions.CurrentValue.EnableLoginAttemptsLock)
             throw new InvalidOperationException("User lock is not enabled");
 
-        var lockDuration = _options.CurrentValue.AccountLockDurationMinutes;
+        var lockDuration = _securityOptions.CurrentValue.AccountLockDuration;
 
-        user.LockedUntil = _sysTime.Now.Plus(Duration.FromMinutes(lockDuration));
+        user.LockedUntil = _sysTime.Now.Plus(Duration.FromTimeSpan(lockDuration));
         return UpdateUserAsync(user);
     }
 
-    public async Task<IdentityResult> CreateUserAsync(TUser user, string password)
+    public Task<IdentityResult> CreateUserAsync(TUser user, string password, out Guid emailConfirmationCode)
     {
         ThrowIfNull(user);
 
@@ -166,24 +173,36 @@ public class UserManager<TUser> where TUser : User
         user.PasswordHash = _passwordHasher.HashPassword(password);
 
         user.FailedLoginAttempts = 0;
-        user.EmailConfirmed = false;
         user.LockedUntil = null;
         user.LastLoginAt = null;
         user.PasswordResetCode = null;
         user.PasswordResetCodeIssuedAt = null;
 
-        var result = await ValidateUserAsync(user).ConfigureAwait(false);
+        emailConfirmationCode = GenerateEmailConfirmationCode();
 
-        bool successOrEmailUnconfirmed = result.Succeeded ||
-            (result.Errors.Count() == 1 && result.Errors.Single().Equals(IdentityError.EmailUnconfirmed));
+        user.EmailConfirmed = false;
+        user.EmailConfirmationCode = emailConfirmationCode;
+        user.EmailConfirmationCodeIssuedAt = _sysTime.Now;
 
-        if (successOrEmailUnconfirmed)
-            await AddUserAsync(user).ConfigureAwait(false);
-
-        return successOrEmailUnconfirmed ? IdentityResult.Success : result;
+        return AddUserAsync(user);
     }
 
-    public async Task<IdentityResult> UpdateEmailAsync(TUser user, string newEmail)
+    public Task<IdentityResult> UpdateRoleAsync(TUser user, Role role)
+    {
+        ThrowIfNull(user);
+
+        if (role is null)
+            throw new ArgumentNullException(nameof(role));
+
+        if (user.Role.Equals(role))
+            throw new InvalidOperationException("User already is in a provided role");
+
+        user.Role = role;
+
+        return UpdateUserAsync(user);
+    }
+
+    public Task<IdentityResult> UpdateEmailAsync(TUser user, string newEmail, out Guid emailConfirmationCode)
     {
         ThrowIfNull(user);
 
@@ -192,22 +211,83 @@ public class UserManager<TUser> where TUser : User
 
         user.Email = newEmail;
         user.EmailConfirmed = false;
+
+        emailConfirmationCode = GenerateEmailConfirmationCode();
+
+        user.EmailConfirmationCode = emailConfirmationCode;
+        user.EmailConfirmationCodeIssuedAt = _sysTime.Now;
+
         user.SecurityStamp = GenerateSecurityStamp();
 
-        var result = await ValidateUserAsync(user).ConfigureAwait(false);
+        return UpdateUserAsync(user, true);
+    }
 
-        bool successOrEmailUnconfirmed = result.Succeeded ||
-            (result.Errors.Count() == 1 && result.Errors.Single().Equals(IdentityError.EmailUnconfirmed));
+    public ValueTask<IdentityResult> ConfirmEmailAsync(TUser user, Guid emailConfirmationCode)
+    {
+        ThrowIfNull(user);
 
-        if (successOrEmailUnconfirmed)
-            await UpdateUserAsync(user).ConfigureAwait(false);
+        if (user.EmailConfirmed)
+            return ValueTask.FromResult(IdentityResult.Fail(IdentityError.EmailAlreadyConfirmed));
 
-        return successOrEmailUnconfirmed ? IdentityResult.Success : result;
+        if (emailConfirmationCode == default)
+            throw new ArgumentNullException(nameof(emailConfirmationCode));
+
+        if (user.EmailConfirmationCode is null)
+            return ValueTask.FromResult(IdentityResult.Fail(IdentityError.MissingEmailConfirmationCode));
+
+        if (user.EmailConfirmationCodeIssuedAt is null)
+            throw new ArgumentNullException(nameof(user.EmailConfirmationCodeIssuedAt));
+
+        var validityPeriod = _emailOptions.CurrentValue.EmailConfirmationCodeValidityPeriod;
+
+        if (_sysTime.Now > user.EmailConfirmationCodeIssuedAt.Value.Plus(Duration.FromTimeSpan(validityPeriod)))
+            return ValueTask.FromResult(IdentityResult.Fail(IdentityError.ExpiredEmailConfirmationCode));
+
+        user.EmailConfirmed = true;
+        user.EmailConfirmationCode = null;
+        user.EmailConfirmationCodeIssuedAt = null;
+
+        return new ValueTask<IdentityResult>(UpdateUserAsync(user));
+    }
+
+    public async ValueTask<IdentityResult> UpdatePasswordAsync(TUser user, string newPassword, string passwordResetCode)
+    {
+        ThrowIfNull(user);
+
+        if (string.IsNullOrWhiteSpace(newPassword))
+            throw new ArgumentNullException(nameof(newPassword));
+
+        if (string.IsNullOrWhiteSpace(passwordResetCode))
+            throw new ArgumentNullException(nameof(passwordResetCode));
+
+        if (user.PasswordResetCode is null)
+            return IdentityResult.Fail(IdentityError.MissingPasswordResetCode);
+
+        if (user.PasswordResetCodeIssuedAt is null)
+            throw new ArgumentNullException(nameof(user.PasswordResetCodeIssuedAt));
+
+        var validityPeriod = _securityOptions.CurrentValue.PasswordResetCodeValidityPeriod;
+
+        if (_sysTime.Now > user.PasswordResetCodeIssuedAt.Value.Plus(Duration.FromTimeSpan(validityPeriod)))
+            return IdentityResult.Fail(IdentityError.ExpiredEmailConfirmationCode);
+
+        var result = await ValidatePasswordAsync(newPassword).ConfigureAwait(false);
+
+        if (!result.Succeeded)
+            return result;
+
+
+        user.PasswordHash = _passwordHasher.HashPassword(newPassword);
+        user.PasswordResetCode = null;
+        user.PasswordResetCodeIssuedAt = null;
+        user.SecurityStamp = GenerateSecurityStamp();
+
+        return await UpdateUserAsync(user).ConfigureAwait(false);
     }
 
     private string GeneratePasswordResetCode(int length)
     {
-        var allowedChars = _options.CurrentValue.PasswordResetCodeAllowedCharacters;
+        var allowedChars = _securityOptions.CurrentValue.PasswordResetCodeAllowedCharacters;
 
         if (string.IsNullOrEmpty(allowedChars))
             throw new ArgumentNullException(nameof(allowedChars));
@@ -223,38 +303,64 @@ public class UserManager<TUser> where TUser : User
         return new string(code);
     }
 
-    public async Task<string> ResetPasswordAsync(TUser user)
+    public Task<IdentityResult> ResetPasswordAsync(TUser user, out string passwordResetCode)
     {
         ThrowIfNull(user);
 
-        var length = _options.CurrentValue.PasswordResetCodeLength;
+        var length = _securityOptions.CurrentValue.PasswordResetCodeLength;
 
-        var code = GeneratePasswordResetCode(length);
+        passwordResetCode = GeneratePasswordResetCode(length);
 
-        user.PasswordResetCode = code;
+        user.PasswordResetCode = passwordResetCode;
         user.PasswordResetCodeIssuedAt = _sysTime.Now;
         user.SecurityStamp = GenerateSecurityStamp();
 
-        await UpdateUserAsync(user).ConfigureAwait(false);
-
-        return code;
+        return UpdateUserAsync(user);
     }
 
     private static Guid GenerateSecurityStamp() => Guid.NewGuid();
+    private static Guid GenerateEmailConfirmationCode() => Guid.NewGuid();
 
-    public Task UpdateUserAsync(TUser user, CancellationToken cancellationToken = default)
+    public async Task<IdentityResult> UpdateUserAsync(TUser user, bool ignoreUnconfirmedEmail = false, CancellationToken cancellationToken = default)
     {
         ThrowIfNull(user);
+
+        var result = await ValidateUserAsync(user).ConfigureAwait(false);
+
+        bool successOrUnconfirmedEmail = result.Succeeded ||
+            (ignoreUnconfirmedEmail && result.Errors.Count() == 1 &&
+            result.Errors.Single().Equals(IdentityError.EmailUnconfirmed));
+
+        if (!successOrUnconfirmedEmail)
+            return result;
 
         _unitOfWork.Users.Update(user);
-        return _unitOfWork.CommitChangesAsync(cancellationToken);
+        await _unitOfWork.CommitChangesAsync(cancellationToken);
+
+        return IdentityResult.Success;
     }
 
-    public Task AddUserAsync(TUser user, CancellationToken cancellationToken = default)
+    public async Task<IdentityResult> AddUserAsync(TUser user, CancellationToken cancellationToken = default)
     {
         ThrowIfNull(user);
 
+        var result = await ValidateUserAsync(user).ConfigureAwait(false);
+
+        bool successOrUnconfirmedEmail = result.Succeeded ||
+            (result.Errors.Count() == 1 && result.Errors.Single().Equals(IdentityError.EmailUnconfirmed));
+
+        if (!successOrUnconfirmedEmail)
+            return result;
+
         _unitOfWork.Users.Add(user);
+        await _unitOfWork.CommitChangesAsync(cancellationToken);
+
+        return IdentityResult.Success;
+    }
+
+    public Task RemoveUserAsync(TUser user, CancellationToken cancellationToken = default)
+    {
+        _unitOfWork.Users.Remove(user);
         return _unitOfWork.CommitChangesAsync(cancellationToken);
     }
 

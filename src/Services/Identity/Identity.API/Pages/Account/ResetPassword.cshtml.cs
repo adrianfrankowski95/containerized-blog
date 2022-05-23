@@ -8,14 +8,15 @@ using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
-
+using Blog.Services.Identity.API.Core;
+using Blog.Services.Identity.API.Models;
 namespace Blog.Services.Identity.API.Pages.Account;
 
 public class ResetPasswordModel : PageModel
 {
-    private readonly UserManager<IdentityUser> _userManager;
+    private readonly UserManager<User> _userManager;
 
-    public ResetPasswordModel(UserManager<IdentityUser> userManager)
+    public ResetPasswordModel(UserManager<User> userManager)
     {
         _userManager = userManager;
     }

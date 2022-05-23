@@ -11,15 +11,21 @@ public enum IdentityErrorCode
     InvalidEmailFormat = 6,
     EmailDuplicated = 7,
     EmailUnconfirmed = 8,
-    MissingUsername = 9,
-    InvalidUsernameFormat = 10,
-    UsernameDuplicated = 11,
+    EmailAlreadyConfirmed = 9,
+    InvalidEmailConfirmationCode = 10,
+    MissingEmailConfirmationCode = 11,
+    ExpiredEmailConfirmationCode = 12,
+    MissingUsername = 13,
+    InvalidUsernameFormat = 14,
+    UsernameDuplicated = 15,
     MissingSecurityStamp = 16,
     InvalidSecurityStamp = 17,
     PasswordTooShort = 18,
     PasswordWithoutLowerCase = 19,
     PasswordWithoutUpperCase = 20,
     PasswordWithoutDigit = 21,
-    PasswordWithoutNonAlphanumeric = 22
-
+    PasswordWithoutNonAlphanumeric = 22,
+    InvalidPasswordResetCode = 23,
+    MissingPasswordResetCode = 24,
+    ExpiredPasswordResetCode = 25
 }

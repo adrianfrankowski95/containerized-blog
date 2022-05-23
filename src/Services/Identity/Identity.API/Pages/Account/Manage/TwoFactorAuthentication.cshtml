@@ -1,5 +1,6 @@
 ﻿@page
 @using Microsoft.AspNetCore.Http.Features
+@namespace Blog.Services.Identity.API.Pages.Account.Manage
 @model TwoFactorAuthenticationModel
 @{
     ViewData["Title"] = "Two-factor authentication (2FA)";
@@ -18,7 +19,8 @@
             {
                 <div class="alert alert-danger">
                     <strong>You have no recovery codes left.</strong>
-                    <p>You must <a asp-page="./GenerateRecoveryCodes">generate a new set of recovery codes</a> before you can log in with a recovery code.</p>
+                    <p>You must <a asp-page="./GenerateRecoveryCodes">generate a new set of recovery codes</a> before you can log in
+                        with a recovery code.</p>
                 </div>
             }
             else if (Model.RecoveryCodesLeft == 1)
@@ -67,5 +69,5 @@
 }
 
 @section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+<partial name="_ValidationScriptsPartial" />
 }

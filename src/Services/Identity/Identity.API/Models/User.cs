@@ -10,22 +10,27 @@ public class User
 
     }
 
-    public User(NonEmptyString username, NonEmptyString email, bool receiveEmails)
+    public User(NonEmptyString username, NonEmptyString name, NonEmptyString lastName, NonEmptyString email, bool receiveEmails)
     {
         Id = Guid.NewGuid();
 
         Username = username;
+        Name = name;
+        LastName = lastName;
         Email = email;
-        ReceiveEmails = receiveEmails;
+        ReceiveAdditionalEmails = receiveEmails;
     }
 
     public Guid Id { get; set; }
     public NonEmptyString Username { get; set; }
+    public NonEmptyString Name { get; set; }
+    public NonEmptyString LastName { get; set; }
+    public NonEmptyString FullName => Name + " " + LastName;
     public NonEmptyString Email { get; set; }
     public bool EmailConfirmed { get; set; }
     public NonEmptyString PasswordHash { get; set; }
     public Role Role { get; set; }
-    public bool ReceiveEmails { get; set; }
+    public bool ReceiveAdditionalEmails { get; set; }
     public Instant CreatedAt { get; set; }
     public Instant? LockedUntil { get; set; }
     public Instant? SuspendedUntil { get; set; }
@@ -34,4 +39,6 @@ public class User
     public Guid SecurityStamp { get; set; }
     public string? PasswordResetCode { get; set; }
     public Instant? PasswordResetCodeIssuedAt { get; set; }
+    public Guid? EmailConfirmationCode { get; set; }
+    public Instant? EmailConfirmationCodeIssuedAt { get; set; }
 }

@@ -6,7 +6,7 @@ public interface IUserRepository<TUser> where TUser : User
 {
     public void Add(TUser user);
 
-    public void Delete(TUser user);
+    public void Remove(TUser user);
 
     public void Update(TUser user);
 

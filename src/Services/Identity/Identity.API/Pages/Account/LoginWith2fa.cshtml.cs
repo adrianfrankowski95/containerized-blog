@@ -4,6 +4,9 @@
 
 
 using System.ComponentModel.DataAnnotations;
+using Blog.Services.Identity.API.Core;
+using Blog.Services.Identity.API.Models;
+using Blog.Services.Identity.API.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -11,13 +14,13 @@ namespace Blog.Services.Identity.API.Pages.Account;
 
 public class LoginWith2faModel : PageModel
 {
-    private readonly SignInManager<IdentityUser> _signInManager;
-    private readonly UserManager<IdentityUser> _userManager;
+    private readonly SignInManager<User> _signInManager;
+    private readonly UserManager<User> _userManager;
     private readonly ILogger<LoginWith2faModel> _logger;
 
     public LoginWith2faModel(
-        SignInManager<IdentityUser> signInManager,
-        UserManager<IdentityUser> userManager,
+        SignInManager<User> signInManager,
+        UserManager<User> userManager,
         ILogger<LoginWith2faModel> logger)
     {
         _signInManager = signInManager;

@@ -33,10 +33,22 @@ public class IdentityError
         => new(IdentityErrorCode.InvalidEmailFormat, "Invalid email format");
 
     public static IdentityError EmailDuplicated
-        => new(IdentityErrorCode.EmailDuplicated, "This email already exists");
+        => new(IdentityErrorCode.EmailDuplicated, "This email address already exists");
 
     public static IdentityError EmailUnconfirmed
-    => new(IdentityErrorCode.EmailUnconfirmed, "Unconfirmed email");
+        => new(IdentityErrorCode.EmailUnconfirmed, "Unconfirmed email address");
+
+    public static IdentityError EmailAlreadyConfirmed
+        => new(IdentityErrorCode.EmailAlreadyConfirmed, "Email address is already confirmed");
+
+    public static IdentityError InvalidEmailConfirmationCode
+        => new(IdentityErrorCode.InvalidEmailConfirmationCode, "Invalid email address confirmation code");
+
+    public static IdentityError MissingEmailConfirmationCode
+        => new(IdentityErrorCode.MissingEmailConfirmationCode, "Missing email address confirmation code");
+
+    public static IdentityError ExpiredEmailConfirmationCode
+         => new(IdentityErrorCode.ExpiredEmailConfirmationCode, "Expired email address confirmation code");
 
     public static IdentityError MissingUsername
         => new(IdentityErrorCode.MissingUsername, "Missing username");
@@ -67,6 +79,15 @@ public class IdentityError
 
     public static IdentityError PasswordWithoutNonAlphanumeric
         => new(IdentityErrorCode.PasswordWithoutNonAlphanumeric, "Password must contain non-alphanumeric character");
+
+    public static IdentityError InvalidPasswordResetCode
+        => new(IdentityErrorCode.InvalidPasswordResetCode, "Invalid password reset code");
+
+    public static IdentityError MissingPasswordResetCode
+        => new(IdentityErrorCode.MissingPasswordResetCode, "Missing password reset code");
+
+    public static IdentityError ExpiredPasswordResetCode
+         => new(IdentityErrorCode.ExpiredPasswordResetCode, "Expired password reset code");
 
     public override bool Equals(object? obj)
     {

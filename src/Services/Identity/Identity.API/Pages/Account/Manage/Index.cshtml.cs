@@ -3,6 +3,9 @@
 #nullable disable
 
 using System.ComponentModel.DataAnnotations;
+using Blog.Services.Identity.API.Core;
+using Blog.Services.Identity.API.Models;
+using Blog.Services.Identity.API.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -10,12 +13,12 @@ namespace Blog.Services.Identity.API.Pages.Account.Manage;
 
 public class IndexModel : PageModel
 {
-    private readonly UserManager<IdentityUser> _userManager;
-    private readonly SignInManager<IdentityUser> _signInManager;
+    private readonly UserManager<User> _userManager;
+    private readonly SignInManager<User> _signInManager;
 
     public IndexModel(
-        UserManager<IdentityUser> userManager,
-        SignInManager<IdentityUser> signInManager)
+        UserManager<User> userManager,
+        SignInManager<User> signInManager)
     {
         _userManager = userManager;
         _signInManager = signInManager;
@@ -56,7 +59,7 @@ public class IndexModel : PageModel
         public string PhoneNumber { get; set; }
     }
 
-    private async Task LoadAsync(IdentityUser user)
+    private async Task LoadAsync(User user)
     {
         var userName = await _userManager.GetUserNameAsync(user);
         var phoneNumber = await _userManager.GetPhoneNumberAsync(user);
