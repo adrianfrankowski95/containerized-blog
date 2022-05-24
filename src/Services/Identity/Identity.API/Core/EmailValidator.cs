@@ -10,11 +10,14 @@ public class EmailValidator<TUser> : IUserAttributeValidator<TUser> where TUser 
     private readonly IUserRepository<TUser> _userRepository;
     private readonly IOptionsMonitor<EmailOptions> _options;
 
+    public int ValidationOrder { get; } = 3;
+
     public EmailValidator(IUserRepository<TUser> userRepository, IOptionsMonitor<EmailOptions> options)
     {
         _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         _options = options ?? throw new ArgumentNullException(nameof(options));
     }
+
     public async ValueTask ValidateAsync(TUser user, ICollection<IdentityError> errors)
     {
         if (user is null)

@@ -293,8 +293,7 @@ public class UserManager<TUser> where TUser : User
 
         var passwordVerificationResult = VerifyPassword(user, oldPassword);
 
-        if (passwordVerificationResult != PasswordVerificationResult.Success ||
-            passwordVerificationResult != PasswordVerificationResult.SuccessNeedsRehash)
+        if (passwordVerificationResult is PasswordVerificationResult.Fail)
             return Task.FromResult(IdentityResult.Fail(IdentityError.InvalidCredentials));
 
         return UpdatePasswordHashAsync(user, newPassword);

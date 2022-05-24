@@ -8,7 +8,10 @@ public class UserValidator<TUser> : IUserValidator<TUser> where TUser : User
 
     public UserValidator(IEnumerable<IUserAttributeValidator<TUser>> attributeValidators)
     {
-        UserAttributeValidators = attributeValidators ?? throw new ArgumentNullException(nameof(attributeValidators));
+        if (attributeValidators is null)
+            throw new ArgumentNullException(nameof(attributeValidators));
+
+        UserAttributeValidators = attributeValidators.OrderBy(x => x.ValidationOrder);
     }
 
     public async ValueTask<IdentityResult> ValidateAsync(TUser user)

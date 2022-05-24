@@ -7,6 +7,8 @@ public class SecurityStampValidator<TUser> : IUserAttributeValidator<TUser> wher
 {
     private readonly IUserRepository<TUser> _userRepository;
 
+    public int ValidationOrder { get; } = 1;
+
     public SecurityStampValidator(IUserRepository<TUser> userRepository)
     {
         _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
