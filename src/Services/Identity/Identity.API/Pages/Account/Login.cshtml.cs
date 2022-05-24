@@ -75,22 +75,31 @@ public class LoginModel : PageModel
         public bool RememberMe { get; set; }
     }
 
-    public async Task OnGetAsync(string returnUrl = null)
+    private void Load(string email, bool rememberMe, string returnUrl)
+    {
+        ReturnUrl = returnUrl ?? Url.Content("~/");
+
+        Input = new InputModel
+        {
+            Email = email,
+            RememberMe = rememberMe
+        };
+    }
+
+    public async Task OnGetAsync(string email = null, bool rememberMe = false, string returnUrl = null)
     {
         if (!string.IsNullOrEmpty(ErrorMessage))
         {
             ModelState.AddModelError(string.Empty, ErrorMessage);
         }
 
-        returnUrl ??= Url.Content("~/");
+        Load(email, rememberMe, returnUrl);
 
         // Clear the existing external cookie to ensure a clean login process
         await _signInManager.SignOutAsync(HttpContext);
-
-        ReturnUrl = returnUrl;
     }
 
-    public async Task<IActionResult> OnPostLoginAsync(string returnUrl = null)
+    public async Task<IActionResult> OnPostAsync(string returnUrl = null)
     {
         returnUrl ??= Url.Content("~/");
 
@@ -123,7 +132,7 @@ public class LoginModel : PageModel
                 {
                     _logger.LogWarning("User email address is no longer valid.");
                     if (user is not null)
-                        return RedirectToPage("./ChangeOutdatedEmail", new { userId = user.Id });
+                        return RedirectToPage("./UpdateEmail", new { userId = user.Id });
                 }
             }
 
