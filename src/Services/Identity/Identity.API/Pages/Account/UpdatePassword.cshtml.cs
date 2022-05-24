@@ -12,13 +12,13 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace Blog.Services.Identity.API.Pages.Account.Manage;
 
-public class ChangePasswordModel : PageModel
+public class UpdatePassword : PageModel
 {
     private readonly UserManager<User> _userManager;
     private readonly SignInManager<User> _signInManager;
     private readonly ILogger<ChangePasswordModel> _logger;
 
-    public ChangePasswordModel(
+    public UpdatePassword(
         UserManager<User> userManager,
         SignInManager<User> signInManager,
         ILogger<ChangePasswordModel> logger)
@@ -42,6 +42,10 @@ public class ChangePasswordModel : PageModel
     [TempData]
     public string StatusMessage { get; set; }
 
+    public string Email { get; set; }
+    public bool RememberMe { get; set; }
+    public string ReturnUrl { get; set; }
+
     /// <summary>
     ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
     ///     directly from your code. This API may change or be removed in future releases.
@@ -62,7 +66,7 @@ public class ChangePasswordModel : PageModel
         ///     directly from your code. This API may change or be removed in future releases.
         /// </summary>
         [Required]
-        [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+        [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 8)]
         [DataType(DataType.Password)]
         [Display(Name = "New password")]
         public string NewPassword { get; set; }
@@ -77,28 +81,38 @@ public class ChangePasswordModel : PageModel
         public string ConfirmPassword { get; set; }
     }
 
-    public async Task<IActionResult> OnGetAsync()
+    private void Load(User user, bool rememberMe, string returnUrl)
     {
-        var user = await _userManager.GetUserAsync(User);
+        Email = user.Email;
+        RememberMe = rememberMe;
+        ReturnUrl = returnUrl ?? Url.Content("~/");
+    }
+
+    public async Task<IActionResult> OnGetAsync(Guid userId, bool rememberMe = false, string returnUrl = null)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
         if (user is null)
         {
-            return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+            return NotFound($"Unable to load user with ID '{userId}'.");
         }
+
+        Load(user, rememberMe, returnUrl);
 
         return Page();
     }
 
     public async Task<IActionResult> OnPostAsync()
     {
-        if (!ModelState.IsValid)
-        {
-            return Page();
-        }
-
-        var user = await _userManager.GetUserAsync(User);
+        var user = await _userManager.FindByEmailAsync(Email);
         if (user is null)
         {
             return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+        }
+
+        if (!ModelState.IsValid)
+        {
+            Load(user, RememberMe, ReturnUrl);
+            return Page();
         }
 
         var changePasswordResult = await _userManager.UpdatePasswordAsync(user, Input.OldPassword, Input.NewPassword);
@@ -111,17 +125,7 @@ public class ChangePasswordModel : PageModel
             return Page();
         }
 
-        bool success = await _signInManager.RefreshSignInAsync(HttpContext, user);
-        if (!success)
-        {
-            _logger.LogWarning("User cannot be signed-in again.");
-            StatusMessage = "Your password has been changed, please re-login.";
-            return RedirectToPage("../Login");
-        }
-
-        _logger.LogInformation("User changed their password successfully.");
-        StatusMessage = "Your password has been changed.";
-
-        return RedirectToPage();
+        StatusMessage = "Your password has been changed, please re-login.";
+        return RedirectToPage("./Login", new { email = Email, rememberMe = RememberMe, returnUrl = ReturnUrl });
     }
 }

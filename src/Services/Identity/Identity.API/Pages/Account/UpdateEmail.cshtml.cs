@@ -15,20 +15,20 @@ using Microsoft.Extensions.Options;
 
 namespace Blog.Services.Identity.API.Pages.Account.Manage;
 
-public class OutdatedEmailModel : PageModel
+public class UpdateEmailModel : PageModel
 {
     private readonly UserManager<User> _userManager;
     private readonly SignInManager<User> _signInManager;
     private readonly IEmailSender _emailSender;
     private readonly IOptionsMonitor<EmailOptions> _emailOptions;
-    private readonly ILogger<OutdatedEmailModel> _logger;
+    private readonly ILogger<UpdateEmailModel> _logger;
 
-    public OutdatedEmailModel(
+    public UpdateEmailModel(
         UserManager<User> userManager,
         SignInManager<User> signInManager,
         IOptionsMonitor<EmailOptions> emailOptions,
         IEmailSender emailSender,
-        ILogger<OutdatedEmailModel> logger)
+        ILogger<UpdateEmailModel> logger)
     {
         _userManager = userManager;
         _signInManager = signInManager;
@@ -42,6 +42,8 @@ public class OutdatedEmailModel : PageModel
     ///     directly from your code. This API may change or be removed in future releases.
     /// </summary>
     public string Email { get; set; }
+    public bool RememberMe { get; set; }
+    public string ReturnUrl { get; set; }
 
     /// <summary>
     ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
@@ -73,9 +75,11 @@ public class OutdatedEmailModel : PageModel
         public string NewEmail { get; set; }
     }
 
-    private void Load(User user)
+    private void Load(User user, bool rememberMe, string returnUrl)
     {
         Email = user.Email;
+        RememberMe = rememberMe;
+        ReturnUrl = returnUrl ?? Url.Content("~/");
 
         Input = new InputModel
         {
@@ -83,13 +87,13 @@ public class OutdatedEmailModel : PageModel
         };
     }
 
-    public async Task<IActionResult> OnGetAsync(Guid userId)
+    public async Task<IActionResult> OnGetAsync(Guid userId, bool rememberMe = false, string returnUrl = null)
     {
         var user = await _userManager.FindByIdAsync(userId);
         if (user is null)
-            return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+            return NotFound($"Unable to load user with ID '{userId}'.");
 
-        Load(user);
+        Load(user, rememberMe, returnUrl);
         return Page();
     }
 
@@ -98,12 +102,12 @@ public class OutdatedEmailModel : PageModel
         var user = await _userManager.FindByEmailAsync(Email);
         if (user is null)
         {
-            return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+            return NotFound($"Unable to load user with email '{Email}'.");
         }
 
         if (!ModelState.IsValid)
         {
-            Load(user);
+            Load(user, RememberMe, ReturnUrl);
             return Page();
         }
 
@@ -151,11 +155,11 @@ public class OutdatedEmailModel : PageModel
                     $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
 
                 StatusMessage = "Confirmation link to change email sent. Please check your email.";
-                return RedirectToPage();
+                return RedirectToPage("./Login", new { email = Input.NewEmail, rememberMe = RememberMe, returnUrl = ReturnUrl });
             }
 
             StatusMessage = "Your email has been changed, please re-login.";
-            return RedirectToPage("./Login");
+            return RedirectToPage("./Login", new { email = Input.NewEmail, rememberMe = RememberMe, returnUrl = ReturnUrl });
         }
 
         ModelState.AddModelError(string.Empty, "Your email is unchanged.");

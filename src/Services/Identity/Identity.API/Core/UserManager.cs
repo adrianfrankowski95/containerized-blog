@@ -315,14 +315,14 @@ public class UserManager<TUser> where TUser : User
     {
         ThrowIfNull(user);
 
-        if (IsResettingPassword(user))
-            throw new InvalidOperationException("User cannot change his password during resetting");
-
         if (string.IsNullOrWhiteSpace(newPassword))
             throw new ArgumentNullException(nameof(newPassword));
 
         if (string.IsNullOrWhiteSpace(oldPassword))
             throw new ArgumentNullException(nameof(oldPassword));
+
+        if (IsResettingPassword(user))
+            throw new InvalidOperationException("User cannot change his password during resetting");
 
         var passwordVerificationResult = VerifyPassword(user, oldPassword);
 
