@@ -4,13 +4,13 @@ public class IdentityResult
 {
     private static readonly IdentityResult _success = new(true);
     public bool Succeeded { get; private set; }
-    public IEnumerable<IdentityError> Errors { get; }
+    public HashSet<IdentityError> Errors { get; }
 
     private IdentityResult(bool success) { Succeeded = success; }
 
     private IdentityResult(IEnumerable<IdentityError> errors) : this(false)
     {
-        Errors = errors;
+        Errors = errors.ToHashSet();
     }
 
     public static IdentityResult Fail(IdentityError error) => new(new[] { error });

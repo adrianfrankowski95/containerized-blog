@@ -31,34 +31,29 @@ public class LoginService<TUser> : ILoginService where TUser : User
         if (passwordVerificationResult is PasswordVerificationResult.Success ||
             passwordVerificationResult is PasswordVerificationResult.SuccessNeedsRehash)
         {
-            if (passwordVerificationResult is PasswordVerificationResult.SuccessNeedsRehash)
-            {
-                //User is validated in UpdatePasswordHashAsync.UpdateUserAsync method
-                var passwordHashUpdateResult = await _userManager.UpdatePasswordHashAsync(user, password, false).ConfigureAwait(false);
-                if (!passwordHashUpdateResult.Succeeded)
-                    return passwordHashUpdateResult;
-            }
-            else if (passwordVerificationResult is PasswordVerificationResult.Success)
-            {     
-                var userValidationResult = await _userManager.ValidateUserAsync(user).ConfigureAwait(false);
-                if (!userValidationResult.Succeeded)
-                    return userValidationResult;
-            }
+            var userValidationResult = await _userManager.ValidateUserAsync(user).ConfigureAwait(false);
+            if (!userValidationResult.Succeeded)
+                return userValidationResult;
 
             var passwordValidationResult = await _userManager.ValidatePasswordAsync(password).ConfigureAwait(false);
             if (!passwordValidationResult.Succeeded)
                 return passwordValidationResult;
 
+            if (passwordVerificationResult is PasswordVerificationResult.SuccessNeedsRehash)
+            {
+                var passwordHashUpdateResult = await _userManager.UpdatePasswordHashAsync(user, password, false).ConfigureAwait(false);
+                if (!passwordHashUpdateResult.Succeeded)
+                    return passwordHashUpdateResult;
+            }
+
             return await _userManager.SuccessfulLoginAttemptAsync(user).ConfigureAwait(false);
         }
         else if (passwordVerificationResult is PasswordVerificationResult.Fail)
         {
-            IdentityResult result = IdentityResult.Success;
-
             if (_options.CurrentValue.EnableLoginAttemptsLock)
-                result = await _userManager.FailedLoginAttemptAsync(user).ConfigureAwait(false);
+                await _userManager.FailedLoginAttemptAsync(user).ConfigureAwait(false);
 
-            return result.Succeeded ? IdentityResult.Fail(IdentityError.InvalidCredentials) : result;
+            return IdentityResult.Fail(IdentityError.InvalidCredentials);
         }
         else
             throw new NotSupportedException("Unhandled password verification result");
