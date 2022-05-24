@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 #nullable disable
 
+
 using System.ComponentModel.DataAnnotations;
 using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Models;
@@ -11,17 +12,20 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace Blog.Services.Identity.API.Pages.Account.Manage;
 
-public class SetPasswordModel : PageModel
+public class ChangePasswordModel : PageModel
 {
     private readonly UserManager<User> _userManager;
     private readonly SignInManager<User> _signInManager;
+    private readonly ILogger<ChangePasswordModel> _logger;
 
-    public SetPasswordModel(
+    public ChangePasswordModel(
         UserManager<User> userManager,
-        SignInManager<User> signInManager)
+        SignInManager<User> signInManager,
+        ILogger<ChangePasswordModel> logger)
     {
         _userManager = userManager;
         _signInManager = signInManager;
+        _logger = logger;
     }
 
     /// <summary>
@@ -49,6 +53,15 @@ public class SetPasswordModel : PageModel
         ///     directly from your code. This API may change or be removed in future releases.
         /// </summary>
         [Required]
+        [DataType(DataType.Password)]
+        [Display(Name = "Current password")]
+        public string OldPassword { get; set; }
+
+        /// <summary>
+        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
+        ///     directly from your code. This API may change or be removed in future releases.
+        /// </summary>
+        [Required]
         [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
         [DataType(DataType.Password)]
         [Display(Name = "New password")]
@@ -67,16 +80,9 @@ public class SetPasswordModel : PageModel
     public async Task<IActionResult> OnGetAsync()
     {
         var user = await _userManager.GetUserAsync(User);
-        if (user == null)
+        if (user is null)
         {
             return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
-        }
-
-        var hasPassword = await _userManager.HasPasswordAsync(user);
-
-        if (hasPassword)
-        {
-            return RedirectToPage("./ChangePassword");
         }
 
         return Page();
@@ -90,23 +96,31 @@ public class SetPasswordModel : PageModel
         }
 
         var user = await _userManager.GetUserAsync(User);
-        if (user == null)
+        if (user is null)
         {
             return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
         }
 
-        var addPasswordResult = await _userManager.AddPasswordAsync(user, Input.NewPassword);
-        if (!addPasswordResult.Succeeded)
+        var changePasswordResult = await _userManager.UpdatePasswordAsync(user, Input.OldPassword, Input.NewPassword);
+        if (!changePasswordResult.Succeeded)
         {
-            foreach (var error in addPasswordResult.Errors)
+            foreach (var error in changePasswordResult.Errors)
             {
-                ModelState.AddModelError(string.Empty, error.Description);
+                ModelState.AddModelError(string.Empty, error.ErrorDescription);
             }
             return Page();
         }
 
-        await _signInManager.RefreshSignInAsync(user);
-        StatusMessage = "Your password has been set.";
+        bool success = await _signInManager.RefreshSignInAsync(HttpContext, user);
+        if (!success)
+        {
+            _logger.LogWarning("User cannot be signed-in again.");
+            StatusMessage = "Your password has been changed, please re-login.";
+            return RedirectToPage("../Login");
+        }
+
+        _logger.LogInformation("User changed their password successfully.");
+        StatusMessage = "Your password has been changed.";
 
         return RedirectToPage();
     }

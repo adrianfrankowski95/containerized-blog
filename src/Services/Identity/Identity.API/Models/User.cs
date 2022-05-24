@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using NodaTime;
 
 namespace Blog.Services.Identity.API.Models;
@@ -25,14 +26,17 @@ public class User
     public NonEmptyString Username { get; set; }
     public NonEmptyString Name { get; set; }
     public NonEmptyString LastName { get; set; }
+
+    [JsonIgnore]
     public NonEmptyString FullName => Name + " " + LastName;
+
     public NonEmptyString Email { get; set; }
     public bool EmailConfirmed { get; set; }
     public NonEmptyString PasswordHash { get; set; }
     public Role Role { get; set; }
     public bool ReceiveAdditionalEmails { get; set; }
     public Instant CreatedAt { get; set; }
-    public Instant? LockedUntil { get; set; }
+    public Instant? LockedOutUntil { get; set; }
     public Instant? SuspendedUntil { get; set; }
     public Instant? LastLoginAt { get; set; }
     public NonNegativeInt FailedLoginAttempts { get; set; }

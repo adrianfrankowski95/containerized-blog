@@ -11,6 +11,7 @@ using Blog.Services.Identity.API.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Options;
 
 namespace Blog.Services.Identity.API.Pages.Account.Manage;
 
@@ -18,16 +19,22 @@ public class EmailModel : PageModel
 {
     private readonly UserManager<User> _userManager;
     private readonly SignInManager<User> _signInManager;
+    private readonly IOptionsMonitor<EmailOptions> _emailOptions;
     private readonly IEmailSender _emailSender;
+    private readonly ILogger<EmailModel> _logger;
 
     public EmailModel(
         UserManager<User> userManager,
         SignInManager<User> signInManager,
-        IEmailSender emailSender)
+        IOptionsMonitor<EmailOptions> emailOptions,
+        IEmailSender emailSender,
+        ILogger<EmailModel> logger)
     {
         _userManager = userManager;
         _signInManager = signInManager;
+        _emailOptions = emailOptions;
         _emailSender = emailSender;
+        _logger = logger;
     }
 
     /// <summary>
@@ -72,9 +79,9 @@ public class EmailModel : PageModel
         public string NewEmail { get; set; }
     }
 
-    private async Task LoadAsync(User user)
+    private void Load(User user)
     {
-        var email = await _userManager.GetEmailAsync(user);
+        var email = user.Email;
         Email = email;
 
         Input = new InputModel
@@ -82,53 +89,89 @@ public class EmailModel : PageModel
             NewEmail = email,
         };
 
-        IsEmailConfirmed = await _userManager.IsEmailConfirmedAsync(user);
+        IsEmailConfirmed = user.EmailConfirmed;
     }
 
     public async Task<IActionResult> OnGetAsync()
     {
         var user = await _userManager.GetUserAsync(User);
-        if (user == null)
-        {
+        if (user is null)
             return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
-        }
 
-        await LoadAsync(user);
+        Load(user);
         return Page();
     }
 
     public async Task<IActionResult> OnPostChangeEmailAsync()
     {
         var user = await _userManager.GetUserAsync(User);
-        if (user == null)
+        if (user is null)
         {
             return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
         }
 
         if (!ModelState.IsValid)
         {
-            await LoadAsync(user);
+            Load(user);
             return Page();
         }
 
-        var email = await _userManager.GetEmailAsync(user);
-        if (Input.NewEmail != email)
+        if (!string.Equals(Input.NewEmail, user.Email, StringComparison.OrdinalIgnoreCase))
         {
-            var userId = await _userManager.GetUserIdAsync(user);
-            var code = await _userManager.GenerateChangeEmailTokenAsync(user, Input.NewEmail);
-            code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-            var callbackUrl = Url.Page(
-                "/Account/ConfirmEmailChange",
-                pageHandler: null,
-                values: new { area = "Identity", userId = userId, email = Input.NewEmail, code = code },
-                protocol: Request.Scheme);
-            await _emailSender.SendEmailAsync(
-                Input.NewEmail,
-                "Confirm your email",
-                $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+            var result = await _userManager.UpdateEmailAsync(user, Input.NewEmail);
+            if (!result.Succeeded)
+            {
+                //Reveal details about account state only if provided credentials are valid
+                if (!result.Errors.Contains(IdentityError.InvalidCredentials))
+                {
+                    if (result.Errors.Contains(IdentityError.AccountSuspended))
+                    {
+                        if (user is not null)
+                        {
+                            _logger.LogWarning("User account suspended.");
+                            return RedirectToPage("./Suspension", new { userId = user.Id });
+                        }
+                    }
+                    else if (result.Errors.Contains(IdentityError.AccountLockedOut))
+                    {
+                        _logger.LogWarning("User account locked out.");
+                        return RedirectToPage("./Lockout");
+                    }
+                    else if (result.Errors.Contains(IdentityError.EmailDuplicated))
+                    {
+                        ModelState.AddModelError(string.Empty, "Provided email is already in use.");
+                        return Page();
+                    }
+                }
 
-            StatusMessage = "Confirmation link to change email sent. Please check your email.";
-            return RedirectToPage();
+                ModelState.AddModelError(string.Empty, "Invalid email change attempt.");
+                return Page();
+            }
+
+            if (_emailOptions.CurrentValue.RequireConfirmed)
+            {
+                var code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(user.EmailConfirmationCode.ToString()));
+                var callbackUrl = Url.Page(
+                    "/Account/ConfirmEmailChange",
+                    pageHandler: null,
+                    values: new { area = "Identity", userId = user.Id, email = Input.NewEmail, code = code },
+                    protocol: Request.Scheme);
+                await _emailSender.SendEmailAsync(
+                    Input.NewEmail,
+                    "Confirm your email",
+                    $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+
+                StatusMessage = "Confirmation link to change email sent. Please check your email.";
+                return RedirectToPage();
+            }
+
+            bool success = await _signInManager.RefreshSignInAsync(HttpContext, user);
+            if (!success)
+            {
+                _logger.LogWarning("User cannot be signed-in again.");
+                StatusMessage = "Your email has been changed, please re-login.";
+                return RedirectToPage("../Login");
+            }
         }
 
         StatusMessage = "Your email is unchanged.";
@@ -138,28 +181,32 @@ public class EmailModel : PageModel
     public async Task<IActionResult> OnPostSendVerificationEmailAsync()
     {
         var user = await _userManager.GetUserAsync(User);
-        if (user == null)
+        if (user is null)
         {
             return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
         }
 
         if (!ModelState.IsValid)
         {
-            await LoadAsync(user);
+            Load(user);
             return Page();
         }
 
-        var userId = await _userManager.GetUserIdAsync(user);
-        var email = await _userManager.GetEmailAsync(user);
-        var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-        code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+        var result = await _userManager.UpdateEmailAsync(user, user.Email);
+        if (!result.Succeeded)
+        {
+            ModelState.AddModelError(string.Empty, "Invalid email verification send attempt.");
+            return Page();
+        }
+
+        var code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(user.EmailConfirmationCode.ToString()));
         var callbackUrl = Url.Page(
             "/Account/ConfirmEmail",
             pageHandler: null,
-            values: new { area = "Identity", userId = userId, code = code },
+            values: new { area = "Identity", userId = user.Id, code = code },
             protocol: Request.Scheme);
         await _emailSender.SendEmailAsync(
-            email,
+            user.Email,
             "Confirm your email",
             $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
 

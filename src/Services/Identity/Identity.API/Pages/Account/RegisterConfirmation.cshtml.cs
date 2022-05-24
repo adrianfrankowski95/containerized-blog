@@ -47,10 +47,10 @@ public class RegisterConfirmationModel : PageModel
         {
             return RedirectToPage("/Index");
         }
-        returnUrl = returnUrl ?? Url.Content("~/");
+        returnUrl ??= Url.Content("~/");
 
         var user = await _userManager.FindByEmailAsync(email);
-        if (user == null)
+        if (user is null)
         {
             return NotFound($"Unable to load user with email '{email}'.");
         }

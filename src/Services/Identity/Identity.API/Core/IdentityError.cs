@@ -17,8 +17,8 @@ public class IdentityError
     public static IdentityError InvalidIdentifier
         => new(IdentityErrorCode.InvalidCredentials, "Invalid identifier");
 
-    public static IdentityError AccountLocked
-        => new(IdentityErrorCode.AccountLocked, "Too many failed login attempts");
+    public static IdentityError AccountLockedOut
+        => new(IdentityErrorCode.AccountLockedOut, "Too many failed login attempts");
 
     public static IdentityError AccountSuspended
         => new(IdentityErrorCode.AccountSuspended, "Account suspended");
