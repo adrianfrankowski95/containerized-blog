@@ -1,15 +1,13 @@
-using Blog.Services.Identity.API.Infrastructure.Repositories;
 using Blog.Services.Identity.API.Models;
-using Blog.Services.Identity.API.Services;
-using Microsoft.Extensions.Options;
 
 namespace Blog.Services.Identity.API.Core;
 
-public class UserStatusValidator<TUser> : IUserAttributeValidator<TUser> where TUser : User
+public class UserStateValidator<TUser> : IUserAttributeValidator<TUser> where TUser : User
 {
     private readonly UserManager<TUser> _userManager;
+    public int ValidationOrder { get; } = 2;
 
-    public UserStatusValidator(UserManager<TUser> userManager)
+    public UserStateValidator(UserManager<TUser> userManager)
     {
         _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
 

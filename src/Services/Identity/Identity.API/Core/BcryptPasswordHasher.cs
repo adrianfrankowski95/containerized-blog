@@ -19,7 +19,6 @@ public class BcryptPasswordHasher : IPasswordHasher
         if (string.IsNullOrWhiteSpace(passwordHash))
             throw new ArgumentNullException(nameof(passwordHash));
 
-
         if (BCrypt.Net.BCrypt.EnhancedVerify(password, passwordHash, HashType.SHA512))
         {
             if (CheckPasswordNeedsRehash(passwordHash))

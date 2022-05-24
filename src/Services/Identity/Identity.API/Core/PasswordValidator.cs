@@ -1,4 +1,3 @@
-using Blog.Services.Identity.API.Infrastructure.Repositories;
 using Blog.Services.Identity.API.Models;
 using Microsoft.Extensions.Options;
 
@@ -6,15 +5,11 @@ namespace Blog.Services.Identity.API.Core;
 
 public class PasswordValidator<TUser> : IPasswordValidator<TUser> where TUser : User
 {
-    private readonly IUserRepository<TUser> _userRepository;
     private readonly IOptionsMonitor<PasswordOptions> _options;
-    private readonly IPasswordHasher _passwordHasher;
 
-    public PasswordValidator(IUserRepository<TUser> userRepository, IOptionsMonitor<PasswordOptions> options, IPasswordHasher passwordHasher)
+    public PasswordValidator(IOptionsMonitor<PasswordOptions> options)
     {
-        _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         _options = options ?? throw new ArgumentNullException(nameof(options));
-        _passwordHasher = passwordHasher ?? throw new ArgumentNullException(nameof(passwordHasher));
     }
     public ValueTask<IdentityResult> ValidateAsync(string password)
     {

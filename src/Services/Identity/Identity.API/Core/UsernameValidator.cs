@@ -9,6 +9,8 @@ public class UsernameValidator<TUser> : IUserAttributeValidator<TUser> where TUs
     private readonly IUserRepository<TUser> _userRepository;
     private readonly IOptionsMonitor<UsernameOptions> _options;
 
+    public int ValidationOrder { get; } = 4;
+
     public UsernameValidator(IUserRepository<TUser> userRepository, IOptionsMonitor<UsernameOptions> options)
     {
         _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
