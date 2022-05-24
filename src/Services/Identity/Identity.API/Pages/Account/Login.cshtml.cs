@@ -4,6 +4,7 @@
 
 
 using System.ComponentModel.DataAnnotations;
+using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Models;
 using Blog.Services.Identity.API.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -13,12 +14,14 @@ namespace Blog.Services.Identity.API.Pages.Account;
 
 public class LoginModel : PageModel
 {
+    private readonly UserManager<User> _userManager;
     private readonly SignInManager<User> _signInManager;
     private readonly ILoginService _loginService;
     private readonly ILogger<LoginModel> _logger;
 
-    public LoginModel(SignInManager<User> signInManager, ILoginService loginService, ILogger<LoginModel> logger)
+    public LoginModel(UserManager<User> userManager, SignInManager<User> signInManager, ILoginService loginService, ILogger<LoginModel> logger)
     {
+        _userManager = userManager;
         _signInManager = signInManager;
         _loginService = loginService;
         _logger = logger;
@@ -101,16 +104,28 @@ public class LoginModel : PageModel
                 _logger.LogInformation("User logged in.");
                 return LocalRedirect(returnUrl);
             }
-            if (result.IsLockedOut)
+
+            //Reveal details about account state only if provided credentials are valid
+            if (!result.Errors.Contains(IdentityError.InvalidCredentials))
             {
-                _logger.LogWarning("User account locked out.");
-                return RedirectToPage("./Lockout");
+                if (result.Errors.Contains(IdentityError.AccountSuspended))
+                {
+                    var user = await _userManager.FindByEmailAsync(Input.Email);
+                    if (user is not null)
+                    {
+                        _logger.LogWarning("User account suspended.");
+                        return RedirectToPage("./Suspension", new { suspendedUntil = user.LockedUntil });
+                    }
+                }
+                else if (result.Errors.Contains(IdentityError.AccountLocked))
+                {
+                    _logger.LogWarning("User account locked out.");
+                    return RedirectToPage("./Lockout");
+                }
             }
-            else
-            {
-                ModelState.AddModelError(string.Empty, "Invalid login attempt.");
-                return Page();
-            }
+
+            ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+            return Page();
         }
 
         // If we got this far, something failed, redisplay form

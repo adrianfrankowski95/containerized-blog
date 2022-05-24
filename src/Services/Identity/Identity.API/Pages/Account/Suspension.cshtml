@@ -1,0 +1,12 @@
+﻿@page
+@namespace Blog.Services.Identity.API.Pages.Account
+@using System.Globalization
+@model SuspensionModel
+@{
+    ViewData["Title"] = "Suspended";
+}
+
+<header>
+    <h1 class="text-danger">@ViewData["Title"]</h1>
+    <p class="text-danger">This account has been suspended until @Model.SuspendedUntil.ToString("dddd, dd mmmm yyyy HH:mm:ss", DateTimeFormatInfo.InvariantInfo).</p>
+</header>
