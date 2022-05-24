@@ -31,7 +31,7 @@ public class UserManager : UserManager<User>
 
         ThrowIfDisposed();
         var userRoleStore = GetUserRoleStore();
-        if (user == null)
+        if (user is null)
         {
             throw new ArgumentNullException(nameof(user));
         }

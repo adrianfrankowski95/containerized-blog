@@ -43,6 +43,26 @@ public class UserManager<TUser> where TUser : User
     public Task<TUser?> FindByIdAsync(Guid userId)
         => _unitOfWork.Users.FindByIdAsync(userId);
 
+    public Task<TUser?> GetUserAsync(ClaimsPrincipal principal)
+    {
+        var id = GetUserId(principal);
+
+        if (id is null)
+            throw new ArgumentNullException(nameof(id));
+
+        return _unitOfWork.Users.FindByIdAsync(id.Value);
+    }
+
+    public Guid? GetUserId(ClaimsPrincipal principal)
+    {
+        if (principal is null)
+            throw new ArgumentNullException(nameof(principal));
+
+        string id = principal.FindFirstValue(IdentityConstants.ClaimTypes.Id);
+
+        return Guid.TryParse(id, out Guid userId) ? userId : null;
+    }
+
     public ValueTask<IdentityResult> ValidateUserAsync(TUser user)
         => _userValidator.ValidateAsync(user);
 
@@ -107,25 +127,25 @@ public class UserManager<TUser> where TUser : User
     {
         ThrowIfNull(user);
 
-        if (IsLocked(user))
-            throw new InvalidOperationException("Login attempt for a locked user");
+        if (IsLockedOut(user))
+            throw new InvalidOperationException("Login attempt by a locked out user");
 
         var maxAttempts = _securityOptions.CurrentValue.MaxAllowedLoginAttempts;
 
         user.FailedLoginAttempts = ++user.FailedLoginAttempts;
 
         if (user.FailedLoginAttempts >= maxAttempts)
-            return LockAsync(user);
+            return LockOutAsync(user);
         else
             return UpdateUserAsync(user);
     }
 
-    public bool IsLocked(TUser user)
+    public bool IsLockedOut(TUser user)
     {
         ThrowIfNull(user);
 
-        return _securityOptions.CurrentValue.EnableLoginAttemptsLock &&
-            user.LockedUntil is not null && user.LockedUntil > _sysTime.Now;
+        return _securityOptions.CurrentValue.EnableAccountLockout &&
+            user.LockedOutUntil is not null && user.LockedOutUntil > _sysTime.Now;
     }
 
     public bool IsSuspended(TUser user)
@@ -140,19 +160,19 @@ public class UserManager<TUser> where TUser : User
         return user.PasswordResetCode is not null;
     }
 
-    private Task<IdentityResult> LockAsync(TUser user)
+    private Task<IdentityResult> LockOutAsync(TUser user)
     {
         ThrowIfNull(user);
 
-        if (IsLocked(user))
-            throw new InvalidOperationException("User is already locked");
+        if (IsLockedOut(user))
+            throw new InvalidOperationException("User is already locked out");
 
-        if (!_securityOptions.CurrentValue.EnableLoginAttemptsLock)
-            throw new InvalidOperationException("User lock is not enabled");
+        if (!_securityOptions.CurrentValue.EnableAccountLockout)
+            throw new InvalidOperationException("User lockout is not enabled");
 
-        var lockDuration = _securityOptions.CurrentValue.AccountLockDuration;
+        var lockoutDuration = _securityOptions.CurrentValue.AccountLockoutDuration;
 
-        user.LockedUntil = _sysTime.Now.Plus(Duration.FromTimeSpan(lockDuration));
+        user.LockedOutUntil = _sysTime.Now.Plus(Duration.FromTimeSpan(lockoutDuration));
         user.FailedLoginAttempts = 0;
 
         return UpdateUserAsync(user);
@@ -169,7 +189,7 @@ public class UserManager<TUser> where TUser : User
         user.CreatedAt = _sysTime.Now;
 
         user.FailedLoginAttempts = 0;
-        user.LockedUntil = null;
+        user.LockedOutUntil = null;
         user.LastLoginAt = null;
         user.PasswordResetCode = null;
         user.PasswordResetCodeIssuedAt = null;
@@ -208,10 +228,18 @@ public class UserManager<TUser> where TUser : User
             throw new ArgumentNullException(nameof(newEmail));
 
         user.Email = newEmail;
-        user.EmailConfirmed = false;
 
-        user.EmailConfirmationCode = GenerateEmailConfirmationCode();
-        user.EmailConfirmationCodeIssuedAt = _sysTime.Now;
+        if (_emailOptions.CurrentValue.RequireConfirmed)
+        {
+            user.EmailConfirmed = false;
+            user.EmailConfirmationCode = GenerateEmailConfirmationCode();
+            user.EmailConfirmationCodeIssuedAt = _sysTime.Now;
+        }
+        else
+        {
+            user.EmailConfirmationCode = null;
+            user.EmailConfirmationCodeIssuedAt = null;
+        }
 
         user.SecurityStamp = GenerateSecurityStamp();
 
@@ -326,15 +354,13 @@ public class UserManager<TUser> where TUser : User
         return new string(code);
     }
 
-    public Task<IdentityResult> ResetPasswordAsync(TUser user, out string passwordResetCode)
+    public Task<IdentityResult> ResetPasswordAsync(TUser user)
     {
         ThrowIfNull(user);
 
         var length = _securityOptions.CurrentValue.PasswordResetCodeLength;
 
-        passwordResetCode = GeneratePasswordResetCode(length);
-
-        user.PasswordResetCode = passwordResetCode;
+        user.PasswordResetCode = GeneratePasswordResetCode(length);
         user.PasswordResetCodeIssuedAt = _sysTime.Now;
         user.SecurityStamp = GenerateSecurityStamp();
 

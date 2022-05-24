@@ -4,7 +4,7 @@ public enum IdentityErrorCode
 {
     InvalidCredentials = 0,
     InvalidIdentifier = 1,
-    AccountLocked = 2,
+    AccountLockedOut = 2,
     AccountSuspended = 3,
     ResettingPassword = 4,
     MissingEmail = 5,

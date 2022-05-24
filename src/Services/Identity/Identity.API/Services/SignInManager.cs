@@ -24,6 +24,17 @@ public class SignInManager<TUser> : ISignInManager<TUser> where TUser : User
             new AuthenticationProperties() { IsPersistent = isPersistent, RedirectUri = redirectUri });
     }
 
+    public async Task<bool> RefreshSignInAsync(HttpContext context, TUser user)
+    {
+        var auth = await context.AuthenticateAsync(IdentityConstants.AuthenticationScheme).ConfigureAwait(false);
+
+        if (!auth.Succeeded || !IsSignedIn(auth.Principal))
+            return false;
+
+        await SignInAsync(context, user, auth.Properties.IsPersistent, auth.Properties.RedirectUri).ConfigureAwait(false);
+        return true;
+    }
+
     public Task SignOutAsync(HttpContext context)
      => context.SignOutAsync(IdentityConstants.AuthenticationScheme);
 

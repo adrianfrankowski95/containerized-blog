@@ -14,14 +14,12 @@ namespace Blog.Services.Identity.API.Pages.Account;
 
 public class LoginModel : PageModel
 {
-    private readonly UserManager<User> _userManager;
     private readonly SignInManager<User> _signInManager;
-    private readonly ILoginService _loginService;
+    private readonly ILoginService<User> _loginService;
     private readonly ILogger<LoginModel> _logger;
 
-    public LoginModel(UserManager<User> userManager, SignInManager<User> signInManager, ILoginService loginService, ILogger<LoginModel> logger)
+    public LoginModel(SignInManager<User> signInManager, ILoginService<User> loginService, ILogger<LoginModel> logger)
     {
-        _userManager = userManager;
         _signInManager = signInManager;
         _loginService = loginService;
         _logger = logger;
@@ -92,13 +90,13 @@ public class LoginModel : PageModel
         ReturnUrl = returnUrl;
     }
 
-    public async Task<IActionResult> OnPostAsync(string returnUrl = null)
+    public async Task<IActionResult> OnPostLoginAsync(string returnUrl = null)
     {
         returnUrl ??= Url.Content("~/");
 
         if (ModelState.IsValid)
         {
-            var result = await _loginService.LoginAsync(Input.Email, Input.Password);
+            var result = await _loginService.LoginAsync(Input.Email, Input.Password, out User user);
             if (result.Succeeded)
             {
                 _logger.LogInformation("User logged in.");
@@ -110,17 +108,22 @@ public class LoginModel : PageModel
             {
                 if (result.Errors.Contains(IdentityError.AccountSuspended))
                 {
-                    var user = await _userManager.FindByEmailAsync(Input.Email);
+                    _logger.LogWarning("User account suspended.");
                     if (user is not null)
-                    {
-                        _logger.LogWarning("User account suspended.");
-                        return RedirectToPage("./Suspension", new { suspendedUntil = user.LockedUntil });
-                    }
+                        return RedirectToPage("./Suspension", new { userId = user.Id });
                 }
-                else if (result.Errors.Contains(IdentityError.AccountLocked))
+                else if (result.Errors.Contains(IdentityError.AccountLockedOut))
                 {
                     _logger.LogWarning("User account locked out.");
                     return RedirectToPage("./Lockout");
+                }
+                else if (result.Errors.Contains(IdentityError.EmailDuplicated) ||
+                        result.Errors.Contains(IdentityError.InvalidEmailFormat) ||
+                        result.Errors.Contains(IdentityError.MissingEmail))
+                {
+                    _logger.LogWarning("User email address is no longer valid.");
+                    if (user is not null)
+                        return RedirectToPage("./ChangeOutdatedEmail", new { userId = user.Id });
                 }
             }
 

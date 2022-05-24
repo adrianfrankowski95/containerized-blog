@@ -5,7 +5,7 @@ using NodaTime;
 
 namespace Blog.Services.Identity.API.Services;
 
-public class LoginService<TUser> : ILoginService where TUser : User
+public class LoginService<TUser> : ILoginService<TUser> where TUser : User
 {
     private readonly UserManager<TUser> _userManager;
     private readonly IOptionsMonitor<SecurityOptions> _options;
@@ -16,12 +16,19 @@ public class LoginService<TUser> : ILoginService where TUser : User
         _options = options ?? throw new ArgumentNullException(nameof(options));
     }
 
-    public async ValueTask<IdentityResult> LoginAsync(string email, string password)
+    public Task<IdentityResult> LoginAsync(string email, string password, out TUser? user)
     {
-        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
-            return IdentityResult.Fail(IdentityError.InvalidCredentials);
+        user = null;
 
-        var user = await _userManager.FindByEmailAsync(email).ConfigureAwait(false);
+        if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+            return Task.FromResult(IdentityResult.Fail(IdentityError.InvalidCredentials));
+
+        return ProcessLoginAsync(email, password, user);
+    }
+
+    private async Task<IdentityResult> ProcessLoginAsync(string email, string password, TUser? user)
+    {
+        user = await _userManager.FindByEmailAsync(email).ConfigureAwait(false);
 
         if (user is null)
             return IdentityResult.Fail(IdentityError.InvalidCredentials);
@@ -50,7 +57,7 @@ public class LoginService<TUser> : ILoginService where TUser : User
         }
         else if (passwordVerificationResult is PasswordVerificationResult.Fail)
         {
-            if (_options.CurrentValue.EnableLoginAttemptsLock)
+            if (_options.CurrentValue.EnableAccountLockout)
                 await _userManager.FailedLoginAttemptAsync(user).ConfigureAwait(false);
 
             return IdentityResult.Fail(IdentityError.InvalidCredentials);

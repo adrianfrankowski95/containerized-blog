@@ -80,15 +80,9 @@ public class ChangePasswordModel : PageModel
     public async Task<IActionResult> OnGetAsync()
     {
         var user = await _userManager.GetUserAsync(User);
-        if (user == null)
+        if (user is null)
         {
             return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
-        }
-
-        var hasPassword = await _userManager.HasPasswordAsync(user);
-        if (!hasPassword)
-        {
-            return RedirectToPage("./SetPassword");
         }
 
         return Page();
@@ -102,7 +96,7 @@ public class ChangePasswordModel : PageModel
         }
 
         var user = await _userManager.GetUserAsync(User);
-        if (user == null)
+        if (user is null)
         {
             return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
         }
@@ -112,12 +106,19 @@ public class ChangePasswordModel : PageModel
         {
             foreach (var error in changePasswordResult.Errors)
             {
-                ModelState.AddModelError(string.Empty, error.Description);
+                ModelState.AddModelError(string.Empty, error.ErrorDescription);
             }
             return Page();
         }
 
-        await _signInManager.RefreshSignInAsync(user);
+        bool success = await _signInManager.RefreshSignInAsync(HttpContext, user);
+        if (!success)
+        {
+            _logger.LogWarning("User cannot be signed-in again.");
+            StatusMessage = "Your password has been changed, please re-login.";
+            return RedirectToPage("../Login");
+        }
+
         _logger.LogInformation("User changed their password successfully.");
         StatusMessage = "Your password has been changed.";
 

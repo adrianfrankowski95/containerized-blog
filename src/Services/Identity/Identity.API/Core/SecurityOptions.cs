@@ -2,9 +2,9 @@ namespace Blog.Services.Identity.API.Core;
 
 public class SecurityOptions
 {
-    public bool EnableLoginAttemptsLock { get; set; } = true;
+    public bool EnableAccountLockout { get; set; } = true;
     public int MaxAllowedLoginAttempts { get; set; } = 5;
-    public TimeSpan AccountLockDuration { get; set; } = TimeSpan.FromMinutes(1);
+    public TimeSpan AccountLockoutDuration { get; set; } = TimeSpan.FromMinutes(1);
     public int PasswordResetCodeLength { get; set; } = 6;
     //without I,l
     public string PasswordResetCodeAllowedCharacters { get; set; } = "ABCDEFGHJKLMNOPQRSTUVWXYZ1234567890!@$?_-/\\=abcdefghijkmnopqrstuvwxyz";

@@ -52,7 +52,7 @@ public class ExternalLoginsModel : PageModel
     public async Task<IActionResult> OnGetAsync()
     {
         var user = await _userManager.GetUserAsync(User);
-        if (user == null)
+        if (user is null)
         {
             return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
         }
@@ -75,7 +75,7 @@ public class ExternalLoginsModel : PageModel
     public async Task<IActionResult> OnPostRemoveLoginAsync(string loginProvider, string providerKey)
     {
         var user = await _userManager.GetUserAsync(User);
-        if (user == null)
+        if (user is null)
         {
             return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
         }
@@ -106,7 +106,7 @@ public class ExternalLoginsModel : PageModel
     public async Task<IActionResult> OnGetLinkLoginCallbackAsync()
     {
         var user = await _userManager.GetUserAsync(User);
-        if (user == null)
+        if (user is null)
         {
             return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
         }

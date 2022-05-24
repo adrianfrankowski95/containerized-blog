@@ -23,9 +23,9 @@ public class UserStateValidator<TUser> : IUserAttributeValidator<TUser> where TU
             errors.Add(IdentityError.AccountSuspended);
         }
 
-        if (_userManager.IsLocked(user))
+        if (_userManager.IsLockedOut(user))
         {
-            errors.Add(IdentityError.AccountLocked);
+            errors.Add(IdentityError.AccountLockedOut);
         }
 
         if (_userManager.IsResettingPassword(user))
