@@ -43,6 +43,9 @@ public class UserManager<TUser> where TUser : User
     public Task<TUser?> FindByIdAsync(Guid userId)
         => _unitOfWork.Users.FindByIdAsync(userId);
 
+    public Task<TUser?> FindByUsernameAsync(string username)
+        => _unitOfWork.Users.FindByUsernameAsync(username);
+
     public Task<TUser?> GetUserAsync(ClaimsPrincipal principal)
     {
         var id = GetUserId(principal);
@@ -237,7 +240,7 @@ public class UserManager<TUser> where TUser : User
         return UpdateUserAsync(user, true);
     }
 
-    public Task<IdentityResult> UpdateUsername(TUser user, string newUsername)
+    public Task<IdentityResult> UpdateUsernameAsync(TUser user, string newUsername)
     {
         ThrowIfNull(user);
 

@@ -3,34 +3,31 @@
 #nullable disable
 
 using System.ComponentModel.DataAnnotations;
-using System.Text;
-using System.Text.Encodings.Web;
 using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Options;
 
 namespace Blog.Services.Identity.API.Pages.Account.Manage;
 
-public class UpdateEmailModel : PageModel
+public class UpdateUsernameModel : PageModel
 {
     private readonly UserManager<User> _userManager;
-    private readonly IEmailSender _emailSender;
+    private readonly IOptionsMonitor<EmailOptions> _emailOptions;
+    private readonly ILogger<UpdateUsernameModel> _logger;
 
-    private readonly ILogger<UpdateEmailModel> _logger;
-
-    public UpdateEmailModel(
+    public UpdateUsernameModel(
         UserManager<User> userManager,
         IEmailSender emailSender,
         ILogger<UpdateEmailModel> logger)
     {
         _userManager = userManager;
         _emailSender = emailSender;
-        _logger = logger;
     }
 
-    public string Email { get; private set; }
+    [BindProperty]
+    public string Username { get; private set; }
 
     [TempData]
     public string StatusMessage { get; set; }
@@ -41,19 +38,18 @@ public class UpdateEmailModel : PageModel
     public class InputModel
     {
         [Required]
-        [EmailAddress]
-        [Display(Name = "New email")]
-        public string NewEmail { get; set; }
+        [StringLength(32, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 3)]
+        [Display(Name = "New username")]
+        public string NewUsername { get; set; }
     }
 
     private void Load(User user)
     {
-        Email = user.Email;
-        TempData[nameof(Email)] = user.Email;
+        Username = user.Username;
 
         Input = new InputModel
         {
-            NewEmail = user.Email,
+            NewUsername = user.Username,
         };
     }
 
@@ -69,12 +65,10 @@ public class UpdateEmailModel : PageModel
 
     public async Task<IActionResult> OnPostAsync()
     {
-        Email = (string)TempData[nameof(Email)];
-        
-        var user = await _userManager.FindByEmailAsync(Email);
+        var user = await _userManager.FindByUsernameAsync(Username);
         if (user is null)
         {
-            return NotFound($"Unable to load user with email '{Email}'.");
+            return NotFound($"Unable to load user with username '{Username}'.");
         }
 
         if (!ModelState.IsValid)
@@ -83,9 +77,9 @@ public class UpdateEmailModel : PageModel
             return Page();
         }
 
-        if (!string.Equals(Input.NewEmail, user.Email, StringComparison.OrdinalIgnoreCase))
+        if (!string.Equals(Input.NewUsername, user.Username, StringComparison.OrdinalIgnoreCase))
         {
-            var result = await _userManager.UpdateEmailAsync(user, Input.NewEmail);
+            var result = await _userManager.UpdateUsernameAsync(user, Input.NewUsername);
             if (!result.Succeeded)
             {
                 //Reveal details about account state only if provided credentials are valid
@@ -102,33 +96,23 @@ public class UpdateEmailModel : PageModel
                         _logger.LogWarning("User account locked out.");
                         return RedirectToPage("./Lockout");
                     }
-                    else if (result.Errors.Contains(IdentityError.EmailDuplicated))
+                    else if (result.Errors.Contains(IdentityError.UsernameDuplicated))
                     {
-                        ModelState.AddModelError(string.Empty, "Provided email is already in use.");
+                        ModelState.AddModelError(string.Empty, "Provided username is already in use.");
                         return Page();
                     }
                 }
 
-                ModelState.AddModelError(string.Empty, "Invalid email change attempt.");
+                ModelState.AddModelError(string.Empty, "Invalid username update attempt.");
                 return Page();
             }
 
-            var code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(user.EmailConfirmationCode.ToString()));
-            var callbackUrl = Url.Page(
-                "/Account/ConfirmEmailChange",
-                pageHandler: null,
-                values: new { area = "Identity", userId = user.Id, email = Input.NewEmail, code = code },
-                protocol: Request.Scheme);
-            await _emailSender.SendEmailAsync(
-                Input.NewEmail,
-                "Confirm your email",
-                $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
-
-            StatusMessage = "Confirmation link to change email sent. Please check your email.";
+            ///Login with TempData from Login.cshtml.cs!
+            StatusMessage = "Your password has been changed, please re-login.";
             return RedirectToPage("./Login");
         }
 
-        ModelState.AddModelError(string.Empty, "Your email is unchanged.");
+        ModelState.AddModelError(string.Empty, "Your username is unchanged.");
         return RedirectToPage();
     }
 }
