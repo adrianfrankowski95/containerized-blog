@@ -61,6 +61,7 @@ public class LoginModel : PageModel
     private void SaveInput()
     {
         TempData[nameof(Input.Email)] = Input.Email;
+        TempData[nameof(Input.Password)] = Input.Password;
         TempData[nameof(Input.RememberMe)] = Input.RememberMe;
     }
 
@@ -115,7 +116,6 @@ public class LoginModel : PageModel
                 }
                 else if (result.Errors.Contains(IdentityError.InvalidUsernameFormat))
                 {
-                    INWALID USERNAME PAGE < --------------------
                     _logger.LogWarning("User username does not meet validation requirements anymore.");
 
                     SaveInput();
@@ -126,9 +126,6 @@ public class LoginModel : PageModel
                         result.Errors.Contains(IdentityError.InvalidEmailFormat))
                 {
                     _logger.LogWarning("User email does not meet validation requirements anymore.");
-
-                    SaveInput();
-
                     return RedirectToPage("./UpdateEmail", new { userId = user.Id });
                 }
                 else if (result.Errors.Contains(IdentityError.PasswordTooShort) ||

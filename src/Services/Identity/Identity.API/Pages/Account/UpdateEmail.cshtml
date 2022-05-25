@@ -1,15 +1,15 @@
 ﻿@page
 @namespace Blog.Services.Identity.API.Pages.Account
-@model OutdatedEmailModel
+@model UpdateEmailModel
 @{
-    ViewData["Title"] = "Update Email";
+    ViewData["Title"] = "Update email";
 }
 
 <h3>@ViewData["Title"]</h3>
 <partial name="_StatusMessage" for="StatusMessage" />
 <div class="row">
     <div class="col-md-6">
-        <form id="email-form" method="post">
+        <form id="update-email-form" method="post">
             <div asp-validation-summary="All" class="text-danger"></div>
 
                 <div class="form-floating input-group">
@@ -21,7 +21,7 @@
                 <label asp-for="Input.NewEmail" class="form-label"></label>
                 <span asp-validation-for="Input.NewEmail" class="text-danger"></span>
             </div>
-            <button id="change-email-button" type="submit" class="w-100 btn btn-lg btn-primary">Change email</button>
+            <button type="submit" class="w-100 btn btn-lg btn-primary">Update email</button>
         </form>
     </div>
 </div>
