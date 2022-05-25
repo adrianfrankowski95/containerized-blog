@@ -229,21 +229,24 @@ public class UserManager<TUser> where TUser : User
 
         user.Email = newEmail;
 
-        if (_emailOptions.CurrentValue.RequireConfirmed)
-        {
-            user.EmailConfirmed = false;
-            user.EmailConfirmationCode = GenerateEmailConfirmationCode();
-            user.EmailConfirmationCodeIssuedAt = _sysTime.Now;
-        }
-        else
-        {
-            user.EmailConfirmationCode = null;
-            user.EmailConfirmationCodeIssuedAt = null;
-        }
-
+        user.EmailConfirmed = false;
+        user.EmailConfirmationCode = GenerateEmailConfirmationCode();
+        user.EmailConfirmationCodeIssuedAt = _sysTime.Now;
         user.SecurityStamp = GenerateSecurityStamp();
 
         return UpdateUserAsync(user, true);
+    }
+
+    public Task<IdentityResult> UpdateUsername(TUser user, string newUsername)
+    {
+        ThrowIfNull(user);
+
+        if (string.IsNullOrWhiteSpace(newUsername))
+            throw new ArgumentNullException(nameof(newUsername));
+
+        user.Username = newUsername;
+
+        return UpdateUserAsync(user);
     }
 
     public Task<IdentityResult> ConfirmEmailAsync(TUser user, Guid emailConfirmationCode)

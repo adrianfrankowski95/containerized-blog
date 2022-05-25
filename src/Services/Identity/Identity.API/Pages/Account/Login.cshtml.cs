@@ -25,78 +25,59 @@ public class LoginModel : PageModel
         _logger = logger;
     }
 
-    /// <summary>
-    ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-    ///     directly from your code. This API may change or be removed in future releases.
-    /// </summary>
+
     [BindProperty]
     public InputModel Input { get; set; }
 
-    /// <summary>
-    ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-    ///     directly from your code. This API may change or be removed in future releases.
-    /// </summary>
     public string ReturnUrl { get; set; }
 
-    /// <summary>
-    ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-    ///     directly from your code. This API may change or be removed in future releases.
-    /// </summary>
     [TempData]
     public string ErrorMessage { get; set; }
 
-    /// <summary>
-    ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-    ///     directly from your code. This API may change or be removed in future releases.
-    /// </summary>
+
     public class InputModel
     {
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         [Required]
         [EmailAddress]
         public string Email { get; set; }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         [Required]
         [DataType(DataType.Password)]
         public string Password { get; set; }
 
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         [Display(Name = "Remember me?")]
         public bool RememberMe { get; set; }
     }
 
-    private void Load(string email, bool rememberMe, string returnUrl)
+    private void LoadInput()
     {
-        ReturnUrl = returnUrl ?? Url.Content("~/");
-
-        Input = new InputModel
+        Input = new InputModel()
         {
-            Email = email,
-            RememberMe = rememberMe
+            Email = (string)TempData[nameof(Input.Email)],
+            RememberMe = (bool)TempData[nameof(Input.RememberMe)]
         };
     }
 
-    public async Task OnGetAsync(string email = null, bool rememberMe = false, string returnUrl = null)
+    private void SaveInput()
+    {
+        TempData[nameof(Input.Email)] = Input.Email;
+        TempData[nameof(Input.RememberMe)] = Input.RememberMe;
+    }
+
+    public IActionResult OnGet(string returnUrl = null)
     {
         if (!string.IsNullOrEmpty(ErrorMessage))
         {
             ModelState.AddModelError(string.Empty, ErrorMessage);
         }
 
-        Load(email, rememberMe, returnUrl);
+        ReturnUrl = returnUrl ?? Url.Content("~/");
 
-        // Clear the existing external cookie to ensure a clean login process
-        await _signInManager.SignOutAsync(HttpContext);
+        if (_signInManager.IsSignedIn(User))
+            return LocalRedirect(ReturnUrl);
+
+        LoadInput();
+        return Page();
     }
 
     public async Task<IActionResult> OnPostAsync(string returnUrl = null)
@@ -109,6 +90,9 @@ public class LoginModel : PageModel
             if (result.Succeeded)
             {
                 _logger.LogInformation("User logged in.");
+
+                await _signInManager.SignInAsync(HttpContext, user, Input.RememberMe);
+
                 return LocalRedirect(returnUrl);
             }
 
@@ -118,21 +102,46 @@ public class LoginModel : PageModel
                 if (result.Errors.Contains(IdentityError.AccountSuspended))
                 {
                     _logger.LogWarning("User account suspended.");
+
                     if (user is not null)
                         return RedirectToPage("./Suspension", new { userId = user.Id });
+
                 }
                 else if (result.Errors.Contains(IdentityError.AccountLockedOut))
                 {
                     _logger.LogWarning("User account locked out.");
+
                     return RedirectToPage("./Lockout");
                 }
-                else if (result.Errors.Contains(IdentityError.EmailDuplicated) ||
-                        result.Errors.Contains(IdentityError.InvalidEmailFormat) ||
-                        result.Errors.Contains(IdentityError.MissingEmail))
+                else if (result.Errors.Contains(IdentityError.InvalidUsernameFormat))
                 {
-                    _logger.LogWarning("User email address is no longer valid.");
-                    if (user is not null)
-                        return RedirectToPage("./UpdateEmail", new { userId = user.Id });
+                    INWALID USERNAME PAGE < --------------------
+                    _logger.LogWarning("User username does not meet validation requirements anymore.");
+
+                    SaveInput();
+
+                    return RedirectToPage("./UpdateUsername", new { userId = user.Id });
+                }
+                else if (result.Errors.Contains(IdentityError.EmailDuplicated) ||
+                        result.Errors.Contains(IdentityError.InvalidEmailFormat))
+                {
+                    _logger.LogWarning("User email does not meet validation requirements anymore.");
+
+                    SaveInput();
+
+                    return RedirectToPage("./UpdateEmail", new { userId = user.Id });
+                }
+                else if (result.Errors.Contains(IdentityError.PasswordTooShort) ||
+                        result.Errors.Contains(IdentityError.PasswordWithoutDigit) ||
+                        result.Errors.Contains(IdentityError.PasswordWithoutLowerCase) ||
+                        result.Errors.Contains(IdentityError.PasswordWithoutNonAlphanumeric) ||
+                        result.Errors.Contains(IdentityError.PasswordWithoutUpperCase))
+                {
+                    _logger.LogWarning("User password does not meet validation requirements anymore.");
+
+                    SaveInput();
+
+                    return RedirectToPage("./UpdatePassword", new { userId = user.Id });
                 }
             }
 

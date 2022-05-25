@@ -15,41 +15,23 @@ namespace Blog.Services.Identity.API.Pages.Account.Manage;
 public class UpdatePassword : PageModel
 {
     private readonly UserManager<User> _userManager;
-    private readonly SignInManager<User> _signInManager;
     private readonly ILogger<ChangePasswordModel> _logger;
 
     public UpdatePassword(
         UserManager<User> userManager,
-        SignInManager<User> signInManager,
         ILogger<ChangePasswordModel> logger)
     {
         _userManager = userManager;
-        _signInManager = signInManager;
         _logger = logger;
     }
 
-    /// <summary>
-    ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-    ///     directly from your code. This API may change or be removed in future releases.
-    /// </summary>
+
     [BindProperty]
     public InputModel Input { get; set; }
 
-    /// <summary>
-    ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-    ///     directly from your code. This API may change or be removed in future releases.
-    /// </summary>
     [TempData]
     public string StatusMessage { get; set; }
 
-    public string Email { get; set; }
-    public bool RememberMe { get; set; }
-    public string ReturnUrl { get; set; }
-
-    /// <summary>
-    ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-    ///     directly from your code. This API may change or be removed in future releases.
-    /// </summary>
     public class InputModel
     {
         /// <summary>
@@ -81,14 +63,20 @@ public class UpdatePassword : PageModel
         public string ConfirmPassword { get; set; }
     }
 
-    private void Load(User user, bool rememberMe, string returnUrl)
+    private void SaveUserId(User user)
     {
-        Email = user.Email;
-        RememberMe = rememberMe;
-        ReturnUrl = returnUrl ?? Url.Content("~/");
+        TempData["UserId"] = user.Id;
     }
 
-    public async Task<IActionResult> OnGetAsync(Guid userId, bool rememberMe = false, string returnUrl = null)
+    private Guid GetUserId()
+        => (Guid)TempData["UserId"];
+
+    private void KeepUserId()
+    {
+        TempData.Keep("UserId");
+    }
+
+    public async Task<IActionResult> OnGetAsync(Guid userId)
     {
         var user = await _userManager.FindByIdAsync(userId);
         if (user is null)
@@ -96,22 +84,23 @@ public class UpdatePassword : PageModel
             return NotFound($"Unable to load user with ID '{userId}'.");
         }
 
-        Load(user, rememberMe, returnUrl);
-
+        SaveUserId(user);
         return Page();
     }
 
     public async Task<IActionResult> OnPostAsync()
     {
-        var user = await _userManager.FindByEmailAsync(Email);
+        var userId = GetUserId();
+
+        var user = await _userManager.FindByIdAsync(userId);
         if (user is null)
         {
-            return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+            return NotFound($"Unable to load user with ID '{userId}'.");
         }
 
         if (!ModelState.IsValid)
         {
-            Load(user, RememberMe, ReturnUrl);
+            KeepUserId();
             return Page();
         }
 
@@ -122,10 +111,11 @@ public class UpdatePassword : PageModel
             {
                 ModelState.AddModelError(string.Empty, error.ErrorDescription);
             }
+            KeepUserId();
             return Page();
         }
 
         StatusMessage = "Your password has been changed, please re-login.";
-        return RedirectToPage("./Login", new { email = Email, rememberMe = RememberMe, returnUrl = ReturnUrl });
+        return RedirectToPage("./Login");
     }
 }
