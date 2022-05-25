@@ -32,6 +32,7 @@ builder.Services
         opts.Cookie.IsEssential = true;
         opts.Cookie.SameSite = SameSiteMode.Strict;
         opts.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        opts.Validate
     });
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

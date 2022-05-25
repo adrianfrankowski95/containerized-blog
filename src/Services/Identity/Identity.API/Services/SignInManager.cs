@@ -14,14 +14,14 @@ public class SignInManager<TUser> : ISignInManager<TUser> where TUser : User
         _userClaimsFactory = userClaimsFactory ?? throw new ArgumentNullException(nameof(userClaimsFactory));
     }
 
-    public async Task SignInAsync(HttpContext context, TUser user, bool isPersistent, string? redirectUri = null)
+    public async Task SignInAsync(HttpContext context, TUser user, bool isPersistent)
     {
         var principal = await _userClaimsFactory.CreateAsync(user).ConfigureAwait(false);
 
         await context.SignInAsync(
             IdentityConstants.AuthenticationScheme,
             principal,
-            new AuthenticationProperties() { IsPersistent = isPersistent, RedirectUri = redirectUri });
+            new AuthenticationProperties() { IsPersistent = isPersistent });
     }
 
     public async Task<bool> RefreshSignInAsync(HttpContext context, TUser user)
@@ -31,7 +31,7 @@ public class SignInManager<TUser> : ISignInManager<TUser> where TUser : User
         if (!auth.Succeeded || !IsSignedIn(auth.Principal))
             return false;
 
-        await SignInAsync(context, user, auth.Properties.IsPersistent, auth.Properties.RedirectUri).ConfigureAwait(false);
+        await SignInAsync(context, user, auth.Properties.IsPersistent).ConfigureAwait(false);
         return true;
     }
 

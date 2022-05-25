@@ -23,10 +23,7 @@ public class SuspensionModel : PageModel
         _userManager = userManager;
         _logger = logger;
     }
-    /// <summary>
-    ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-    ///     directly from your code. This API may change or be removed in future releases.
-    /// </summary>
+
     public Instant SuspendedUntil { get; private set; }
     public async Task<IActionResult> OnGetAsync(Guid userId)
     {
