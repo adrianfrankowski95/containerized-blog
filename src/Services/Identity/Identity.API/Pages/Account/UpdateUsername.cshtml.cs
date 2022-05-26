@@ -16,16 +16,13 @@ namespace Blog.Services.Identity.API.Pages.Account.Manage;
 public class UpdateUsernameModel : PageModel
 {
     private readonly UserManager<User> _userManager;
-    private readonly IOptionsMonitor<EmailOptions> _emailOptions;
     private readonly ILogger<UpdateUsernameModel> _logger;
 
     public UpdateUsernameModel(
         UserManager<User> userManager,
-        IEmailSender emailSender,
         ILogger<UpdateEmailModel> logger)
     {
         _userManager = userManager;
-        _emailSender = emailSender;
     }
 
     public string Username { get; set; }
