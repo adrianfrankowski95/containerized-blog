@@ -55,7 +55,7 @@ public class LoginModel : PageModel
         Input = new InputModel()
         {
             Email = (string)TempData[nameof(Input.Email)],
-            RememberMe = (bool)TempData[nameof(Input.RememberMe)]
+            RememberMe = (bool?)TempData[nameof(Input.RememberMe)] ?? false
         };
     }
 
@@ -92,7 +92,7 @@ public class LoginModel : PageModel
 
         if (ModelState.IsValid)
         {
-            var result = await _loginService.LoginAsync(Input.Email, Input.Password, out User user);
+            (IdentityResult result, User user) = await _loginService.LoginAsync(Input.Email, Input.Password);
             if (result.Succeeded)
             {
                 _logger.LogInformation("User logged in.");
