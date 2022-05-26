@@ -7,11 +7,13 @@ using System.ComponentModel.DataAnnotations;
 using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Models;
 using Blog.Services.Identity.API.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace Blog.Services.Identity.API.Pages.Account;
 
+[AllowAnonymous]
 public class LoginModel : PageModel
 {
     private readonly SignInManager<User> _signInManager;
@@ -33,7 +35,6 @@ public class LoginModel : PageModel
 
     [TempData]
     public string ErrorMessage { get; set; }
-
 
     public class InputModel
     {
@@ -61,21 +62,25 @@ public class LoginModel : PageModel
     private void SaveInput()
     {
         TempData[nameof(Input.Email)] = Input.Email;
-        TempData[nameof(Input.Password)] = Input.Password;
         TempData[nameof(Input.RememberMe)] = Input.RememberMe;
     }
 
-    public IActionResult OnGet(string returnUrl = null)
+    private void ClearInput()
+    {
+        TempData.Remove(nameof(Input.Email));
+        TempData.Remove(nameof(Input.RememberMe));
+
+        Input = new();
+    }
+
+    public async Task<IActionResult> OnGetAsync(string returnUrl = null)
     {
         if (!string.IsNullOrEmpty(ErrorMessage))
-        {
             ModelState.AddModelError(string.Empty, ErrorMessage);
-        }
 
         ReturnUrl = returnUrl ?? Url.Content("~/");
 
-        if (_signInManager.IsSignedIn(User))
-            return LocalRedirect(ReturnUrl);
+        await _signInManager.SignOutAsync(HttpContext);
 
         LoadInput();
         return Page();
@@ -91,9 +96,7 @@ public class LoginModel : PageModel
             if (result.Succeeded)
             {
                 _logger.LogInformation("User logged in.");
-
                 await _signInManager.SignInAsync(HttpContext, user, Input.RememberMe);
-
                 return LocalRedirect(returnUrl);
             }
 
@@ -103,30 +106,26 @@ public class LoginModel : PageModel
                 if (result.Errors.Contains(IdentityError.AccountSuspended))
                 {
                     _logger.LogWarning("User account suspended.");
-
-                    if (user is not null)
-                        return RedirectToPage("./Suspension", new { userId = user.Id });
-
+                    TempData["SuspendedUntil"] = user.SuspendedUntil.Value;
+                    return RedirectToPage("./Suspension");
                 }
                 else if (result.Errors.Contains(IdentityError.AccountLockedOut))
                 {
                     _logger.LogWarning("User account locked out.");
-
                     return RedirectToPage("./Lockout");
                 }
                 else if (result.Errors.Contains(IdentityError.InvalidUsernameFormat))
                 {
                     _logger.LogWarning("User username does not meet validation requirements anymore.");
-
                     SaveInput();
-
-                    return RedirectToPage("./UpdateUsername", new { userId = user.Id });
+                    return RedirectToPage("./UpdateUsername");
                 }
                 else if (result.Errors.Contains(IdentityError.EmailDuplicated) ||
                         result.Errors.Contains(IdentityError.InvalidEmailFormat))
                 {
                     _logger.LogWarning("User email does not meet validation requirements anymore.");
-                    return RedirectToPage("./UpdateEmail", new { userId = user.Id });
+                    SaveInput();
+                    return RedirectToPage("./UpdateEmail");
                 }
                 else if (result.Errors.Contains(IdentityError.PasswordTooShort) ||
                         result.Errors.Contains(IdentityError.PasswordWithoutDigit) ||
@@ -135,14 +134,13 @@ public class LoginModel : PageModel
                         result.Errors.Contains(IdentityError.PasswordWithoutUpperCase))
                 {
                     _logger.LogWarning("User password does not meet validation requirements anymore.");
-
                     SaveInput();
-
-                    return RedirectToPage("./UpdatePassword", new { userId = user.Id });
+                    return RedirectToPage("./UpdatePassword");
                 }
             }
 
             ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+            ClearInput();
             return Page();
         }
 
