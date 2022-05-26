@@ -5,12 +5,14 @@
 using System.ComponentModel.DataAnnotations;
 using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Options;
 
 namespace Blog.Services.Identity.API.Pages.Account.Manage;
 
+[AllowAnonymous]
 public class UpdateUsernameModel : PageModel
 {
     private readonly UserManager<User> _userManager;
@@ -26,8 +28,7 @@ public class UpdateUsernameModel : PageModel
         _emailSender = emailSender;
     }
 
-    [BindProperty]
-    public string Username { get; private set; }
+    public string Username { get; set; }
 
     [TempData]
     public string StatusMessage { get; set; }
@@ -43,7 +44,9 @@ public class UpdateUsernameModel : PageModel
         public string NewUsername { get; set; }
     }
 
-    private void Load(User user)
+    private string LoadEmail() => (string)TempData.Peek("Email");
+
+    private void LoadInput(User user)
     {
         Username = user.Username;
 
@@ -53,27 +56,39 @@ public class UpdateUsernameModel : PageModel
         };
     }
 
-    public async Task<IActionResult> OnGetAsync(Guid userId)
+    public async Task<IActionResult> OnGetAsync()
     {
-        var user = await _userManager.FindByIdAsync(userId);
-        if (user is null)
-            return NotFound($"Unable to load user with ID '{userId}'.");
+        var email = LoadEmail();
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            _logger.LogWarning("Unable to load user email.");
+            RedirectToPage("./Login");
+        }
 
-        Load(user);
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user is null)
+            return NotFound($"Unable to load user with email '{email}'.");
+
+        LoadInput(user);
         return Page();
     }
 
     public async Task<IActionResult> OnPostAsync()
     {
-        var user = await _userManager.FindByUsernameAsync(Username);
-        if (user is null)
+        var email = LoadEmail();
+        if (string.IsNullOrWhiteSpace(email))
         {
-            return NotFound($"Unable to load user with username '{Username}'.");
+            _logger.LogWarning("Unable to load user email.");
+            RedirectToPage("./Login");
         }
+
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user is null)
+            return NotFound($"Unable to load user with email '{email}'.");
 
         if (!ModelState.IsValid)
         {
-            Load(user);
+            LoadInput(user);
             return Page();
         }
 
@@ -88,8 +103,8 @@ public class UpdateUsernameModel : PageModel
                     if (result.Errors.Contains(IdentityError.AccountSuspended))
                     {
                         _logger.LogWarning("User account suspended.");
-                        if (user is not null)
-                            return RedirectToPage("./Suspension", new { userId = user.Id });
+                        TempData["SuspendedUntil"] = user.SuspendedUntil.Value;
+                        return RedirectToPage("./Suspension");
                     }
                     else if (result.Errors.Contains(IdentityError.AccountLockedOut))
                     {
@@ -107,8 +122,7 @@ public class UpdateUsernameModel : PageModel
                 return Page();
             }
 
-            ///Login with TempData from Login.cshtml.cs!
-            StatusMessage = "Your password has been changed, please re-login.";
+            StatusMessage = "Your username has been changed, please re-login.";
             return RedirectToPage("./Login");
         }
 
