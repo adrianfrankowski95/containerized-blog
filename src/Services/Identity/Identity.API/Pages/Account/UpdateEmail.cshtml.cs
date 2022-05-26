@@ -7,12 +7,14 @@ using System.Text;
 using System.Text.Encodings.Web;
 using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 
 namespace Blog.Services.Identity.API.Pages.Account.Manage;
 
+[AllowAnonymous]
 public class UpdateEmailModel : PageModel
 {
     private readonly UserManager<User> _userManager;
@@ -46,40 +48,55 @@ public class UpdateEmailModel : PageModel
         public string NewEmail { get; set; }
     }
 
-    private void Load(User user)
+    private void LoadEmail()
     {
-        Email = user.Email;
-        TempData[nameof(Email)] = user.Email;
+        Email = (string)TempData.Peek("Email");
+    }
 
+    private void LoadInput()
+    {
+        LoadEmail();
         Input = new InputModel
         {
-            NewEmail = user.Email,
+            NewEmail = Email
         };
     }
 
-    public async Task<IActionResult> OnGetAsync(Guid userId)
+    private void SetNewEmail()
     {
-        var user = await _userManager.FindByIdAsync(userId);
-        if (user is null)
-            return NotFound($"Unable to load user with ID '{userId}'.");
+        TempData["Email"] = Input.NewEmail;
+    }
 
-        Load(user);
+    public IActionResult OnGet()
+    {
+        LoadInput();
+
+        if (string.IsNullOrWhiteSpace(Email))
+        {
+            _logger.LogWarning("Unable to load user email.");
+            RedirectToPage("./Login");
+        }
+
         return Page();
     }
 
     public async Task<IActionResult> OnPostAsync()
     {
-        Email = (string)TempData[nameof(Email)];
-        
+        LoadEmail();
+
+        if (string.IsNullOrWhiteSpace(Email))
+        {
+            _logger.LogWarning("Unable to load user email.");
+            RedirectToPage("./Login");
+        }
+
         var user = await _userManager.FindByEmailAsync(Email);
         if (user is null)
-        {
             return NotFound($"Unable to load user with email '{Email}'.");
-        }
 
         if (!ModelState.IsValid)
         {
-            Load(user);
+            LoadInput();
             return Page();
         }
 
@@ -94,8 +111,8 @@ public class UpdateEmailModel : PageModel
                     if (result.Errors.Contains(IdentityError.AccountSuspended))
                     {
                         _logger.LogWarning("User account suspended.");
-                        if (user is not null)
-                            return RedirectToPage("./Suspension", new { userId = user.Id });
+                        TempData["SuspendedUntil"] = user.SuspendedUntil.Value;
+                        return RedirectToPage("./Suspension");
                     }
                     else if (result.Errors.Contains(IdentityError.AccountLockedOut))
                     {
@@ -125,6 +142,7 @@ public class UpdateEmailModel : PageModel
                 $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
 
             StatusMessage = "Confirmation link to change email sent. Please check your email.";
+            SetNewEmail();
             return RedirectToPage("./Login");
         }
 
