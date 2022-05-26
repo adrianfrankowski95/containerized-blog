@@ -98,8 +98,7 @@ public class LoginModel : PageModel
                 if (result.Errors.Contains(IdentityError.AccountSuspended))
                 {
                     _logger.LogWarning("User account suspended.");
-                    TempData["SuspendedUntil"] = user.SuspendedUntil.Value;
-                    return RedirectToPage("./Suspension");
+                    return RedirectToPage("./Suspension", new { suspendedUntil = user.SuspendedUntil.Value });
                 }
                 else if (result.Errors.Contains(IdentityError.AccountLockedOut))
                 {

@@ -11,7 +11,7 @@ public class User
 
     }
 
-    public User(NonEmptyString username, NonEmptyString name, NonEmptyString lastName, NonEmptyString email, bool receiveEmails)
+    public User(NonEmptyString email, NonEmptyString username, NonEmptyString name, NonEmptyString lastName, bool receiveAdditionalEmails)
     {
         Id = Guid.NewGuid();
 
@@ -19,10 +19,12 @@ public class User
         Name = name;
         LastName = lastName;
         Email = email;
-        ReceiveAdditionalEmails = receiveEmails;
+        ReceiveAdditionalEmails = receiveAdditionalEmails;
     }
 
     public Guid Id { get; set; }
+    public NonEmptyString Email { get; set; }
+    public bool EmailConfirmed { get; set; }
     public NonEmptyString Username { get; set; }
     public NonEmptyString Name { get; set; }
     public NonEmptyString LastName { get; set; }
@@ -30,8 +32,6 @@ public class User
     [JsonIgnore]
     public NonEmptyString FullName => Name + " " + LastName;
 
-    public NonEmptyString Email { get; set; }
-    public bool EmailConfirmed { get; set; }
     public NonEmptyString PasswordHash { get; set; }
     public Role Role { get; set; }
     public bool ReceiveAdditionalEmails { get; set; }

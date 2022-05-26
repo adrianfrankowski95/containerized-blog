@@ -111,8 +111,7 @@ public class UpdateEmailModel : PageModel
                     if (result.Errors.Contains(IdentityError.AccountSuspended))
                     {
                         _logger.LogWarning("User account suspended.");
-                        TempData["SuspendedUntil"] = user.SuspendedUntil.Value;
-                        return RedirectToPage("./Suspension");
+                        return RedirectToPage("./Suspension", new { suspendedUntil = user.SuspendedUntil.Value });
                     }
                     else if (result.Errors.Contains(IdentityError.AccountLockedOut))
                     {
@@ -139,7 +138,7 @@ public class UpdateEmailModel : PageModel
             await _emailSender.SendEmailAsync(
                 Input.NewEmail,
                 "Confirm your email",
-                $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                $"Please confirm your email by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
 
             StatusMessage = "Confirmation link to change email sent. Please check your email.";
             SetNewEmail();

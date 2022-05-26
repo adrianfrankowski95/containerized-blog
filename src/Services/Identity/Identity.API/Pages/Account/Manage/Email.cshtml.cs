@@ -40,9 +40,7 @@ public class EmailModel : PageModel
 
     public string Email { get; set; }
 
-
     public bool IsEmailConfirmed { get; set; }
-
 
     [TempData]
     public string StatusMessage { get; set; }
@@ -109,7 +107,7 @@ public class EmailModel : PageModel
                         if (user is not null)
                         {
                             _logger.LogWarning("User account suspended.");
-                            return RedirectToPage("./Suspension", new { userId = user.Id });
+                            return RedirectToPage("./Suspension", new { suspendedUntil = user.SuspendedUntil.Value });
                         }
                     }
                     else if (result.Errors.Contains(IdentityError.AccountLockedOut))
@@ -137,22 +135,14 @@ public class EmailModel : PageModel
             await _emailSender.SendEmailAsync(
                 Input.NewEmail,
                 "Confirm your email",
-                $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                $"Please confirm your email by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
 
             StatusMessage = "Confirmation link to change email sent. Please check your email.";
 
-            if (_emailOptions.CurrentValue.RequireConfirmed)
-                return RedirectToPage();
-            else
-            {
-                bool success = await _signInManager.RefreshSignInAsync(HttpContext, user);
-                if (!success)
-                {
-                    _logger.LogWarning("User cannot be signed-in again.");
-                    StatusMessage = "Your email has been changed, please re-login.";
-                    return RedirectToPage("../Login");
-                }
-            }
+            if (!_emailOptions.CurrentValue.RequireConfirmed)
+                await _signInManager.RefreshSignInAsync(HttpContext, user);
+
+            return RedirectToPage();
         }
 
         StatusMessage = "Your email is unchanged.";
@@ -189,7 +179,7 @@ public class EmailModel : PageModel
         await _emailSender.SendEmailAsync(
             user.Email,
             "Confirm your email",
-            $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+            $"Please confirm your email by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
 
         StatusMessage = "Verification email sent. Please check your email.";
         return RedirectToPage();
