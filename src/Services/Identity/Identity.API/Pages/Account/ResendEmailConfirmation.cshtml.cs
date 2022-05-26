@@ -5,13 +5,12 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text;
 using System.Text.Encodings.Web;
+using Blog.Services.Identity.API.Core;
+using Blog.Services.Identity.API.Models;
 using Microsoft.AspNetCore.Authorization;
-
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
-using Blog.Services.Identity.API.Core;
-using Blog.Services.Identity.API.Models;
 
 namespace Blog.Services.Identity.API.Pages.Account;
 
@@ -34,10 +33,6 @@ public class ResendEmailConfirmationModel : PageModel
 
     public class InputModel
     {
-        /// <summary>
-        ///     This API supports the ASP.NET Core Identity default UI infrastructure and is not intended to be used
-        ///     directly from your code. This API may change or be removed in future releases.
-        /// </summary>
         [Required]
         [EmailAddress]
         public string Email { get; set; }
@@ -72,7 +67,7 @@ public class ResendEmailConfirmationModel : PageModel
         await _emailSender.SendEmailAsync(
             Input.Email,
             "Confirm your email",
-            $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+            $"Please confirm your email by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
 
         ModelState.AddModelError(string.Empty, "Verification email sent. Please check your email.");
         return Page();

@@ -12,19 +12,18 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 namespace Blog.Services.Identity.API.Pages.Account.Manage;
 
 [AllowAnonymous]
-public class UpdatePassword : PageModel
+public class UpdatePasswordModel : PageModel
 {
     private readonly UserManager<User> _userManager;
     private readonly ILogger<ChangePasswordModel> _logger;
 
-    public UpdatePassword(
+    public UpdatePasswordModel(
         UserManager<User> userManager,
         ILogger<ChangePasswordModel> logger)
     {
         _userManager = userManager;
         _logger = logger;
     }
-
 
     [BindProperty]
     public InputModel Input { get; set; }

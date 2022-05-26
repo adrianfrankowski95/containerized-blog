@@ -15,7 +15,7 @@ public class UserEntityConfiguration<TUser> : IEntityTypeConfiguration<TUser> wh
 
         builder
             .Property(x => x.Username)
-            .HasColumnType("varchar(32)")
+            .HasColumnType("varchar(20)")
             .IsRequired();
 
         builder

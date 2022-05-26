@@ -10,9 +10,14 @@ namespace Blog.Services.Identity.API.Pages.Account;
 [AllowAnonymous]
 public class SuspensionModel : PageModel
 {
-    [TempData]
     public Instant SuspendedUntil { get; set; }
-    public void OnGet()
+    public IActionResult OnGet(Instant suspendedUntil)
     {
+        if (suspendedUntil == null || suspendedUntil == default)
+            return RedirectToPage("/Index");
+
+        SuspendedUntil = suspendedUntil;
+
+        return Page();
     }
 }

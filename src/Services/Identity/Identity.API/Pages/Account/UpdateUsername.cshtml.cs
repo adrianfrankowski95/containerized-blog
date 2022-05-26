@@ -39,7 +39,7 @@ public class UpdateUsernameModel : PageModel
     public class InputModel
     {
         [Required]
-        [StringLength(32, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 3)]
+        [StringLength(20, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 3)]
         [Display(Name = "New username")]
         public string NewUsername { get; set; }
     }
@@ -103,8 +103,7 @@ public class UpdateUsernameModel : PageModel
                     if (result.Errors.Contains(IdentityError.AccountSuspended))
                     {
                         _logger.LogWarning("User account suspended.");
-                        TempData["SuspendedUntil"] = user.SuspendedUntil.Value;
-                        return RedirectToPage("./Suspension");
+                        return RedirectToPage("./Suspension", new { suspendedUntil = user.SuspendedUntil.Value });
                     }
                     else if (result.Errors.Contains(IdentityError.AccountLockedOut))
                     {

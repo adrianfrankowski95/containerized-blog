@@ -3,12 +3,12 @@
 #nullable disable
 
 using System.Text;
+using Blog.Services.Identity.API.Core;
+using Blog.Services.Identity.API.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
-using Blog.Services.Identity.API.Core;
-using Blog.Services.Identity.API.Models;
 namespace Blog.Services.Identity.API.Pages.Account;
 
 [AllowAnonymous]
@@ -34,7 +34,7 @@ public class RegisterConfirmationModel : PageModel
 
     public async Task<IActionResult> OnGetAsync(string email, string returnUrl = null)
     {
-        if (email == null)
+        if (string.IsNullOrWhiteSpace(email))
         {
             return RedirectToPage("/Index");
         }
@@ -51,13 +51,12 @@ public class RegisterConfirmationModel : PageModel
         DisplayConfirmAccountLink = true;
         if (DisplayConfirmAccountLink)
         {
-            var userId = await _userManager.GetUserIdAsync(user);
-            var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
+
+            var code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(user.EmailConfirmationCode.ToString()));
             EmailConfirmationUrl = Url.Page(
                 "/Account/ConfirmEmail",
                 pageHandler: null,
-                values: new { area = "Identity", userId = userId, code = code, returnUrl = returnUrl },
+                values: new { area = "Identity", userId = user.Id, code = code, returnUrl = returnUrl },
                 protocol: Request.Scheme);
         }
 
