@@ -5,13 +5,11 @@
 using System.ComponentModel.DataAnnotations;
 using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Models;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace Blog.Services.Identity.API.Pages.Account.Manage;
 
-[AllowAnonymous]
 public class UpdatePasswordModel : PageModel
 {
     private readonly UserManager<User> _userManager;
