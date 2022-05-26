@@ -5,11 +5,13 @@
 using System.ComponentModel.DataAnnotations;
 using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace Blog.Services.Identity.API.Pages.Account.Manage;
 
+[AllowAnonymous]
 public class UpdatePassword : PageModel
 {
     private readonly UserManager<User> _userManager;
@@ -49,46 +51,35 @@ public class UpdatePassword : PageModel
         public string ConfirmPassword { get; set; }
     }
 
-    private void SaveUserId(User user)
-    {
-        TempData["UserId"] = user.Id;
-    }
+    private string LoadEmail() => (string)TempData.Peek("Email");
 
-    private Guid GetUserId()
-        => (Guid)TempData["UserId"];
-
-    private void KeepUserId()
+    public IActionResult OnGet()
     {
-        TempData.Keep("UserId");
-    }
-
-    public async Task<IActionResult> OnGetAsync(Guid userId)
-    {
-        var user = await _userManager.FindByIdAsync(userId);
-        if (user is null)
+        var email = LoadEmail();
+        if (string.IsNullOrWhiteSpace(email))
         {
-            return NotFound($"Unable to load user with ID '{userId}'.");
+            _logger.LogWarning("Unable to load user email.");
+            RedirectToPage("./Login");
         }
 
-        SaveUserId(user);
         return Page();
     }
 
     public async Task<IActionResult> OnPostAsync()
     {
-        var userId = GetUserId();
-
-        var user = await _userManager.FindByIdAsync(userId);
-        if (user is null)
+        var email = LoadEmail();
+        if (string.IsNullOrWhiteSpace(email))
         {
-            return NotFound($"Unable to load user with ID '{userId}'.");
+            _logger.LogWarning("Unable to load user email.");
+            RedirectToPage("./Login");
         }
+
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user is null)
+            return NotFound($"Unable to load user with email '{email}'.");
 
         if (!ModelState.IsValid)
-        {
-            KeepUserId();
             return Page();
-        }
 
         var changePasswordResult = await _userManager.UpdatePasswordAsync(user, Input.OldPassword, Input.NewPassword);
         if (!changePasswordResult.Succeeded)
@@ -97,11 +88,10 @@ public class UpdatePassword : PageModel
             {
                 ModelState.AddModelError(string.Empty, error.ErrorDescription);
             }
-            KeepUserId();
+
             return Page();
         }
 
-        ///Login with TempData from Login.cshtml.cs!
         StatusMessage = "Your password has been changed, please re-login.";
         return RedirectToPage("./Login");
     }
