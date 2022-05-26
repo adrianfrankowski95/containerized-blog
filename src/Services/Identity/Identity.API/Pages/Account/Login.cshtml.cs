@@ -65,14 +65,6 @@ public class LoginModel : PageModel
         TempData[nameof(Input.RememberMe)] = Input.RememberMe;
     }
 
-    private void ClearInput()
-    {
-        TempData.Remove(nameof(Input.Email));
-        TempData.Remove(nameof(Input.RememberMe));
-
-        Input = new();
-    }
-
     public async Task<IActionResult> OnGetAsync(string returnUrl = null)
     {
         if (!string.IsNullOrEmpty(ErrorMessage))
@@ -140,8 +132,7 @@ public class LoginModel : PageModel
             }
 
             ModelState.AddModelError(string.Empty, "Invalid login attempt.");
-            ClearInput();
-            return Page();
+            return RedirectToPage();
         }
 
         // If we got this far, something failed, redisplay form
