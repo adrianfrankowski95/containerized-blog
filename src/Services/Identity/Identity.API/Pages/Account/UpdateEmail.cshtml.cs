@@ -7,14 +7,12 @@ using System.Text;
 using System.Text.Encodings.Web;
 using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Models;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 
 namespace Blog.Services.Identity.API.Pages.Account.Manage;
 
-[AllowAnonymous]
 public class UpdateEmailModel : PageModel
 {
     private readonly UserManager<User> _userManager;
