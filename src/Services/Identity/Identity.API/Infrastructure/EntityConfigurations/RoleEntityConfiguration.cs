@@ -17,7 +17,5 @@ public class RoleEntityConfiguration<TRole> : IEntityTypeConfiguration<TRole> wh
 
         builder.Property(x => x.Name).IsRequired();
         builder.HasIndex(x => x.Name).HasMethod("hash").IsUnique();
-
-        builder.UseXminAsConcurrencyToken();
     }
 }

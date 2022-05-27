@@ -35,8 +35,8 @@ public class ResetPasswordModel : PageModel
         [Required]
         [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 8)]
         [DataType(DataType.Password)]
-        [Display(Name = "Password")]
-        public string Password { get; set; }
+        [Display(Name = "New password")]
+        public string NewPassword { get; set; }
 
         [DataType(DataType.Password)]
         [Display(Name = "Confirm password")]
@@ -47,20 +47,30 @@ public class ResetPasswordModel : PageModel
         public string Code { get; set; }
     }
 
-    public IActionResult OnGet(string code = null)
+    public async Task<IActionResult> OnGet(Guid userId, string code = null)
     {
+        if (userId == null || userId == default)
+        {
+            return BadRequest("A user ID must be supplied for password reset.");
+        }
         if (string.IsNullOrWhiteSpace(code))
         {
             return BadRequest("A code must be supplied for password reset.");
         }
-        else
+
+        // Don't reveal that the user does not exist
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user is not null)
         {
-            Input = new InputModel
-            {
-                Code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(code))
-            };
-            return Page();
+            if (_userManager.IsPasswordResetCodeExpired(user))
+                return RedirectToPage("./ResetPasswordExpiration");
         }
+
+        Input = new InputModel
+        {
+            Code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(code))
+        };
+        return Page();
     }
 
     public async Task<IActionResult> OnPostAsync()
@@ -77,10 +87,15 @@ public class ResetPasswordModel : PageModel
             return RedirectToPage("./ResetPasswordConfirmation");
         }
 
-        var result = await _userManager.ResetPasswordAsync(user, Input.Password, Input.Code);
+        var result = await _userManager.ResetPasswordAsync(user, Input.NewPassword, Input.Code);
         if (result.Succeeded)
         {
             return RedirectToPage("./ResetPasswordConfirmation");
+        }
+
+        if (result.Errors.Count == 1 && result.Errors.Contains(IdentityError.ExpiredPasswordResetCode))
+        {
+            return RedirectToPage("./ResetPasswordExpiration");
         }
 
         foreach (var error in result.Errors)
