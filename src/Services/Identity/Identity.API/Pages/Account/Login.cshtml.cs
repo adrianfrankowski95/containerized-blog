@@ -109,14 +109,15 @@ public class LoginModel : PageModel
                 {
                     _logger.LogWarning("User username does not meet validation requirements anymore.");
                     SaveInput();
-                    return RedirectToPage("./UpdateUsername");
+                    return RedirectToPage("./UpdateUsername",
+                        new { returntUrl = Url.Page("./Login", new { returnUrl = returnUrl }) });
                 }
-                else if (result.Errors.Contains(IdentityError.EmailDuplicated) ||
-                        result.Errors.Contains(IdentityError.InvalidEmailFormat))
+                else if (result.Errors.Contains(IdentityError.InvalidEmailFormat))
                 {
                     _logger.LogWarning("User email does not meet validation requirements anymore.");
                     SaveInput();
-                    return RedirectToPage("./UpdateEmail");
+                    return RedirectToPage("./UpdateEmail",
+                        new { returntUrl = Url.Page("./Login", new { returnUrl = returnUrl }) });
                 }
                 else if (result.Errors.Contains(IdentityError.PasswordTooShort) ||
                         result.Errors.Contains(IdentityError.PasswordWithoutDigit) ||
@@ -126,7 +127,8 @@ public class LoginModel : PageModel
                 {
                     _logger.LogWarning("User password does not meet validation requirements anymore.");
                     SaveInput();
-                    return RedirectToPage("./UpdatePassword");
+                    return RedirectToPage("./UpdatePassword",
+                        new { returntUrl = Url.Page("./Login", new { returnUrl = returnUrl }) });
                 }
             }
 

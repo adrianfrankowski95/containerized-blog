@@ -48,10 +48,7 @@ public class ForgotPasswordModel : PageModel
                 return RedirectToPage("./ForgotPasswordConfirmation");
             }
 
-            // For more information on how to enable account confirmation and password reset please
-            // visit https://go.microsoft.com/fwlink/?LinkID=532713
             var result = await _userManager.ResetPasswordAsync(user);
-
             if (result.Succeeded)
             {
                 var code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(user.PasswordResetCode));
