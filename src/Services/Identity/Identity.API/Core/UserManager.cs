@@ -157,7 +157,17 @@ public class UserManager<TUser> where TUser : User
     public bool IsResettingPassword(TUser user)
     {
         ThrowIfNull(user);
-        return user.PasswordResetCode is not null;
+
+        bool passwordResetCodeExists = user.PasswordResetCode is not null;
+        bool issuedAtExists = user.PasswordResetCodeIssuedAt is not null;
+
+        if (passwordResetCodeExists && !issuedAtExists)
+            throw new InvalidOperationException("Password reset code creation date is not set");
+
+        if (!passwordResetCodeExists && issuedAtExists)
+            throw new InvalidOperationException("Password reset code is not set");
+
+        return passwordResetCodeExists && issuedAtExists;
     }
 
     private Task<IdentityResult> LockOutAsync(TUser user)
