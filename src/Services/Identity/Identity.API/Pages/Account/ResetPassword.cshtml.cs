@@ -15,10 +15,12 @@ namespace Blog.Services.Identity.API.Pages.Account;
 public class ResetPasswordModel : PageModel
 {
     private readonly UserManager<User> _userManager;
+    private readonly ILogger<ResetPasswordModel> _logger;
 
-    public ResetPasswordModel(UserManager<User> userManager)
+    public ResetPasswordModel(UserManager<User> userManager, ILogger<ResetPasswordModel> logger)
     {
         _userManager = userManager;
+        _logger = logger;
     }
 
 
@@ -47,7 +49,17 @@ public class ResetPasswordModel : PageModel
         public string Code { get; set; }
     }
 
-    public async Task<IActionResult> OnGet(Guid userId, string code = null)
+    private void SaveEmail(User user)
+    {
+        TempData[nameof(user.Email)] = user.Email;
+    }
+
+    private void SaveUsername(User user)
+    {
+        TempData[nameof(user.Username)] = user.Username;
+    }
+
+    public async Task<IActionResult> OnGet(Guid userId, string code)
     {
         if (userId == null || userId == default)
         {
@@ -81,27 +93,56 @@ public class ResetPasswordModel : PageModel
         }
 
         var user = await _userManager.FindByEmailAsync(Input.Email);
-        if (user is null)
+        if (user is null || !user.EmailConfirmed)
         {
             // Don't reveal that the user does not exist
             return RedirectToPage("./ResetPasswordConfirmation");
         }
 
         var result = await _userManager.ResetPasswordAsync(user, Input.NewPassword, Input.Code);
-        if (result.Succeeded)
+        if (!result.Succeeded)
         {
-            return RedirectToPage("./ResetPasswordConfirmation");
+            if (result.Errors.Contains(IdentityError.ExpiredPasswordResetCode))
+            {
+                return RedirectToPage("./ResetPasswordExpiration");
+            }
+
+            //Reveal details about account state only if provided credentials are valid
+            if (!result.Errors.Contains(IdentityError.InvalidCredentials))
+            {
+                if (result.Errors.Contains(IdentityError.AccountSuspended))
+                {
+                    _logger.LogWarning("User account suspended.");
+                    return RedirectToPage("./Suspension", new { suspendedUntil = user.SuspendedUntil.Value });
+                }
+                else if (result.Errors.Contains(IdentityError.AccountLockedOut))
+                {
+                    _logger.LogWarning("User account locked out.");
+                    return RedirectToPage("./Lockout");
+                }
+                else if (result.Errors.Contains(IdentityError.InvalidUsernameFormat))
+                {
+                    _logger.LogWarning("User username does not meet validation requirements anymore.");
+                    SaveUsername(user);
+                    return RedirectToPage("./UpdateUsername",
+                        new { returnUrl = Url.Page("./ResetPassword.cshtml", new { userId = user.Id, code = Input.Code }) });
+                }
+                else if (result.Errors.Contains(IdentityError.InvalidEmailFormat))
+                {
+                    _logger.LogWarning("User email does not meet validation requirements anymore.");
+                    SaveEmail(user);
+                    return RedirectToPage("./UpdateEmail",
+                        new { returnUrl = Url.Page("./ResetPassword.cshtml", new { userId = user.Id, code = Input.Code }) });
+                }
+            }
+
+            foreach (var error in result.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error.ErrorDescription);
+            }
+            return Page();
         }
 
-        if (result.Errors.Count == 1 && result.Errors.Contains(IdentityError.ExpiredPasswordResetCode))
-        {
-            return RedirectToPage("./ResetPasswordExpiration");
-        }
-
-        foreach (var error in result.Errors)
-        {
-            ModelState.AddModelError(string.Empty, error.ErrorDescription);
-        }
-        return Page();
+        return RedirectToPage("./ResetPasswordConfirmation");
     }
 }

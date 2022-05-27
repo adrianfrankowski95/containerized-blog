@@ -28,6 +28,7 @@ public class UpdatePasswordModel : PageModel
 
     [TempData]
     public string StatusMessage { get; set; }
+    public string ReturnUrl { get; set; }
 
     public class InputModel
     {
@@ -50,25 +51,27 @@ public class UpdatePasswordModel : PageModel
 
     private string LoadEmail() => (string)TempData.Peek("Email");
 
-    public IActionResult OnGet()
+    public IActionResult OnGet(string returnUrl = null)
     {
+        ReturnUrl = returnUrl ?? Url.Content("~/");
+
         var email = LoadEmail();
         if (string.IsNullOrWhiteSpace(email))
         {
-            _logger.LogWarning("Unable to load user email.");
-            RedirectToPage("./Login");
+            return NotFound($"Unable to load user email.");
         }
 
         return Page();
     }
 
-    public async Task<IActionResult> OnPostAsync()
+    public async Task<IActionResult> OnPostAsync(string returnUrl = null)
     {
+        returnUrl ??= Url.Content("~/");
+
         var email = LoadEmail();
         if (string.IsNullOrWhiteSpace(email))
         {
-            _logger.LogWarning("Unable to load user email.");
-            RedirectToPage("./Login");
+            return NotFound($"Unable to load user email.");
         }
 
         var user = await _userManager.FindByEmailAsync(email);
@@ -89,7 +92,7 @@ public class UpdatePasswordModel : PageModel
             return Page();
         }
 
-        StatusMessage = "Your password has been changed, please re-login.";
-        return RedirectToPage("./Login");
+        StatusMessage = "Your password has been changed.";
+        return LocalRedirect(returnUrl);
     }
 }

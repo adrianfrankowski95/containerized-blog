@@ -30,7 +30,8 @@ public class UpdateEmailModel : PageModel
         _logger = logger;
     }
 
-    public string Email { get; private set; }
+    public string Email { get; set; }
+    public string ReturnUrl { get; set; }
 
     [TempData]
     public string StatusMessage { get; set; }
@@ -65,27 +66,29 @@ public class UpdateEmailModel : PageModel
         TempData["Email"] = Input.NewEmail;
     }
 
-    public IActionResult OnGet()
+    public IActionResult OnGet(string returnUrl = null)
     {
+        ReturnUrl = returnUrl ?? Url.Content("~/");
+
         LoadInput();
 
         if (string.IsNullOrWhiteSpace(Email))
         {
-            _logger.LogWarning("Unable to load user email.");
-            RedirectToPage("./Login");
+            return NotFound($"Unable to load user email.");
         }
 
         return Page();
     }
 
-    public async Task<IActionResult> OnPostAsync()
+    public async Task<IActionResult> OnPostAsync(string returnUrl = null)
     {
+        returnUrl ??= Url.Content("~/");
+
         LoadEmail();
 
         if (string.IsNullOrWhiteSpace(Email))
         {
-            _logger.LogWarning("Unable to load user email.");
-            RedirectToPage("./Login");
+            return NotFound($"Unable to load user email.");
         }
 
         var user = await _userManager.FindByEmailAsync(Email);
@@ -118,7 +121,7 @@ public class UpdateEmailModel : PageModel
                     }
                     else if (result.Errors.Contains(IdentityError.EmailDuplicated))
                     {
-                        ModelState.AddModelError(string.Empty, "Provided email is already in use.");
+                        ModelState.AddModelError(string.Empty, "The provided email is already in use.");
                         return Page();
                     }
                 }
@@ -140,7 +143,7 @@ public class UpdateEmailModel : PageModel
 
             StatusMessage = "Confirmation link to change email sent. Please check your email.";
             SetNewEmail();
-            return RedirectToPage("./Login");
+            return LocalRedirect(returnUrl);
         }
 
         ModelState.AddModelError(string.Empty, "Your email is unchanged.");
