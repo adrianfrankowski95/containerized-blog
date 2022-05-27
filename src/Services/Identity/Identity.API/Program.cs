@@ -24,7 +24,6 @@ builder.Services
     .AddAuthentication(opts =>
         {
             opts.DefaultAuthenticateScheme = IdentityConstants.AuthenticationScheme;
-            opts.RequireAuthenticatedSignIn = true;
         })
     .AddCookie(IdentityConstants.AuthenticationScheme, opts =>
     {

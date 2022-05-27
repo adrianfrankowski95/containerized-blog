@@ -265,12 +265,7 @@ public class UserManager<TUser> where TUser : User
         if (!user.EmailConfirmationCode.Equals(emailConfirmationCode))
             return Task.FromResult(IdentityResult.Fail(IdentityError.InvalidEmailConfirmationCode));
 
-        if (user.EmailConfirmationCodeIssuedAt is null)
-            throw new ArgumentNullException(nameof(user.EmailConfirmationCodeIssuedAt));
-
-        var validityPeriod = _emailOptions.CurrentValue.EmailConfirmationCodeValidityPeriod;
-
-        if (_sysTime.Now > user.EmailConfirmationCodeIssuedAt.Value.Plus(Duration.FromTimeSpan(validityPeriod)))
+        if (IsEmailConfirmationCodeExpired(user))
             return Task.FromResult(IdentityResult.Fail(IdentityError.ExpiredEmailConfirmationCode));
 
         user.EmailConfirmed = true;
@@ -280,38 +275,17 @@ public class UserManager<TUser> where TUser : User
         return UpdateUserAsync(user);
     }
 
-    public async Task<IdentityResult> ResetPasswordAsync(TUser user, string newPassword, string passwordResetCode)
+    public bool IsEmailConfirmationCodeExpired(TUser user)
     {
-        ThrowIfNull(user);
+        if (user.EmailConfirmationCodeIssuedAt is null)
+            throw new ArgumentNullException(nameof(user.EmailConfirmationCodeIssuedAt));
 
-        if (string.IsNullOrWhiteSpace(newPassword))
-            throw new ArgumentNullException(nameof(newPassword));
+        var validityPeriod = _emailOptions.CurrentValue.EmailConfirmationCodeValidityPeriod;
 
-        if (string.IsNullOrWhiteSpace(passwordResetCode))
-            throw new ArgumentNullException(nameof(passwordResetCode));
+        if (_sysTime.Now > user.EmailConfirmationCodeIssuedAt.Value.Plus(Duration.FromTimeSpan(validityPeriod)))
+            return true;
 
-        if (user.PasswordResetCode is null)
-            return IdentityResult.Fail(IdentityError.MissingPasswordResetCode);
-
-        if (!string.Equals(user.PasswordResetCode, passwordResetCode, StringComparison.Ordinal))
-            return IdentityResult.Fail(IdentityError.InvalidPasswordResetCode);
-
-        if (user.PasswordResetCodeIssuedAt is null)
-            throw new ArgumentNullException(nameof(user.PasswordResetCodeIssuedAt));
-
-        var validityPeriod = _securityOptions.CurrentValue.PasswordResetCodeValidityPeriod;
-
-        if (_sysTime.Now > user.PasswordResetCodeIssuedAt.Value.Plus(Duration.FromTimeSpan(validityPeriod)))
-            return IdentityResult.Fail(IdentityError.ExpiredEmailConfirmationCode);
-
-        user.PasswordResetCode = null;
-        user.PasswordResetCodeIssuedAt = null;
-
-        var result = await UpdatePasswordHashAsync(user, newPassword).ConfigureAwait(false);
-        if (!result.Succeeded)
-            return result;
-
-        return await UpdateUserAsync(user).ConfigureAwait(false);
+        return false;
     }
 
     public async Task<IdentityResult> UpdatePasswordAsync(TUser user, string newPassword, string oldPassword)
@@ -368,6 +342,50 @@ public class UserManager<TUser> where TUser : User
         user.SecurityStamp = GenerateSecurityStamp();
 
         return UpdateUserAsync(user);
+    }
+
+    public async Task<IdentityResult> ResetPasswordAsync(TUser user, string newPassword, string passwordResetCode)
+    {
+        ThrowIfNull(user);
+
+        if (string.IsNullOrWhiteSpace(newPassword))
+            throw new ArgumentNullException(nameof(newPassword));
+
+        if (string.IsNullOrWhiteSpace(passwordResetCode))
+            throw new ArgumentNullException(nameof(passwordResetCode));
+
+        if (user.PasswordResetCode is null)
+            return IdentityResult.Fail(IdentityError.MissingPasswordResetCode);
+
+        if (!string.Equals(user.PasswordResetCode, passwordResetCode, StringComparison.Ordinal))
+            return IdentityResult.Fail(IdentityError.InvalidPasswordResetCode);
+
+        if (IsPasswordResetCodeExpired(user))
+            return IdentityResult.Fail(IdentityError.ExpiredPasswordResetCode);
+
+        user.PasswordResetCode = null;
+        user.PasswordResetCodeIssuedAt = null;
+
+        var result = await UpdatePasswordHashAsync(user, newPassword).ConfigureAwait(false);
+        if (!result.Succeeded)
+            return result;
+
+        return await UpdateUserAsync(user).ConfigureAwait(false);
+    }
+
+    public bool IsPasswordResetCodeExpired(TUser user)
+    {
+        ThrowIfNull(user);
+
+        if (user.PasswordResetCodeIssuedAt is null)
+            throw new ArgumentNullException(nameof(user.PasswordResetCodeIssuedAt));
+
+        var validityPeriod = _securityOptions.CurrentValue.PasswordResetCodeValidityPeriod;
+
+        if (_sysTime.Now > user.PasswordResetCodeIssuedAt.Value.Plus(Duration.FromTimeSpan(validityPeriod)))
+            return true;
+
+        return false;
     }
 
     private static Guid GenerateSecurityStamp() => Guid.NewGuid();

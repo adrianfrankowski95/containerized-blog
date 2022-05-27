@@ -80,7 +80,5 @@ public class UserEntityConfiguration<TUser> : IEntityTypeConfiguration<TUser> wh
         builder
             .Property(x => x.EmailConfirmationCodeIssuedAt)
             .IsRequired(false);
-
-        builder.UseXminAsConcurrencyToken();
     }
 }

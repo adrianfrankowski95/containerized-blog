@@ -58,7 +58,7 @@ public class ForgotPasswordModel : PageModel
                 var callbackUrl = Url.Page(
                     "/Account/ResetPassword",
                     pageHandler: null,
-                    values: new { area = "Identity", code },
+                    values: new { area = "Identity", userId = user.Id, code = code },
                     protocol: Request.Scheme);
 
                 await _emailSender.SendEmailAsync(
