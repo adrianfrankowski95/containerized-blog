@@ -162,10 +162,10 @@ public class UserManager<TUser> where TUser : User
         bool issuedAtExists = user.PasswordResetCodeIssuedAt is not null;
 
         if (passwordResetCodeExists && !issuedAtExists)
-            throw new InvalidOperationException("Password reset code creation date is not set");
+            throw new InvalidOperationException("Password reset code exists, but its creation date is not set");
 
         if (!passwordResetCodeExists && issuedAtExists)
-            throw new InvalidOperationException("Password reset code is not set");
+            throw new InvalidOperationException("Password reset code creation date exists, but code has not been generated");
 
         return passwordResetCodeExists && issuedAtExists;
     }
@@ -263,14 +263,11 @@ public class UserManager<TUser> where TUser : User
     {
         ThrowIfNull(user);
 
-        if (user.EmailConfirmed)
+        if (!IsConfirmingEmail(user))
             return Task.FromResult(IdentityResult.Fail(IdentityError.EmailAlreadyConfirmed));
 
         if (emailConfirmationCode == default)
             throw new ArgumentNullException(nameof(emailConfirmationCode));
-
-        if (user.EmailConfirmationCode is null)
-            return Task.FromResult(IdentityResult.Fail(IdentityError.MissingEmailConfirmationCode));
 
         if (!user.EmailConfirmationCode.Equals(emailConfirmationCode))
             return Task.FromResult(IdentityResult.Fail(IdentityError.InvalidEmailConfirmationCode));
@@ -283,6 +280,34 @@ public class UserManager<TUser> where TUser : User
         user.EmailConfirmationCodeIssuedAt = null;
 
         return UpdateUserAsync(user);
+    }
+
+    public bool IsConfirmingEmail(TUser user)
+    {
+        ThrowIfNull(user);
+
+        bool emailConfirmed = user.EmailConfirmed;
+        bool confirmationCodeExists = user.EmailConfirmationCode is not null && user.EmailConfirmationCode.Value != default;
+        bool issuedAtExists = user.EmailConfirmationCodeIssuedAt is not null;
+
+        if (emailConfirmed)
+        {
+            if (confirmationCodeExists)
+                throw new InvalidOperationException("Email address is confirmed, but confirmation code exists");
+
+            if (issuedAtExists)
+                throw new InvalidOperationException("Email address is confirmed, but confirmation code creation date exists");
+        }
+        else
+        {
+            if (!confirmationCodeExists)
+                throw new InvalidOperationException("Email address is not confirmed, but confirmation code has not been generated");
+
+            if (!issuedAtExists)
+                throw new InvalidOperationException("Email confiration code exists, but its creation date has not been set");
+        }
+
+        return !emailConfirmed;
     }
 
     public bool IsEmailConfirmationCodeExpired(TUser user)
@@ -309,7 +334,7 @@ public class UserManager<TUser> where TUser : User
             throw new ArgumentNullException(nameof(oldPassword));
 
         if (IsResettingPassword(user))
-            throw new InvalidOperationException("User cannot change his password during resetting");
+            return IdentityResult.Fail(IdentityError.ResettingPassword);
 
         var passwordVerificationResult = VerifyPassword(user, oldPassword);
 
@@ -364,14 +389,14 @@ public class UserManager<TUser> where TUser : User
         if (string.IsNullOrWhiteSpace(passwordResetCode))
             throw new ArgumentNullException(nameof(passwordResetCode));
 
-        if (user.PasswordResetCode is null)
-            return IdentityResult.Fail(IdentityError.MissingPasswordResetCode);
-
-        if (!string.Equals(user.PasswordResetCode, passwordResetCode, StringComparison.Ordinal))
-            return IdentityResult.Fail(IdentityError.InvalidPasswordResetCode);
+        if (!IsResettingPassword(user))
+            return IdentityResult.Fail(IdentityError.PasswordResetNotRequested);
 
         if (IsPasswordResetCodeExpired(user))
             return IdentityResult.Fail(IdentityError.ExpiredPasswordResetCode);
+
+        if (!string.Equals(user.PasswordResetCode, passwordResetCode, StringComparison.Ordinal))
+            return IdentityResult.Fail(IdentityError.InvalidPasswordResetCode);
 
         user.PasswordResetCode = null;
         user.PasswordResetCodeIssuedAt = null;
