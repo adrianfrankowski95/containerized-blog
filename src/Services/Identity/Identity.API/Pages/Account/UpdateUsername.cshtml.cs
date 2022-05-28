@@ -110,7 +110,7 @@ public class UpdateUsernameModel : PageModel
                     }
                     else if (result.Errors.Contains(IdentityError.UsernameDuplicated))
                     {
-                        ModelState.AddModelError(string.Empty, "Provided username is already in use.");
+                        ModelState.AddModelError(string.Empty, "The Username is already in use.");
                         return Page();
                     }
                 }

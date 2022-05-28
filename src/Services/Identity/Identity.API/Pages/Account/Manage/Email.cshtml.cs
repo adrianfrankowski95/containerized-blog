@@ -67,7 +67,7 @@ public class EmailModel : PageModel
             NewEmail = user.Email
         };
 
-        IsEmailConfirmed = user.EmailConfirmed;
+        IsEmailConfirmed = !_userManager.IsConfirmingEmail(user);
     }
 
     public async Task<IActionResult> OnGetAsync()
