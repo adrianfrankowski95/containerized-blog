@@ -7,12 +7,12 @@ namespace Blog.Services.Identity.API.Core;
 
 public class EmailValidator<TUser> : IUserAttributeValidator<TUser> where TUser : User
 {
-    private readonly IUserRepository<TUser> _userRepository;
+    private readonly UserManager<TUser> _userManager;
     private readonly IOptionsMonitor<EmailOptions> _options;
 
-    public EmailValidator(IUserRepository<TUser> userRepository, IOptionsMonitor<EmailOptions> options)
+    public EmailValidator(UserManager<TUser> userManager, IOptionsMonitor<EmailOptions> options)
     {
-        _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+        _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         _options = options ?? throw new ArgumentNullException(nameof(options));
     }
 
@@ -34,10 +34,10 @@ public class EmailValidator<TUser> : IUserAttributeValidator<TUser> where TUser 
 
         var opts = _options.CurrentValue;
 
-        if (opts.RequireConfirmed && !user.EmailConfirmed)
+        if (opts.RequireConfirmed && _userManager.IsConfirmingEmail(user))
             errors.Add(IdentityError.EmailUnconfirmed);
 
-        var owner = await _userRepository.FindByEmailAsync(email).ConfigureAwait(false);
+        var owner = await _userManager.FindByEmailAsync(email).ConfigureAwait(false);
 
         if (owner is not null && !user.Id.Equals(owner.Id))
             errors.Add(IdentityError.EmailDuplicated);

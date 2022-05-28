@@ -121,7 +121,7 @@ public class UpdateEmailModel : PageModel
                     }
                     else if (result.Errors.Contains(IdentityError.EmailDuplicated))
                     {
-                        ModelState.AddModelError(string.Empty, "The provided email is already in use.");
+                        ModelState.AddModelError(string.Empty, "The Email is already in use.");
                         return Page();
                     }
                 }
