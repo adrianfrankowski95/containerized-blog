@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using Blog.Services.Identity.API.Infrastructure.Repositories;
 using Blog.Services.Identity.API.Models;
 using Microsoft.Extensions.Options;
 
@@ -23,24 +22,24 @@ public class EmailValidator<TUser> : IUserAttributeValidator<TUser> where TUser 
 
         var email = user.Email;
 
-        if (email is null || string.IsNullOrWhiteSpace(email))
+        if (string.IsNullOrWhiteSpace(email))
         {
-            errors.Add(IdentityError.MissingEmail);
+            errors.Add(EmailValidationError.MissingEmail);
             return;
         }
 
         if (!new EmailAddressAttribute().IsValid(email))
-            errors.Add(IdentityError.InvalidEmailFormat);
+            errors.Add(EmailValidationError.InvalidEmailFormat);
 
         var opts = _options.CurrentValue;
 
         if (opts.RequireConfirmed && _userManager.IsConfirmingEmail(user))
-            errors.Add(IdentityError.EmailUnconfirmed);
+            errors.Add(EmailValidationError.EmailUnconfirmed);
 
         var owner = await _userManager.FindByEmailAsync(email).ConfigureAwait(false);
 
         if (owner is not null && !user.Id.Equals(owner.Id))
-            errors.Add(IdentityError.EmailDuplicated);
+            errors.Add(EmailValidationError.EmailDuplicated);
 
     }
 }

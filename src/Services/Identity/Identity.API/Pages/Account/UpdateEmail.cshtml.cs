@@ -116,19 +116,19 @@ public class UpdateEmailModel : PageModel
             if (!result.Succeeded)
             {
                 //Reveal details about account state only if provided credentials are valid
-                if (!result.Errors.Contains(IdentityError.InvalidCredentials))
+                if (!result.Errors.Contains(CredentialsError.InvalidCredentials))
                 {
-                    if (result.Errors.Contains(IdentityError.AccountSuspended))
+                    if (result.Errors.Contains(UserStateValidationError.AccountSuspended))
                     {
                         _logger.LogWarning("User account suspended.");
                         return RedirectToPage("./Suspension", new { suspendedUntil = user.SuspendedUntil.Value });
                     }
-                    else if (result.Errors.Contains(IdentityError.AccountLockedOut))
+                    else if (result.Errors.Contains(UserStateValidationError.AccountLockedOut))
                     {
                         _logger.LogWarning("User account locked out.");
                         return RedirectToPage("./Lockout");
                     }
-                    else if (result.Errors.Contains(IdentityError.EmailDuplicated))
+                    else if (result.Errors.Contains(EmailValidationError.EmailDuplicated))
                     {
                         ModelState.AddModelError(string.Empty, "The Email is already in use.");
                         return Page();

@@ -22,19 +22,19 @@ public class PasswordValidator<TUser> : IPasswordValidator<TUser> where TUser : 
 
         //validate password format
         if (password.Length < opts.MinLength)
-            errors.Add(IdentityError.PasswordTooShort);
+            errors.Add(PasswordValidationError.PasswordTooShort);
 
         if (opts.RequireLowerCase && !password.Any(IsLowercase))
-            errors.Add(IdentityError.PasswordWithoutLowerCase);
+            errors.Add(PasswordValidationError.PasswordWithoutLowerCase);
 
         if (opts.RequireUpperCase && !password.Any(IsUppercase))
-            errors.Add(IdentityError.PasswordWithoutUpperCase);
+            errors.Add(PasswordValidationError.PasswordWithoutUpperCase);
 
         if (opts.RequireDigit && !password.Any(IsDigit))
-            errors.Add(IdentityError.PasswordWithoutDigit);
+            errors.Add(PasswordValidationError.PasswordWithoutDigit);
 
         if (opts.RequireNonAlphanumeric && !password.Any(IsNonAlphanumeric))
-            errors.Add(IdentityError.PasswordWithoutNonAlphanumeric);
+            errors.Add(PasswordValidationError.PasswordWithoutNonAlphanumeric);
 
         return
             ValueTask.FromResult(errors.Count == 0 ?

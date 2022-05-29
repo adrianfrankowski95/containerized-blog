@@ -20,17 +20,17 @@ public class UserStateValidator<TUser> : IUserAttributeValidator<TUser> where TU
 
         if (_userManager.IsSuspended(user))
         {
-            errors.Add(IdentityError.AccountSuspended);
+            errors.Add(UserStateValidationError.AccountSuspended);
         }
 
         if (_userManager.IsLockedOut(user))
         {
-            errors.Add(IdentityError.AccountLockedOut);
+            errors.Add(UserStateValidationError.AccountLockedOut);
         }
 
         if (_userManager.IsResettingPassword(user))
         {
-            errors.Add(IdentityError.ResettingPassword);
+            errors.Add(UserStateValidationError.ResettingPassword);
         }
 
         return ValueTask.CompletedTask;

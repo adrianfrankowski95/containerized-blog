@@ -264,16 +264,16 @@ public class UserManager<TUser> where TUser : User
         ThrowIfNull(user);
 
         if (!IsConfirmingEmail(user))
-            return Task.FromResult(IdentityResult.Fail(IdentityError.EmailAlreadyConfirmed));
+            return Task.FromResult(IdentityResult.Fail(EmailConfirmationError.EmailAlreadyConfirmed));
 
         if (emailConfirmationCode == default)
             throw new ArgumentNullException(nameof(emailConfirmationCode));
 
         if (!user.EmailConfirmationCode.Equals(emailConfirmationCode))
-            return Task.FromResult(IdentityResult.Fail(IdentityError.InvalidEmailConfirmationCode));
+            return Task.FromResult(IdentityResult.Fail(EmailConfirmationError.InvalidEmailConfirmationCode));
 
         if (IsEmailConfirmationCodeExpired(user))
-            return Task.FromResult(IdentityResult.Fail(IdentityError.ExpiredEmailConfirmationCode));
+            return Task.FromResult(IdentityResult.Fail(EmailConfirmationError.ExpiredEmailConfirmationCode));
 
         user.EmailConfirmed = true;
         user.EmailConfirmationCode = null;
@@ -334,12 +334,12 @@ public class UserManager<TUser> where TUser : User
             throw new ArgumentNullException(nameof(oldPassword));
 
         if (IsResettingPassword(user))
-            return IdentityResult.Fail(IdentityError.ResettingPassword);
+            return IdentityResult.Fail(UserStateValidationError.ResettingPassword);
 
         var passwordVerificationResult = VerifyPassword(user, oldPassword);
 
         if (passwordVerificationResult is PasswordVerificationResult.Fail)
-            return IdentityResult.Fail(IdentityError.InvalidCredentials);
+            return IdentityResult.Fail(CredentialsError.InvalidCredentials);
 
         var result = await UpdatePasswordHashAsync(user, newPassword).ConfigureAwait(false);
         if (!result.Succeeded)
@@ -390,13 +390,13 @@ public class UserManager<TUser> where TUser : User
             throw new ArgumentNullException(nameof(passwordResetCode));
 
         if (!IsResettingPassword(user))
-            return IdentityResult.Fail(IdentityError.PasswordResetNotRequested);
+            return IdentityResult.Fail(PasswordResetError.PasswordResetNotRequested);
 
         if (IsPasswordResetCodeExpired(user))
-            return IdentityResult.Fail(IdentityError.ExpiredPasswordResetCode);
+            return IdentityResult.Fail(PasswordResetError.ExpiredPasswordResetCode);
 
         if (!string.Equals(user.PasswordResetCode, passwordResetCode, StringComparison.Ordinal))
-            return IdentityResult.Fail(IdentityError.InvalidPasswordResetCode);
+            return IdentityResult.Fail(PasswordResetError.InvalidPasswordResetCode);
 
         user.PasswordResetCode = null;
         user.PasswordResetCodeIssuedAt = null;
@@ -434,7 +434,7 @@ public class UserManager<TUser> where TUser : User
 
         bool successOrUnconfirmedEmail = result.Succeeded ||
             (ignoreUnconfirmedEmail && result.Errors.Count == 1 &&
-            result.Errors.TryGetValue(IdentityError.EmailUnconfirmed, out _));
+            result.Errors.TryGetValue(EmailValidationError.EmailUnconfirmed, out _));
 
         if (!successOrUnconfirmedEmail)
             return result;

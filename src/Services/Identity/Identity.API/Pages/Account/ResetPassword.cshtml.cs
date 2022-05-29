@@ -102,32 +102,32 @@ public class ResetPasswordModel : PageModel
         var result = await _userManager.ResetPasswordAsync(user, Input.NewPassword, Input.Code);
         if (!result.Succeeded)
         {
-            if (result.Errors.Contains(IdentityError.ExpiredPasswordResetCode))
+            if (result.Errors.Contains(PasswordResetError.ExpiredPasswordResetCode))
             {
                 return RedirectToPage("./ResetPasswordExpiration");
             }
 
             //Reveal details about account state only if provided credentials are valid
-            if (!result.Errors.Contains(IdentityError.InvalidCredentials))
+            if (!result.Errors.Contains(CredentialsError.InvalidCredentials))
             {
-                if (result.Errors.Contains(IdentityError.AccountSuspended))
+                if (result.Errors.Contains(UserStateValidationError.AccountSuspended))
                 {
                     _logger.LogWarning("User account suspended.");
                     return RedirectToPage("./Suspension", new { suspendedUntil = user.SuspendedUntil.Value });
                 }
-                else if (result.Errors.Contains(IdentityError.AccountLockedOut))
+                else if (result.Errors.Contains(UserStateValidationError.AccountLockedOut))
                 {
                     _logger.LogWarning("User account locked out.");
                     return RedirectToPage("./Lockout");
                 }
-                else if (result.Errors.Contains(IdentityError.InvalidUsernameFormat))
+                else if (result.Errors.Contains(UsernameValidationError.InvalidUsernameFormat))
                 {
                     _logger.LogWarning("User username does not meet validation requirements anymore.");
                     SaveUsername(user);
                     return RedirectToPage("./UpdateUsername",
                         new { returnUrl = Url.Page("./ResetPassword.cshtml", new { userId = user.Id, code = Input.Code }) });
                 }
-                else if (result.Errors.Contains(IdentityError.InvalidEmailFormat))
+                else if (result.Errors.Contains(EmailValidationError.InvalidEmailFormat))
                 {
                     _logger.LogWarning("User email does not meet validation requirements anymore.");
                     SaveEmail(user);

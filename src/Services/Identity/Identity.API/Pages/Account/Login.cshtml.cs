@@ -93,37 +93,38 @@ public class LoginModel : PageModel
             }
 
             //Reveal details about account state only if provided credentials are valid
-            if (!result.Errors.Contains(IdentityError.InvalidCredentials))
+            if (!result.Errors.Contains(CredentialsError.InvalidCredentials))
             {
-                if (result.Errors.Contains(IdentityError.AccountSuspended))
+                if (result.Errors.Contains(UserStateValidationError.AccountSuspended))
                 {
                     _logger.LogWarning("User account suspended.");
                     return RedirectToPage("./Suspension", new { suspendedUntil = user.SuspendedUntil.Value });
                 }
-                else if (result.Errors.Contains(IdentityError.AccountLockedOut))
+                else if (result.Errors.Contains(UserStateValidationError.AccountLockedOut))
                 {
                     _logger.LogWarning("User account locked out.");
                     return RedirectToPage("./Lockout");
                 }
-                else if (result.Errors.Contains(IdentityError.InvalidUsernameFormat))
+                else if (result.Errors.Contains(UserStateValidationError.ResettingPassword))
+                {
+                    _logger.LogWarning("User password has not been confirmed.");
+                    return RedirectToPage("./UnconfirmedPassword");
+                }
+                else if (result.Errors.Contains(UsernameValidationError.InvalidUsernameFormat))
                 {
                     _logger.LogWarning("User username does not meet validation requirements anymore.");
                     SaveInput();
                     return RedirectToPage("./UpdateUsername",
                         new { returntUrl = Url.Page("./Login", new { returnUrl = returnUrl }) });
                 }
-                else if (result.Errors.Contains(IdentityError.InvalidEmailFormat))
+                else if (result.Errors.Contains(EmailValidationError.InvalidEmailFormat))
                 {
                     _logger.LogWarning("User email does not meet validation requirements anymore.");
                     SaveInput();
                     return RedirectToPage("./UpdateEmail",
                         new { returntUrl = Url.Page("./Login", new { returnUrl = returnUrl }) });
                 }
-                else if (result.Errors.Contains(IdentityError.PasswordTooShort) ||
-                        result.Errors.Contains(IdentityError.PasswordWithoutDigit) ||
-                        result.Errors.Contains(IdentityError.PasswordWithoutLowerCase) ||
-                        result.Errors.Contains(IdentityError.PasswordWithoutNonAlphanumeric) ||
-                        result.Errors.Contains(IdentityError.PasswordWithoutUpperCase))
+                else if (result.Errors.Any(x => x is PasswordValidationError))
                 {
                     _logger.LogWarning("User password does not meet validation requirements anymore.");
                     SaveInput();
