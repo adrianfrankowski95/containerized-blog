@@ -113,14 +113,14 @@ public class ResetPasswordModel : PageModel
                     _logger.LogWarning("User username does not meet validation requirements anymore.");
                     SaveUsername(user);
                     return RedirectToPage("./UpdateUsername",
-                        new { returnUrl = Url.Page("./ResetPassword.cshtml", new { userId = user.Id, code = Input.Code }) });
+                        new { returnUrl = Url.Page("./ResetPassword.cshtml", new { code = Input.Code }) });
                 }
                 else if (result.Errors.Contains(EmailValidationError.InvalidEmailFormat))
                 {
                     _logger.LogWarning("User email does not meet validation requirements anymore.");
                     SaveEmail(user);
                     return RedirectToPage("./UpdateEmail",
-                        new { returnUrl = Url.Page("./ResetPassword.cshtml", new { userId = user.Id, code = Input.Code }) });
+                        new { returnUrl = Url.Page("./ResetPassword.cshtml", new { code = Input.Code }) });
                 }
             }
 
