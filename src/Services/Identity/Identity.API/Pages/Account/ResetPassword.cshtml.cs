@@ -124,7 +124,7 @@ public class ResetPasswordModel : PageModel
                 }
             }
 
-            foreach (var error in result.Errors)
+            foreach (var error in result.Errors.Where(x => x is EmailValidationError || x is PasswordValidationError))
             {
                 ModelState.AddModelError(string.Empty, error.ErrorDescription);
             }
