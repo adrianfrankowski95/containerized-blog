@@ -3,29 +3,38 @@
 #nullable disable
 
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.Text;
 using System.Text.Encodings.Web;
 using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Models;
+using Blog.Services.Identity.API.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Options;
+using NodaTime;
 
 namespace Blog.Services.Identity.API.Pages.Account.Manage;
 
 public class UpdateEmailModel : PageModel
 {
     private readonly UserManager<User> _userManager;
+    private readonly IOptionsMonitor<EmailOptions> _emailOptions;
+    private readonly ISysTime _sysTime;
     private readonly IEmailSender _emailSender;
-
     private readonly ILogger<UpdateEmailModel> _logger;
 
     public UpdateEmailModel(
         UserManager<User> userManager,
+        IOptionsMonitor<EmailOptions> emailOptions,
+        ISysTime sysTime,
         IEmailSender emailSender,
         ILogger<UpdateEmailModel> logger)
     {
         _userManager = userManager;
+        _emailOptions = emailOptions;
+        _sysTime = sysTime;
         _emailSender = emailSender;
         _logger = logger;
     }
@@ -139,7 +148,8 @@ public class UpdateEmailModel : PageModel
             await _emailSender.SendEmailAsync(
                 Input.NewEmail,
                 "Confirm your email",
-                $"Please confirm your email by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                $"Please confirm your email by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>." +
+                $"<br><br>This link will expire at {_sysTime.Now.Plus(Duration.FromTimeSpan(_emailOptions.CurrentValue.EmailConfirmationCodeValidityPeriod)).ToString("dddd, dd mmmm yyyy HH:mm:ss", DateTimeFormatInfo.InvariantInfo)}.");
 
             StatusMessage = "Confirmation link to change email sent. Please check your email.";
             SetNewEmail();
