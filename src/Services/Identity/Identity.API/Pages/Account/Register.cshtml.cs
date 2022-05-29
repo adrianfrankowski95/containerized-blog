@@ -117,7 +117,7 @@ public class RegisterModel : PageModel
 
                 if (_emailOptions.CurrentValue.RequireConfirmed)
                 {
-                    return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl = returnUrl });
+                    return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl });
                 }
                 else
                 {

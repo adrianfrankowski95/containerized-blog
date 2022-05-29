@@ -1,6 +1,7 @@
 using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Infrastructure;
 using Blog.Services.Identity.API.Models;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using NodaTime;
 
@@ -18,21 +19,8 @@ builder.Services.AddRazorPages();
 builder.Services
     .AddNodaTimeClock()
     .AddIdentityInfrastructure<User, Role>(config)
+    .AddIdentityAuthentication<User>()
     .AddControllers();
-
-builder.Services
-    .AddAuthentication(opts =>
-        {
-            opts.DefaultAuthenticateScheme = IdentityConstants.AuthenticationScheme;
-        })
-    .AddCookie(IdentityConstants.AuthenticationScheme, opts =>
-    {
-        opts.Cookie.HttpOnly = true;
-        opts.Cookie.IsEssential = true;
-        opts.Cookie.SameSite = SameSiteMode.Strict;
-        opts.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-        opts.Validate
-    });
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -74,6 +62,26 @@ static class ServiceCollectionExtensions
     public static IServiceCollection AddNodaTimeClock(this IServiceCollection services)
     {
         services.TryAddSingleton<IClock, SystemClock>();
+
+        return services;
+    }
+
+    public static IServiceCollection AddIdentityAuthentication<TUser>(this IServiceCollection services)
+        where TUser : User
+    {
+        services
+            .AddAuthentication(IdentityConstants.AuthenticationScheme)
+            .AddCookie(IdentityConstants.AuthenticationScheme, opts =>
+            {
+                opts.Cookie.HttpOnly = true;
+                opts.Cookie.IsEssential = true;
+                opts.Cookie.SameSite = SameSiteMode.Strict;
+                opts.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                opts.LoginPath = new PathString("/Account/Login");
+            }).Services
+            .AddOptions<CookieAuthenticationOptions>(IdentityConstants.AuthenticationScheme)
+            .Configure<ISecurityStampValidator<TUser>>((opts, validator)
+                => opts.Events = new() { OnValidatePrincipal = validator.ValidateAsync });
 
         return services;
     }

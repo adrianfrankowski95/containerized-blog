@@ -9,7 +9,8 @@ namespace Blog.Services.Identity.API.Core;
 public class UserManager<TUser> where TUser : User
 {
     private readonly IUnitOfWork<TUser> _unitOfWork;
-    private readonly IOptionsMonitor<SecurityOptions> _securityOptions;
+    private readonly IOptionsMonitor<PasswordOptions> _passwordOptions;
+    private readonly IOptionsMonitor<LockoutOptions> _lockoutOptions;
     private readonly IOptionsMonitor<EmailOptions> _emailOptions;
     private readonly ISysTime _sysTime;
     private readonly IPasswordHasher _passwordHasher;
@@ -20,7 +21,8 @@ public class UserManager<TUser> where TUser : User
     public UserManager(
         IUnitOfWork<TUser> unitOfWork,
         IPasswordHasher passwordHasher,
-        IOptionsMonitor<SecurityOptions> securityOptions,
+        IOptionsMonitor<PasswordOptions> passwordOptions,
+        IOptionsMonitor<LockoutOptions> lockoutOptions,
         IOptionsMonitor<EmailOptions> emailOptions,
         IUserValidator<TUser> userValidator,
         IPasswordValidator<TUser> passwordValidator,
@@ -28,7 +30,8 @@ public class UserManager<TUser> where TUser : User
         ISysTime sysTime)
     {
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
-        _securityOptions = securityOptions ?? throw new ArgumentNullException(nameof(securityOptions));
+        _passwordOptions = passwordOptions ?? throw new ArgumentNullException(nameof(passwordOptions));
+        _lockoutOptions = lockoutOptions ?? throw new ArgumentNullException(nameof(lockoutOptions));
         _emailOptions = emailOptions ?? throw new ArgumentNullException(nameof(emailOptions));
         _sysTime = sysTime ?? throw new ArgumentNullException(nameof(sysTime));
         _passwordHasher = passwordHasher ?? throw new ArgumentNullException(nameof(passwordHasher));
@@ -130,7 +133,7 @@ public class UserManager<TUser> where TUser : User
         if (IsLockedOut(user))
             throw new InvalidOperationException("Login attempt by a locked out user");
 
-        var maxAttempts = _securityOptions.CurrentValue.MaxAllowedLoginAttempts;
+        var maxAttempts = _lockoutOptions.CurrentValue.MaxAllowedLoginAttempts;
 
         user.FailedLoginAttempts = ++user.FailedLoginAttempts;
 
@@ -144,7 +147,7 @@ public class UserManager<TUser> where TUser : User
     {
         ThrowIfNull(user);
 
-        return _securityOptions.CurrentValue.EnableAccountLockout &&
+        return _lockoutOptions.CurrentValue.EnableAccountLockout &&
             user.LockedOutUntil is not null && user.LockedOutUntil > _sysTime.Now;
     }
 
@@ -177,10 +180,10 @@ public class UserManager<TUser> where TUser : User
         if (IsLockedOut(user))
             throw new InvalidOperationException("User is already locked out");
 
-        if (!_securityOptions.CurrentValue.EnableAccountLockout)
+        if (!_lockoutOptions.CurrentValue.EnableAccountLockout)
             throw new InvalidOperationException("User lockout is not enabled");
 
-        var lockoutDuration = _securityOptions.CurrentValue.AccountLockoutDuration;
+        var lockoutDuration = _lockoutOptions.CurrentValue.AccountLockoutDuration;
 
         user.LockedOutUntil = _sysTime.Now.Plus(Duration.FromTimeSpan(lockoutDuration));
         user.FailedLoginAttempts = 0;
@@ -350,7 +353,7 @@ public class UserManager<TUser> where TUser : User
 
     private string GeneratePasswordResetCode(int length)
     {
-        var allowedChars = _securityOptions.CurrentValue.PasswordResetCodeAllowedCharacters;
+        var allowedChars = _passwordOptions.CurrentValue.PasswordResetCodeAllowedCharacters;
 
         if (string.IsNullOrEmpty(allowedChars))
             throw new ArgumentNullException(nameof(allowedChars));
@@ -370,7 +373,7 @@ public class UserManager<TUser> where TUser : User
     {
         ThrowIfNull(user);
 
-        var length = _securityOptions.CurrentValue.PasswordResetCodeLength;
+        var length = _passwordOptions.CurrentValue.PasswordResetCodeLength;
 
         user.PasswordResetCode = GeneratePasswordResetCode(length);
         user.PasswordResetCodeIssuedAt = _sysTime.Now;
@@ -415,7 +418,7 @@ public class UserManager<TUser> where TUser : User
         if (user.PasswordResetCodeIssuedAt is null)
             throw new ArgumentNullException(nameof(user.PasswordResetCodeIssuedAt));
 
-        var validityPeriod = _securityOptions.CurrentValue.PasswordResetCodeValidityPeriod;
+        var validityPeriod = _passwordOptions.CurrentValue.PasswordResetCodeValidityPeriod;
 
         if (_sysTime.Now > user.PasswordResetCodeIssuedAt.Value.Plus(Duration.FromTimeSpan(validityPeriod)))
             return true;
