@@ -4,25 +4,33 @@
 
 
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.Text;
 using System.Text.Encodings.Web;
 using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Models;
+using Blog.Services.Identity.API.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Options;
+using NodaTime;
 
 namespace Blog.Services.Identity.API.Pages.Account;
 
 public class ForgotPasswordModel : PageModel
 {
     private readonly UserManager<User> _userManager;
+    private readonly IOptionsMonitor<SecurityOptions> _securityOptions;
+    private readonly ISysTime _sysTime;
     private readonly IEmailSender _emailSender;
 
-    public ForgotPasswordModel(UserManager<User> userManager, IEmailSender emailSender)
+    public ForgotPasswordModel(UserManager<User> userManager, IOptionsMonitor<SecurityOptions> securityOptions, ISysTime sysTime, IEmailSender emailSender)
     {
         _userManager = userManager;
         _emailSender = emailSender;
+        _securityOptions = securityOptions;
+        _sysTime = sysTime;
     }
 
 
@@ -61,7 +69,9 @@ public class ForgotPasswordModel : PageModel
                 await _emailSender.SendEmailAsync(
                     Input.Email,
                     "Reset Password",
-                    $"Please reset your password by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                    $"Please reset your password by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>." +
+                    $"<br><br>This link will expire at {_sysTime.Now.Plus(Duration.FromTimeSpan(_securityOptions.CurrentValue.PasswordResetCodeValidityPeriod)).ToString("dddd, dd mmmm yyyy HH:mm:ss", DateTimeFormatInfo.InvariantInfo)}.");
+
             }
             return RedirectToPage("./ForgotPasswordConfirmation");
         }

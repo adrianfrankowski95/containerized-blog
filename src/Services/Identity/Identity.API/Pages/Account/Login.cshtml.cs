@@ -16,11 +16,11 @@ namespace Blog.Services.Identity.API.Pages.Account;
 [AllowAnonymous]
 public class LoginModel : PageModel
 {
-    private readonly SignInManager<User> _signInManager;
+    private readonly ISignInManager<User> _signInManager;
     private readonly ILoginService<User> _loginService;
     private readonly ILogger<LoginModel> _logger;
 
-    public LoginModel(SignInManager<User> signInManager, ILoginService<User> loginService, ILogger<LoginModel> logger)
+    public LoginModel(ISignInManager<User> signInManager, ILoginService<User> loginService, ILogger<LoginModel> logger)
     {
         _signInManager = signInManager;
         _loginService = loginService;

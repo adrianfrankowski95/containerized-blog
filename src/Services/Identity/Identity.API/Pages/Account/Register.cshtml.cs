@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.Text;
 using System.Text.Encodings.Web;
 using Blog.Services.Identity.API.Core;
@@ -10,27 +11,31 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
+using NodaTime;
 
 namespace Blog.Services.Identity.API.Pages.Account;
 
 public class RegisterModel : PageModel
 {
-    private readonly SignInManager<User> _signInManager;
-    private readonly IOptionsMonitor<EmailOptions> _emailOptions;
     private readonly UserManager<User> _userManager;
+    private readonly ISignInManager<User> _signInManager;
+    private readonly IOptionsMonitor<EmailOptions> _emailOptions;
+    private readonly ISysTime _sysTime;
     private readonly ILogger<RegisterModel> _logger;
     private readonly IEmailSender _emailSender;
 
     public RegisterModel(
         UserManager<User> userManager,
-        SignInManager<User> signInManager,
+        ISignInManager<User> signInManager,
         IOptionsMonitor<EmailOptions> emailOptions,
+        ISysTime sysTime,
         ILogger<RegisterModel> logger,
         IEmailSender emailSender)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _emailOptions = emailOptions;
+        _sysTime = sysTime;
         _logger = logger;
         _emailSender = emailSender;
     }
@@ -107,7 +112,8 @@ public class RegisterModel : PageModel
                     protocol: Request.Scheme);
 
                 await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
-                    $"Please confirm your email by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                    $"Please confirm your email by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>." +
+                    $"<br><br>This link will expire at {_sysTime.Now.Plus(Duration.FromTimeSpan(_emailOptions.CurrentValue.EmailConfirmationCodeValidityPeriod)).ToString("dddd, dd mmmm yyyy HH:mm:ss", DateTimeFormatInfo.InvariantInfo)}.");
 
                 if (_emailOptions.CurrentValue.RequireConfirmed)
                 {

@@ -3,6 +3,7 @@
 #nullable disable
 
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.Text;
 using System.Text.Encodings.Web;
 using Blog.Services.Identity.API.Core;
@@ -12,27 +13,31 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
+using NodaTime;
 
 namespace Blog.Services.Identity.API.Pages.Account.Manage;
 
 public class EmailModel : PageModel
 {
     private readonly UserManager<User> _userManager;
-    private readonly SignInManager<User> _signInManager;
+    private readonly ISignInManager<User> _signInManager;
     private readonly IOptionsMonitor<EmailOptions> _emailOptions;
+    private readonly ISysTime _sysTime;
     private readonly IEmailSender _emailSender;
     private readonly ILogger<EmailModel> _logger;
 
     public EmailModel(
         UserManager<User> userManager,
-        SignInManager<User> signInManager,
+        ISignInManager<User> signInManager,
         IOptionsMonitor<EmailOptions> emailOptions,
+        ISysTime sysTime,
         IEmailSender emailSender,
         ILogger<EmailModel> logger)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _emailOptions = emailOptions;
+        _sysTime = sysTime;
         _emailSender = emailSender;
         _logger = logger;
     }
@@ -135,7 +140,8 @@ public class EmailModel : PageModel
             await _emailSender.SendEmailAsync(
                 Input.NewEmail,
                 "Confirm your email",
-                $"Please confirm your email by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+                $"Please confirm your email by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>." +
+                $"<br><br>This link will expire at {_sysTime.Now.Plus(Duration.FromTimeSpan(_emailOptions.CurrentValue.EmailConfirmationCodeValidityPeriod)).ToString("dddd, dd mmmm yyyy HH:mm:ss", DateTimeFormatInfo.InvariantInfo)}.");
 
             StatusMessage = "Confirmation link to change email sent. Please check your email.";
 

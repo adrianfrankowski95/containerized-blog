@@ -14,11 +14,11 @@ namespace Blog.Services.Identity.API.Pages.Account.Manage;
 public class IndexModel : PageModel
 {
     private readonly UserManager<User> _userManager;
-    private readonly SignInManager<User> _signInManager;
+    private readonly ISignInManager<User> _signInManager;
 
     public IndexModel(
         UserManager<User> userManager,
-        SignInManager<User> signInManager)
+        ISignInManager<User> signInManager)
     {
         _userManager = userManager;
         _signInManager = signInManager;

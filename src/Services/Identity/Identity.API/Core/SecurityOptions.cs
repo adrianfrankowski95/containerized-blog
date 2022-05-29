@@ -8,5 +8,5 @@ public class SecurityOptions
     public int PasswordResetCodeLength { get; set; } = 6;
     //without I,l
     public string PasswordResetCodeAllowedCharacters { get; set; } = "ABCDEFGHJKLMNOPQRSTUVWXYZ1234567890!@$?_-/\\=abcdefghijkmnopqrstuvwxyz";
-    public TimeSpan PasswordResetCodeValidityPeriod { get; set; } = TimeSpan.FromDays(3);
+    public TimeSpan PasswordResetCodeValidityPeriod { get; set; } = TimeSpan.FromDays(1);
 }
