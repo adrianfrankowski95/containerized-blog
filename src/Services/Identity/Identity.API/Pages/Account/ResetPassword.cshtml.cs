@@ -59,23 +59,11 @@ public class ResetPasswordModel : PageModel
         TempData[nameof(user.Username)] = user.Username;
     }
 
-    public async Task<IActionResult> OnGet(Guid userId, string code)
+    public IActionResult OnGet(string code)
     {
-        if (userId == null || userId == default)
-        {
-            return BadRequest("A user ID must be supplied for password reset.");
-        }
         if (string.IsNullOrWhiteSpace(code))
         {
             return BadRequest("A code must be supplied for password reset.");
-        }
-
-        // Don't reveal that the user does not exist
-        var user = await _userManager.FindByIdAsync(userId);
-        if (user is not null)
-        {
-            if (_userManager.IsPasswordResetCodeExpired(user))
-                return RedirectToPage("./ResetPasswordExpiration");
         }
 
         Input = new InputModel
