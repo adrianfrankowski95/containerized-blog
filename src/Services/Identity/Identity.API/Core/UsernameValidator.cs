@@ -23,7 +23,7 @@ public class UsernameValidator<TUser> : IUserAttributeValidator<TUser> where TUs
 
         if (username is null || string.IsNullOrWhiteSpace(username))
         {
-            errors.Add(IdentityError.MissingUsername);
+            errors.Add(UsernameValidationError.MissingUsername);
             return;
         }
 
@@ -31,11 +31,11 @@ public class UsernameValidator<TUser> : IUserAttributeValidator<TUser> where TUs
 
         if (username.Length < opts.MinLength || username.Length > opts.MaxLength ||
             (!string.IsNullOrWhiteSpace(opts.AllowedCharacters) && username.Any(x => !opts.AllowedCharacters.Contains(x))))
-            errors.Add(IdentityError.InvalidUsernameFormat);
+            errors.Add(UsernameValidationError.InvalidUsernameFormat);
 
         var owner = await _userRepository.FindByUsernameAsync(username).ConfigureAwait(false);
 
         if (owner is not null && !user.Id.Equals(owner.Id))
-            errors.Add(IdentityError.UsernameDuplicated);
+            errors.Add(UsernameValidationError.UsernameDuplicated);
     }
 }

@@ -18,12 +18,12 @@ public class LoginService<TUser> : ILoginService<TUser> where TUser : User
     public async Task<(IdentityResult result, TUser? user)> LoginAsync(string email, string password)
     {
         if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
-            return (IdentityResult.Fail(IdentityError.InvalidCredentials), null);
+            return (IdentityResult.Fail(CredentialsError.InvalidCredentials), null);
 
         TUser? user = await _userManager.FindByEmailAsync(email).ConfigureAwait(false);
 
         if (user is null)
-            return (IdentityResult.Fail(IdentityError.InvalidCredentials), null);
+            return (IdentityResult.Fail(CredentialsError.InvalidCredentials), null);
 
         var passwordVerificationResult = _userManager.VerifyPassword(user, password);
 
@@ -53,7 +53,7 @@ public class LoginService<TUser> : ILoginService<TUser> where TUser : User
             if (_options.CurrentValue.EnableAccountLockout)
                 await _userManager.FailedLoginAttemptAsync(user).ConfigureAwait(false);
 
-            return (IdentityResult.Fail(IdentityError.InvalidCredentials), null);
+            return (IdentityResult.Fail(CredentialsError.InvalidCredentials), null);
         }
         else
             throw new NotSupportedException("Unhandled password verification result");

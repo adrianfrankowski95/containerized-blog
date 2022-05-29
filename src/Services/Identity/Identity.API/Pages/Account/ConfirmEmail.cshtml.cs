@@ -37,7 +37,7 @@ public class ConfirmEmailModel : PageModel
         var result = await _userManager.ConfirmEmailAsync(user, code);
 
         bool successOrAlreadyConfirmed = result.Succeeded ||
-            (result.Errors.Count == 1 && result.Errors.Single().Equals(IdentityError.EmailAlreadyConfirmed));
+            (result.Errors.Count == 1 && result.Errors.Single().Equals(EmailConfirmationError.EmailAlreadyConfirmed));
 
         StatusMessage = successOrAlreadyConfirmed ? "Thank you for confirming your email." : "Error confirming your email.";
         return Page();

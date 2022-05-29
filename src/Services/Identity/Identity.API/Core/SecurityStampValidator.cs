@@ -22,13 +22,13 @@ public class SecurityStampValidator<TUser> : IUserAttributeValidator<TUser> wher
 
         if (securityStamp.Equals(default))
         {
-            errors.Add(IdentityError.MissingSecurityStamp);
+            errors.Add(SecurityStampValidationError.MissingSecurityStamp);
             return;
         }
 
         var currentSecurityStamp = await _userRepository.GetSecurityStampAsync(user.Id).ConfigureAwait(false);
 
         if (!currentSecurityStamp.Equals(default) && !securityStamp.Equals(currentSecurityStamp))
-            errors.Add(IdentityError.InvalidSecurityStamp);
+            errors.Add(SecurityStampValidationError.InvalidSecurityStamp);
     }
 }
