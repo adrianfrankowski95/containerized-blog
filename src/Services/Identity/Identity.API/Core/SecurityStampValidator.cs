@@ -1,9 +1,10 @@
 using Blog.Services.Identity.API.Infrastructure.Repositories;
 using Blog.Services.Identity.API.Models;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace Blog.Services.Identity.API.Core;
 
-public class SecurityStampValidator<TUser> : IUserAttributeValidator<TUser> where TUser : User
+public class SecurityStampValidator<TUser> : ISecurityStampValidator<TUser> where TUser : User
 {
     private readonly IUserRepository<TUser> _userRepository;
 
@@ -30,5 +31,10 @@ public class SecurityStampValidator<TUser> : IUserAttributeValidator<TUser> wher
 
         if (!currentSecurityStamp.Equals(default) && !securityStamp.Equals(currentSecurityStamp))
             errors.Add(SecurityStampValidationError.InvalidSecurityStamp);
+    }
+
+    public Task ValidateAsync(CookieValidatePrincipalContext context)
+    {
+        throw new NotImplementedException();
     }
 }

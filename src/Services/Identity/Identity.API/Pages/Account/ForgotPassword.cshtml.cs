@@ -21,15 +21,19 @@ namespace Blog.Services.Identity.API.Pages.Account;
 public class ForgotPasswordModel : PageModel
 {
     private readonly UserManager<User> _userManager;
-    private readonly IOptionsMonitor<SecurityOptions> _securityOptions;
+    private readonly IOptionsMonitor<PasswordOptions> _passwordOptions;
     private readonly ISysTime _sysTime;
     private readonly IEmailSender _emailSender;
 
-    public ForgotPasswordModel(UserManager<User> userManager, IOptionsMonitor<SecurityOptions> securityOptions, ISysTime sysTime, IEmailSender emailSender)
+    public ForgotPasswordModel(
+        UserManager<User> userManager,
+        IOptionsMonitor<PasswordOptions> passwordOptions,
+        ISysTime sysTime,
+        IEmailSender emailSender)
     {
         _userManager = userManager;
         _emailSender = emailSender;
-        _securityOptions = securityOptions;
+        _passwordOptions = passwordOptions;
         _sysTime = sysTime;
     }
 
@@ -70,7 +74,7 @@ public class ForgotPasswordModel : PageModel
                     Input.Email,
                     "Reset Password",
                     $"Please reset your password by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>." +
-                    $"<br><br>This link will expire at {_sysTime.Now.Plus(Duration.FromTimeSpan(_securityOptions.CurrentValue.PasswordResetCodeValidityPeriod)).ToString("dddd, dd mmmm yyyy HH:mm:ss", DateTimeFormatInfo.InvariantInfo)}.");
+                    $"<br><br>This link will expire at {_sysTime.Now.Plus(Duration.FromTimeSpan(_passwordOptions.CurrentValue.PasswordResetCodeValidityPeriod)).ToString("dddd, dd mmmm yyyy HH:mm:ss", DateTimeFormatInfo.InvariantInfo)}.");
 
             }
             return RedirectToPage("./ForgotPasswordConfirmation");

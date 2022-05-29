@@ -7,9 +7,9 @@ namespace Blog.Services.Identity.API.Services;
 public class LoginService<TUser> : ILoginService<TUser> where TUser : User
 {
     private readonly UserManager<TUser> _userManager;
-    private readonly IOptionsMonitor<SecurityOptions> _options;
+    private readonly IOptionsMonitor<LockoutOptions> _options;
 
-    public LoginService(UserManager<TUser> userManager, IOptionsMonitor<SecurityOptions> options)
+    public LoginService(UserManager<TUser> userManager, IOptionsMonitor<LockoutOptions> options)
     {
         _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         _options = options ?? throw new ArgumentNullException(nameof(options));
