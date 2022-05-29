@@ -141,7 +141,7 @@ public class UpdateEmailModel : PageModel
 
             var code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(user.EmailConfirmationCode.ToString()));
             var callbackUrl = Url.Page(
-                "/Account/ConfirmEmailChange",
+                "/Account/ConfirmEmail",
                 pageHandler: null,
                 values: new { area = "Identity", userId = user.Id, email = Input.NewEmail, code = code },
                 protocol: Request.Scheme);
