@@ -30,23 +30,24 @@ public class LoginService<TUser> : ILoginService<TUser> where TUser : User
         if (passwordVerificationResult is PasswordVerificationResult.Success ||
             passwordVerificationResult is PasswordVerificationResult.SuccessNeedsRehash)
         {
-            var userValidationResult = await _userManager.ValidateUserAsync(user).ConfigureAwait(false);
-            if (!userValidationResult.Succeeded)
-                return (userValidationResult, null);
-
-            var passwordValidationResult = await _userManager.ValidatePasswordAsync(password).ConfigureAwait(false);
-            if (!passwordValidationResult.Succeeded)
-                return (passwordValidationResult, null);
+            var errors = new List<IdentityError>();
 
             if (passwordVerificationResult is PasswordVerificationResult.SuccessNeedsRehash)
             {
-                var passwordHashUpdateResult = await _userManager.UpdatePasswordHashAsync(user, password, false).ConfigureAwait(false);
-                if (!passwordHashUpdateResult.Succeeded)
-                    return (passwordHashUpdateResult, null);
+                var passwordHashResult = await _userManager.UpdatePasswordHashAsync(user, password, false).ConfigureAwait(false);
+                if (!passwordHashResult.Succeeded)
+                    errors.AddRange(passwordHashResult.Errors);
             }
 
-            var result = await _userManager.SuccessfulLoginAttemptAsync(user).ConfigureAwait(false);
-            return (result, result.Succeeded ? user : null);
+            var passwordValidationResult = await _userManager.ValidatePasswordAsync(password).ConfigureAwait(false);
+            if (!passwordValidationResult.Succeeded)
+                errors.AddRange(passwordValidationResult.Errors);
+
+            var userValidationResult = await _userManager.SuccessfulLoginAttemptAsync(user).ConfigureAwait(false);
+            if (!userValidationResult.Succeeded)
+                errors.AddRange(userValidationResult.Errors);
+
+            return errors.Count > 0 ? (IdentityResult.Fail(errors), null) : (IdentityResult.Success, user);
         }
         else if (passwordVerificationResult is PasswordVerificationResult.Fail)
         {
