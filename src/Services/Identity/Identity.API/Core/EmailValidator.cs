@@ -8,6 +8,7 @@ public class EmailValidator<TUser> : IUserAttributeValidator<TUser> where TUser 
 {
     private readonly UserManager<TUser> _userManager;
     private readonly IOptionsMonitor<EmailOptions> _options;
+    public int ValidationOrder { get; } = 2;
 
     public EmailValidator(UserManager<TUser> userManager, IOptionsMonitor<EmailOptions> options)
     {

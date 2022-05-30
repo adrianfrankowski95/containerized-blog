@@ -5,6 +5,9 @@ public class PasswordValidationError : IdentityError
     private PasswordValidationError(IdentityErrorCode errorCode, string errorDescription)
         : base(errorCode, errorDescription) { }
 
+    public static PasswordValidationError MissingPassword
+        => new(IdentityErrorCode.MissingPassword, "The Password is required.");
+
     public static PasswordValidationError PasswordTooShort
         => new(IdentityErrorCode.PasswordTooShort, "The Password is too short.");
 

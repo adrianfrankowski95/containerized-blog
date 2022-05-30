@@ -42,4 +42,15 @@ public class SignInManager<TUser> : ISignInManager<TUser> where TUser : User
     public bool IsSignedIn(ClaimsPrincipal principal)
         => principal.Identities is not null &&
             principal.Identities.Any(x => x.AuthenticationType is IdentityConstants.AuthenticationScheme);
+
+    public bool VerifySecurityStamp(TUser? user, ClaimsPrincipal? principal)
+    {
+        if (user is null || principal is null)
+            return false;
+
+        if (!Guid.TryParse(principal.FindFirstValue(IdentityConstants.ClaimTypes.SecurityStamp), out Guid securityStamp))
+            return false;
+
+        return user.SecurityStamp.Equals(securityStamp);
+    }
 }
