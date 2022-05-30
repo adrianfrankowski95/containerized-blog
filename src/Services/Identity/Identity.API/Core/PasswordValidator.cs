@@ -14,10 +14,11 @@ public class PasswordValidator<TUser> : IPasswordValidator<TUser> where TUser : 
     public ValueTask<IdentityResult> ValidateAsync(string password)
     {
         if (string.IsNullOrWhiteSpace(password))
-            throw new ArgumentNullException(nameof(password));
+        {
+            return ValueTask.FromResult(IdentityResult.Fail(PasswordValidationError.MissingPassword));
+        }
 
         var opts = _options.CurrentValue;
-
         var errors = new List<IdentityError>();
 
         //validate password format

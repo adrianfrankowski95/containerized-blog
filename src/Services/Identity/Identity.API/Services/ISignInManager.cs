@@ -10,4 +10,5 @@ public interface ISignInManager<TUser> where TUser : User
     public Task SignOutAsync(HttpContext context);
     public Task<bool> RefreshSignInAsync(HttpContext context, TUser user);
     public bool IsSignedIn(ClaimsPrincipal principal);
+    public bool VerifySecurityStamp(TUser? user, ClaimsPrincipal? principal);
 }

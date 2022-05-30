@@ -46,20 +46,20 @@ public class UserManager<TUser> where TUser : User
     public Task<TUser?> FindByIdAsync(Guid userId)
         => _unitOfWork.Users.FindByIdAsync(userId);
 
-    public Task<TUser?> GetUserAsync(ClaimsPrincipal principal)
+    public Task<TUser?> GetUserAsync(ClaimsPrincipal? principal)
     {
         var id = GetUserId(principal);
 
         if (id is null)
-            throw new ArgumentNullException(nameof(id));
+            return null;
 
         return _unitOfWork.Users.FindByIdAsync(id.Value);
     }
 
-    public Guid? GetUserId(ClaimsPrincipal principal)
+    public Guid? GetUserId(ClaimsPrincipal? principal)
     {
         if (principal is null)
-            throw new ArgumentNullException(nameof(principal));
+            return null;
 
         string id = principal.FindFirstValue(IdentityConstants.ClaimTypes.Id);
 
@@ -71,9 +71,6 @@ public class UserManager<TUser> where TUser : User
 
     public ValueTask<IdentityResult> ValidatePasswordAsync(string password)
         => _passwordValidator.ValidateAsync(password);
-
-    public string GetUsername(ClaimsPrincipal principal)
-        => principal.FindFirstValue(IdentityConstants.ClaimTypes.Username);
 
     public async ValueTask<IdentityResult> UpdatePasswordHashAsync(TUser user, string password, bool validatePassword = true)
     {
@@ -429,7 +426,10 @@ public class UserManager<TUser> where TUser : User
     private static Guid GenerateSecurityStamp() => Guid.NewGuid();
     private static Guid GenerateEmailConfirmationCode() => Guid.NewGuid();
 
-    public async Task<IdentityResult> UpdateUserAsync(TUser user, bool ignoreUnconfirmedEmail = false, CancellationToken cancellationToken = default)
+    public async Task<IdentityResult> UpdateUserAsync(
+        TUser user,
+        bool ignoreUnconfirmedEmail = false,
+        CancellationToken cancellationToken = default)
     {
         ThrowIfNull(user);
 
@@ -437,7 +437,7 @@ public class UserManager<TUser> where TUser : User
 
         bool successOrUnconfirmedEmail = result.Succeeded ||
             (ignoreUnconfirmedEmail && result.Errors.Count == 1 &&
-            result.Errors.TryGetValue(EmailValidationError.EmailUnconfirmed, out _));
+            result.Errors.Contains(EmailValidationError.EmailUnconfirmed));
 
         if (!successOrUnconfirmedEmail)
             return result;
@@ -453,9 +453,6 @@ public class UserManager<TUser> where TUser : User
         _unitOfWork.Users.Remove(user);
         return _unitOfWork.CommitChangesAsync(cancellationToken);
     }
-
-    public ValueTask<ClaimsPrincipal> CreateUserPrincipalAsync(TUser user)
-        => _claimsPrincipalFactory.CreateAsync(user);
 
     private static void ThrowIfNull(TUser user)
     {

@@ -8,12 +8,14 @@ public class UsernameValidator<TUser> : IUserAttributeValidator<TUser> where TUs
 {
     private readonly IUserRepository<TUser> _userRepository;
     private readonly IOptionsMonitor<UsernameOptions> _options;
+    public int ValidationOrder { get; } = 3;
 
     public UsernameValidator(IUserRepository<TUser> userRepository, IOptionsMonitor<UsernameOptions> options)
     {
         _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         _options = options ?? throw new ArgumentNullException(nameof(options));
     }
+
     public async ValueTask ValidateAsync(TUser user, ICollection<IdentityError> errors)
     {
         if (user is null)
