@@ -5,6 +5,7 @@
 using System.ComponentModel.DataAnnotations;
 using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Models;
+using Blog.Services.Identity.API.ValidationAttributes;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -36,6 +37,7 @@ public class UpdateUsernameModel : PageModel
         [Required]
         [StringLength(20, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 3)]
         [Display(Name = "New username")]
+        [Unlike("Username", ErrorMessage = "The {0} and {1} must be different.")]
         public string NewUsername { get; set; }
     }
 
@@ -90,7 +92,7 @@ public class UpdateUsernameModel : PageModel
             return Page();
         }
 
-        if (!string.Equals(Input.NewUsername, user.Username, StringComparison.OrdinalIgnoreCase))
+        if (!string.Equals(Input.NewUsername, user.Username, StringComparison.Ordinal))
         {
             var result = await _userManager.UpdateUsernameAsync(user, Input.NewUsername);
             if (!result.Succeeded)

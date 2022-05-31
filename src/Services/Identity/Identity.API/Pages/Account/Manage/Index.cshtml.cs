@@ -38,9 +38,13 @@ public class IndexModel : PageModel
 
     public class InputModel
     {
-        [Phone]
-        [Display(Name = "Phone number")]
-        public string PhoneNumber { get; set; }
+        [Required]
+        [Display(Name = "First name")]
+        public string FirstName { get; set; }
+
+        [Required]
+        [Display(Name = "Last name")]
+        public string LastName { get; set; }
     }
 
     private async Task LoadAsync(User user)
@@ -48,11 +52,11 @@ public class IndexModel : PageModel
         var userName = await _userManager.GetUserNameAsync(user);
         var phoneNumber = await _userManager.GetPhoneNumberAsync(user);
 
-        Username = userName;
+        Username = user.Username;
 
         Input = new InputModel
         {
-            PhoneNumber = phoneNumber
+            FirstName = user.FirstName
         };
     }
 
@@ -83,9 +87,9 @@ public class IndexModel : PageModel
         }
 
         var phoneNumber = await _userManager.GetPhoneNumberAsync(user);
-        if (Input.PhoneNumber != phoneNumber)
+        if (Input.FirstName != phoneNumber)
         {
-            var setPhoneResult = await _userManager.SetPhoneNumberAsync(user, Input.PhoneNumber);
+            var setPhoneResult = await _userManager.SetPhoneNumberAsync(user, Input.FirstName);
             if (!setPhoneResult.Succeeded)
             {
                 StatusMessage = "Unexpected error when trying to set phone number.";

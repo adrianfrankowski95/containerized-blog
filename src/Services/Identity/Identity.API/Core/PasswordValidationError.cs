@@ -22,4 +22,7 @@ public class PasswordValidationError : IdentityError
 
     public static PasswordValidationError PasswordWithoutNonAlphanumeric
         => new(IdentityErrorCode.PasswordWithoutNonAlphanumeric, "The Password must contain a non-alphanumeric character.");
+
+    public static PasswordValidationError NewAndOldPasswordsAreEqual
+        => new(IdentityErrorCode.NewAndOldPasswordsAreEqual, "The New password and Old password must be different.");
 }

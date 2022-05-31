@@ -9,6 +9,7 @@ using System.Text.Encodings.Web;
 using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Models;
 using Blog.Services.Identity.API.Services;
+using Blog.Services.Identity.API.ValidationAttributes;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
@@ -39,34 +40,38 @@ public class UpdateEmailModel : PageModel
         _logger = logger;
     }
 
-    public string Email { get; set; }
     public string ReturnUrl { get; set; }
 
     [TempData]
     public string StatusMessage { get; set; }
 
-    [BindProperty]
     public InputModel Input { get; set; }
 
     public class InputModel
     {
         [Required]
         [EmailAddress]
+        public string Email { get; set; }
+
+        [BindProperty]
+        [Required]
+        [EmailAddress]
         [Display(Name = "New email")]
+        [Unlike("Email", ErrorMessage = "The {0} and {1} must be different.")]
         public string NewEmail { get; set; }
     }
 
-    private void LoadEmail()
-    {
-        Email = (string)TempData.Peek("Email");
-    }
+    private string LoadEmail()
+        => (string)TempData.Peek("Email");
+
 
     private void LoadInput()
     {
-        LoadEmail();
+        string email = LoadEmail();
         Input = new InputModel
         {
-            NewEmail = Email
+            Email = email,
+            NewEmail = email
         };
     }
 
@@ -81,7 +86,7 @@ public class UpdateEmailModel : PageModel
 
         LoadInput();
 
-        if (string.IsNullOrWhiteSpace(Email))
+        if (string.IsNullOrWhiteSpace(Input.Email))
         {
             return NotFound($"Unable to load user email.");
         }
@@ -93,22 +98,22 @@ public class UpdateEmailModel : PageModel
     {
         returnUrl ??= Url.Content("~/");
 
-        LoadEmail();
+        string email = LoadEmail();
 
-        if (string.IsNullOrWhiteSpace(Email))
+        if (string.IsNullOrWhiteSpace(email))
         {
             return NotFound($"Unable to load user email.");
         }
-
-        var user = await _userManager.FindByEmailAsync(Email);
-        if (user is null)
-            return NotFound($"Unable to load user with email '{Email}'.");
 
         if (!ModelState.IsValid)
         {
             LoadInput();
             return Page();
         }
+
+        var user = await _userManager.FindByEmailAsync(email);
+        if (user is null)
+            return NotFound($"Unable to load user with email '{email}'.");
 
         if (!string.Equals(Input.NewEmail, user.Email, StringComparison.OrdinalIgnoreCase))
         {
@@ -156,7 +161,7 @@ public class UpdateEmailModel : PageModel
             return LocalRedirect(returnUrl);
         }
 
-        ModelState.AddModelError(string.Empty, "Your email is unchanged.");
+        ModelState.AddModelError(string.Empty, "The New email and Old email must be different.");
         return RedirectToPage();
     }
 }

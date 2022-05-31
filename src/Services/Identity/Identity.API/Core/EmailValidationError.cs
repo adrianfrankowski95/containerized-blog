@@ -17,4 +17,6 @@ public class EmailValidationError : IdentityError
     public static EmailValidationError EmailUnconfirmed
         => new(IdentityErrorCode.EmailUnconfirmed, "The Email is unconfirmed.");
 
+    public static EmailValidationError NewAndOldEmailsAreEqual
+        => new(IdentityErrorCode.NewAndOldEmailsAreEqual, "The New email and Old email must be different.");
 }

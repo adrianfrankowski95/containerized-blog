@@ -62,7 +62,7 @@ public class RegisterModel : PageModel
 
         [DataType(DataType.Password)]
         [Display(Name = "Confirm password")]
-        [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
+        [Compare("Password", ErrorMessage = "The Password and Confirmation Password do not match.")]
         public string ConfirmPassword { get; set; }
 
         [Required]
@@ -79,6 +79,9 @@ public class RegisterModel : PageModel
         [StringLength(100, ErrorMessage = "The {0} must be at max {1} characters long.")]
         [Display(Name = "Last name")]
         public string LastName { get; set; }
+
+        [Required]
+        public Gender? Gender { get; set; }
 
         [Display(Name = "I would like to receive additional updates and announcements via email")]
         public bool ReceiveAdditionalEmails { get; set; }
@@ -97,14 +100,14 @@ public class RegisterModel : PageModel
 
         if (ModelState.IsValid)
         {
-            var user = new User(Input.Email, Input.Username, Input.Name, Input.LastName, Input.ReceiveAdditionalEmails);
+            var user = new User(Input.Email, Input.Username, Input.Name, Input.LastName, Input.Gender!.Value, Input.ReceiveAdditionalEmails);
 
             var result = await _userManager.CreateUserAsync(user, Input.Password);
             if (result.Succeeded)
             {
                 _logger.LogInformation("User created a new account with password.");
 
-                var code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(user.EmailConfirmationCode.ToString()));
+                var code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(user.EmailConfirmationCode.ToString()!));
                 var callbackUrl = Url.Page(
                     "/Account/ConfirmEmail",
                     pageHandler: null,

@@ -11,14 +11,21 @@ public class User
 
     }
 
-    public User(NonEmptyString email, NonEmptyString username, NonEmptyString name, NonEmptyString lastName, bool receiveAdditionalEmails)
+    public User(
+        NonEmptyString email,
+        NonEmptyString username,
+        NonEmptyString firstName,
+        NonEmptyString lastName,
+        Gender gender,
+        bool receiveAdditionalEmails)
     {
         Id = Guid.NewGuid();
 
-        Username = username;
-        Name = name;
-        LastName = lastName;
         Email = email;
+        Username = username;
+        FirstName = firstName;
+        LastName = lastName;
+        Gender = gender;
         ReceiveAdditionalEmails = receiveAdditionalEmails;
     }
 
@@ -26,14 +33,16 @@ public class User
     public NonEmptyString Email { get; set; }
     public bool EmailConfirmed { get; set; }
     public NonEmptyString Username { get; set; }
-    public NonEmptyString Name { get; set; }
+    public NonEmptyString FirstName { get; set; }
     public NonEmptyString LastName { get; set; }
+    public Gender Gender { get; set; }
+    public Role Role { get; set; }
 
     [JsonIgnore]
-    public NonEmptyString FullName => Name + " " + LastName;
+    public NonEmptyString FullName => FirstName + " " + LastName;
 
     public NonEmptyString PasswordHash { get; set; }
-    public Role Role { get; set; }
+
     public bool ReceiveAdditionalEmails { get; set; }
     public Instant CreatedAt { get; set; }
     public Instant? LockedOutUntil { get; set; }

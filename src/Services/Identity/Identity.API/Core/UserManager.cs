@@ -51,7 +51,7 @@ public class UserManager<TUser> where TUser : User
         var id = GetUserId(principal);
 
         if (id is null)
-            return null;
+            return Task.FromResult<TUser?>(null);
 
         return _unitOfWork.Users.FindByIdAsync(id.Value);
     }
@@ -72,22 +72,22 @@ public class UserManager<TUser> where TUser : User
     public ValueTask<IdentityResult> ValidatePasswordAsync(string password)
         => _passwordValidator.ValidateAsync(password);
 
-    public async ValueTask<IdentityResult> UpdatePasswordHashAsync(TUser user, string password, bool validatePassword = true)
+    public void UpdatePasswordHash(TUser user, string password)
     {
         ThrowIfNull(user);
 
-        if (validatePassword)
-        {
-            var result = await ValidatePasswordAsync(password).ConfigureAwait(false);
-            if (!result.Succeeded)
-                return result;
+        if (string.IsNullOrWhiteSpace(password))
+            throw new ArgumentNullException(nameof(password));
 
-            //Generate security stamp, verifying password indicates it's a new one
+        //If user has no password hash yet or
+        //provided password is different, generate new security stamp
+        if (string.IsNullOrWhiteSpace(user.PasswordHash) ||
+            VerifyPassword(user, password) is PasswordVerificationResult.Fail)
+        {
             user.SecurityStamp = GenerateSecurityStamp();
         }
 
         user.PasswordHash = _passwordHasher.HashPassword(password);
-        return IdentityResult.Success;
     }
 
     public PasswordVerificationResult VerifyPassword(TUser user, string password)
@@ -95,10 +95,14 @@ public class UserManager<TUser> where TUser : User
         ThrowIfNull(user);
 
         if (string.IsNullOrWhiteSpace(password))
-            return PasswordVerificationResult.Fail;
+            throw new ArgumentNullException(nameof(password));
 
         return _passwordHasher.VerifyPassword(password, user.PasswordHash);
     }
+
+    public bool VerifyPasswordResetCode(TUser user, string? passwordResetCode)
+        => !string.IsNullOrWhiteSpace(passwordResetCode) &&
+            string.Equals(user.PasswordResetCode, passwordResetCode, StringComparison.Ordinal);
 
     public Task<IdentityResult> SuccessfulLoginAttemptAsync(TUser user)
     {
@@ -192,8 +196,9 @@ public class UserManager<TUser> where TUser : User
     {
         ThrowIfNull(user);
 
-        if (string.IsNullOrWhiteSpace(password))
-            throw new ArgumentNullException(nameof(password));
+        var passwordValidationResult = await ValidatePasswordAsync(password).ConfigureAwait(false);
+        if (!passwordValidationResult.Succeeded)
+            return passwordValidationResult;
 
         user.Role = Role.Reader;
         user.CreatedAt = _sysTime.Now;
@@ -208,9 +213,7 @@ public class UserManager<TUser> where TUser : User
         user.EmailConfirmationCode = GenerateEmailConfirmationCode();
         user.EmailConfirmationCodeIssuedAt = _sysTime.Now;
 
-        var result = await UpdatePasswordHashAsync(user, password).ConfigureAwait(false);
-        if (!result.Succeeded)
-            return result;
+        UpdatePasswordHash(user, password);
 
         return await UpdateUserAsync(user, true).ConfigureAwait(false);
     }
@@ -237,11 +240,15 @@ public class UserManager<TUser> where TUser : User
         if (string.IsNullOrWhiteSpace(newEmail))
             throw new ArgumentNullException(nameof(newEmail));
 
+        if (string.Equals(user.Email, newEmail, StringComparison.OrdinalIgnoreCase))
+            return Task.FromResult(IdentityResult.Fail(EmailValidationError.NewAndOldEmailsAreEqual));
+
         user.Email = newEmail;
 
         user.EmailConfirmed = false;
         user.EmailConfirmationCode = GenerateEmailConfirmationCode();
         user.EmailConfirmationCodeIssuedAt = _sysTime.Now;
+
         user.SecurityStamp = GenerateSecurityStamp();
 
         return UpdateUserAsync(user, true);
@@ -253,6 +260,9 @@ public class UserManager<TUser> where TUser : User
 
         if (string.IsNullOrWhiteSpace(newUsername))
             throw new ArgumentNullException(nameof(newUsername));
+
+        if (string.Equals(user.Username, newUsername, StringComparison.Ordinal))
+            return Task.FromResult(IdentityResult.Fail(UsernameValidationError.NewAndOldUsernamesAreEqual));
 
         user.Username = newUsername;
 
@@ -327,23 +337,24 @@ public class UserManager<TUser> where TUser : User
     {
         ThrowIfNull(user);
 
-        if (string.IsNullOrWhiteSpace(newPassword))
-            throw new ArgumentNullException(nameof(newPassword));
+        if (string.IsNullOrWhiteSpace(oldPassword) || string.IsNullOrWhiteSpace(oldPassword))
+            return IdentityResult.Fail(PasswordValidationError.MissingPassword);
 
-        if (string.IsNullOrWhiteSpace(oldPassword))
-            throw new ArgumentNullException(nameof(oldPassword));
+        var passwordValidationResult = await ValidatePasswordAsync(newPassword).ConfigureAwait(false);
+        if (!passwordValidationResult.Succeeded)
+            return passwordValidationResult;
+
+        var passwordVerificationResult = VerifyPassword(user, oldPassword);
+        if (passwordVerificationResult is PasswordVerificationResult.Fail)
+            return IdentityResult.Fail(CredentialsError.InvalidCredentials);
 
         if (IsResettingPassword(user))
             return IdentityResult.Fail(UserStateValidationError.ResettingPassword);
 
-        var passwordVerificationResult = VerifyPassword(user, oldPassword);
+        if (string.Equals(newPassword, oldPassword, StringComparison.Ordinal))
+            return IdentityResult.Fail(PasswordValidationError.NewAndOldPasswordsAreEqual);
 
-        if (passwordVerificationResult is PasswordVerificationResult.Fail)
-            return IdentityResult.Fail(CredentialsError.InvalidCredentials);
-
-        var result = await UpdatePasswordHashAsync(user, newPassword).ConfigureAwait(false);
-        if (!result.Succeeded)
-            return result;
+        UpdatePasswordHash(user, newPassword);
 
         return await UpdateUserAsync(user).ConfigureAwait(false);
     }
@@ -383,27 +394,27 @@ public class UserManager<TUser> where TUser : User
     {
         ThrowIfNull(user);
 
-        if (string.IsNullOrWhiteSpace(newPassword))
-            throw new ArgumentNullException(nameof(newPassword));
-
-        if (string.IsNullOrWhiteSpace(passwordResetCode))
-            throw new ArgumentNullException(nameof(passwordResetCode));
-
         if (!IsResettingPassword(user))
             return IdentityResult.Fail(PasswordResetError.PasswordResetNotRequested);
 
         if (IsPasswordResetCodeExpired(user))
             return IdentityResult.Fail(PasswordResetError.ExpiredPasswordResetCode);
 
-        if (!string.Equals(user.PasswordResetCode, passwordResetCode, StringComparison.Ordinal))
+        if (!VerifyPasswordResetCode(user, passwordResetCode))
             return IdentityResult.Fail(PasswordResetError.InvalidPasswordResetCode);
+
+        var passwordValidationResult = await ValidatePasswordAsync(newPassword).ConfigureAwait(false);
+        if (!passwordValidationResult.Succeeded)
+            return passwordValidationResult;
+
+        var passwordVerificationResult = VerifyPassword(user, newPassword);
+        if (passwordVerificationResult is PasswordVerificationResult.Fail)
+            return IdentityResult.Fail(PasswordValidationError.NewAndOldPasswordsAreEqual);
 
         user.PasswordResetCode = null;
         user.PasswordResetCodeIssuedAt = null;
 
-        var result = await UpdatePasswordHashAsync(user, newPassword).ConfigureAwait(false);
-        if (!result.Succeeded)
-            return result;
+        UpdatePasswordHash(user, newPassword);
 
         return await UpdateUserAsync(user).ConfigureAwait(false);
     }
