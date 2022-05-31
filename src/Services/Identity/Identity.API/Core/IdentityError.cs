@@ -11,9 +11,6 @@ public abstract class IdentityError
         ErrorDescription = errorDescription;
     }
 
-
-
-
     public override bool Equals(object? obj)
     {
         if (obj is null || obj is not IdentityError error)

@@ -25,4 +25,7 @@ public enum IdentityErrorCode
     InvalidPasswordResetCode = 20,
     ExpiredPasswordResetCode = 21,
     PasswordResetNotRequested = 22,
+    NewAndOldPasswordsAreEqual = 23,
+    NewAndOldEmailsAreEqual = 24,
+    NewAndOldUsernamesAreEqual = 25
 }

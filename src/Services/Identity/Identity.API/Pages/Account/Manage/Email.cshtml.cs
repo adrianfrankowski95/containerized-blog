@@ -9,6 +9,7 @@ using System.Text.Encodings.Web;
 using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Models;
 using Blog.Services.Identity.API.Services;
+using Blog.Services.Identity.API.ValidationAttributes;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
@@ -23,7 +24,7 @@ public class EmailModel : PageModel
     private readonly ISignInManager<User> _signInManager;
     private readonly IOptionsMonitor<EmailOptions> _emailOptions;
     private readonly ISysTime _sysTime;
-    private readonly IEmailSender _emailSender;
+    //private readonly IEmailSender _emailSender;
     private readonly ILogger<EmailModel> _logger;
 
     public EmailModel(
@@ -31,27 +32,23 @@ public class EmailModel : PageModel
         ISignInManager<User> signInManager,
         IOptionsMonitor<EmailOptions> emailOptions,
         ISysTime sysTime,
-        IEmailSender emailSender,
+        //IEmailSender emailSender,
         ILogger<EmailModel> logger)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _emailOptions = emailOptions;
         _sysTime = sysTime;
-        _emailSender = emailSender;
+        //_emailSender = emailSender;
         _logger = logger;
     }
 
-
-    public string Email { get; set; }
 
     public bool IsEmailConfirmed { get; set; }
 
     [TempData]
     public string StatusMessage { get; set; }
 
-
-    [BindProperty]
     public InputModel Input { get; set; }
 
 
@@ -59,16 +56,21 @@ public class EmailModel : PageModel
     {
         [Required]
         [EmailAddress]
+        public string Email { get; set; }
+
+        [BindProperty]
+        [Required]
+        [EmailAddress]
         [Display(Name = "New email")]
+        [Unlike("Email", ErrorMessage = "The {0} and {1} must be different.")]
         public string NewEmail { get; set; }
     }
 
     private void Load(User user)
     {
-        Email = user.Email;
-
         Input = new InputModel
         {
+            Email = user.Email,
             NewEmail = user.Email
         };
 
@@ -105,9 +107,9 @@ public class EmailModel : PageModel
             if (!result.Succeeded)
             {
                 //Reveal details about account state only if provided credentials are valid
-                if (!result.Errors.Contains(IdentityError.InvalidCredentials))
+                if (!result.Errors.Contains(CredentialsError.InvalidCredentials))
                 {
-                    if (result.Errors.Contains(IdentityError.AccountSuspended))
+                    if (result.Errors.Contains(UserStateValidationError.AccountSuspended))
                     {
                         if (user is not null)
                         {
@@ -115,12 +117,12 @@ public class EmailModel : PageModel
                             return RedirectToPage("./Suspension", new { suspendedUntil = user.SuspendedUntil.Value });
                         }
                     }
-                    else if (result.Errors.Contains(IdentityError.AccountLockedOut))
+                    else if (result.Errors.Contains(UserStateValidationError.AccountLockedOut))
                     {
                         _logger.LogWarning("User account locked out.");
                         return RedirectToPage("./Lockout");
                     }
-                    else if (result.Errors.Contains(IdentityError.EmailDuplicated))
+                    else if (result.Errors.Contains(EmailValidationError.EmailDuplicated))
                     {
                         ModelState.AddModelError(string.Empty, "Provided email is already in use.");
                         return Page();
@@ -135,13 +137,13 @@ public class EmailModel : PageModel
             var callbackUrl = Url.Page(
                 "/Account/ConfirmEmailChange",
                 pageHandler: null,
-                values: new { area = "Identity", userId = user.Id, email = Input.NewEmail, code = code },
+                values: new { area = "Identity", userId = user.Id, email = Input.NewEmail, code },
                 protocol: Request.Scheme);
-            await _emailSender.SendEmailAsync(
-                Input.NewEmail,
-                "Confirm your email",
-                $"Please confirm your email by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>." +
-                $"<br><br>This link will expire at {_sysTime.Now.Plus(Duration.FromTimeSpan(_emailOptions.CurrentValue.EmailConfirmationCodeValidityPeriod)).ToString("dddd, dd mmmm yyyy HH:mm:ss", DateTimeFormatInfo.InvariantInfo)}.");
+            // await _emailSender.SendEmailAsync(
+            //     Input.NewEmail,
+            //     "Confirm your email",
+            //     $"Please confirm your email by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>." +
+            //     $"<br><br>This link will expire at {_sysTime.Now.Plus(Duration.FromTimeSpan(_emailOptions.CurrentValue.EmailConfirmationCodeValidityPeriod)).ToString("dddd, dd mmmm yyyy HH:mm:ss", DateTimeFormatInfo.InvariantInfo)}.");
 
             StatusMessage = "Confirmation link to change email sent. Please check your email.";
 
@@ -151,7 +153,7 @@ public class EmailModel : PageModel
             return RedirectToPage();
         }
 
-        StatusMessage = "Your email is unchanged.";
+        StatusMessage = "The New email and Old email must be different.";
         return RedirectToPage();
     }
 
@@ -182,10 +184,10 @@ public class EmailModel : PageModel
             pageHandler: null,
             values: new { area = "Identity", userId = user.Id, code = code },
             protocol: Request.Scheme);
-        await _emailSender.SendEmailAsync(
-            user.Email,
-            "Confirm your email",
-            $"Please confirm your email by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
+        // await _emailSender.SendEmailAsync(
+        //     user.Email,
+        //     "Confirm your email",
+        //     $"Please confirm your email by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
 
         StatusMessage = "Verification email sent. Please check your email.";
         return RedirectToPage();

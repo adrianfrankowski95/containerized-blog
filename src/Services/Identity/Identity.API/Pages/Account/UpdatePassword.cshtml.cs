@@ -5,6 +5,7 @@
 using System.ComponentModel.DataAnnotations;
 using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Models;
+using Blog.Services.Identity.API.ValidationAttributes;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
@@ -41,11 +42,12 @@ public class UpdatePasswordModel : PageModel
         [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 8)]
         [DataType(DataType.Password)]
         [Display(Name = "New password")]
+        [Unlike("Old Password", ErrorMessage = "The {0} and {1} must be different.")]
         public string NewPassword { get; set; }
 
         [DataType(DataType.Password)]
         [Display(Name = "Confirm new password")]
-        [Compare("NewPassword", ErrorMessage = "The new password and confirmation password do not match.")]
+        [Compare("NewPassword", ErrorMessage = "The New Password and Confirmation Password do not match.")]
         public string ConfirmPassword { get; set; }
     }
 
@@ -74,25 +76,31 @@ public class UpdatePasswordModel : PageModel
             return NotFound($"Unable to load user email.");
         }
 
+        if (!ModelState.IsValid)
+            return Page();
+
         var user = await _userManager.FindByEmailAsync(email);
         if (user is null)
             return NotFound($"Unable to load user with email '{email}'.");
 
-        if (!ModelState.IsValid)
-            return Page();
-
-        var changePasswordResult = await _userManager.UpdatePasswordAsync(user, Input.OldPassword, Input.NewPassword);
-        if (!changePasswordResult.Succeeded)
+        if (!string.Equals(Input.NewPassword, Input.OldPassword, StringComparison.Ordinal))
         {
-            foreach (var error in changePasswordResult.Errors)
+            var changePasswordResult = await _userManager.UpdatePasswordAsync(user, Input.OldPassword, Input.NewPassword);
+            if (!changePasswordResult.Succeeded)
             {
-                ModelState.AddModelError(string.Empty, error.ErrorDescription);
+                foreach (var error in changePasswordResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, error.ErrorDescription);
+                }
+
+                return Page();
             }
 
-            return Page();
+            StatusMessage = "Your password has been changed.";
+            return LocalRedirect(returnUrl);
         }
 
-        StatusMessage = "Your password has been changed.";
-        return LocalRedirect(returnUrl);
+        ModelState.AddModelError(string.Empty, "The New password and Old password must be different.");
+        return RedirectToPage();
     }
 }

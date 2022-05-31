@@ -13,4 +13,7 @@ public class UsernameValidationError : IdentityError
 
     public static UsernameValidationError UsernameDuplicated
         => new(IdentityErrorCode.UsernameDuplicated, "The Username is already in use.");
+
+    public static UsernameValidationError NewAndOldUsernamesAreEqual
+        => new(IdentityErrorCode.NewAndOldUsernamesAreEqual, "The New username and Old username must be different.");
 }

@@ -24,7 +24,7 @@ public class UserEntityConfiguration<TUser> : IEntityTypeConfiguration<TUser> wh
             .IsUnique();
 
         builder
-            .Property(x => x.Name)
+            .Property(x => x.FirstName)
             .HasColumnType("varchar(50)")
             .IsRequired();
 
@@ -45,6 +45,12 @@ public class UserEntityConfiguration<TUser> : IEntityTypeConfiguration<TUser> wh
             .HasIndex(x => x.Email)
             .HasMethod("hash")
             .IsUnique();
+
+        builder
+            .Property(x => x.Gender)
+            .HasColumnType("varchar(25)")
+            .HasConversion<string>()
+            .IsRequired();
 
         builder
             .Property(x => x.Role)

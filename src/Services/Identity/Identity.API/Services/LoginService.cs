@@ -33,11 +33,7 @@ public class LoginService<TUser> : ILoginService<TUser> where TUser : User
             var errors = new List<IdentityError>();
 
             if (passwordVerificationResult is PasswordVerificationResult.SuccessNeedsRehash)
-            {
-                var passwordHashResult = await _userManager.UpdatePasswordHashAsync(user, password, false).ConfigureAwait(false);
-                if (!passwordHashResult.Succeeded)
-                    errors.AddRange(passwordHashResult.Errors);
-            }
+                _userManager.UpdatePasswordHash(user, password);
 
             var passwordValidationResult = await _userManager.ValidatePasswordAsync(password).ConfigureAwait(false);
             if (!passwordValidationResult.Succeeded)
@@ -47,7 +43,7 @@ public class LoginService<TUser> : ILoginService<TUser> where TUser : User
             if (!userValidationResult.Succeeded)
                 errors.AddRange(userValidationResult.Errors);
 
-            return errors.Count > 0 ? (IdentityResult.Fail(errors), null) : (IdentityResult.Success, user);
+            return errors.Count == 0 ? (IdentityResult.Success, user) : (IdentityResult.Fail(errors), null);
         }
         else if (passwordVerificationResult is PasswordVerificationResult.Fail)
         {
