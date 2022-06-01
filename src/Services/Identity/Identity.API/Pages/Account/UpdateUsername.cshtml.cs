@@ -23,17 +23,17 @@ public class UpdateUsernameModel : PageModel
         _userManager = userManager;
     }
 
-    public string Username { get; set; }
-
     [TempData]
     public string StatusMessage { get; set; }
 
-    [BindProperty]
     public InputModel Input { get; set; }
     public string ReturnUrl { get; set; }
 
     public class InputModel
     {
+        public string Username { get; set; }
+
+        [BindProperty]
         [Required]
         [StringLength(20, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 3)]
         [Display(Name = "New username")]
@@ -45,10 +45,9 @@ public class UpdateUsernameModel : PageModel
 
     private void LoadInput(User user)
     {
-        Username = user.Username;
-
         Input = new InputModel
         {
+            Username = user.Username,
             NewUsername = user.Username,
         };
     }
