@@ -101,6 +101,6 @@ public class UpdatePasswordModel : PageModel
         }
 
         ModelState.AddModelError(string.Empty, "The New password and Old password must be different.");
-        return RedirectToPage();
+        return Page();
     }
 }

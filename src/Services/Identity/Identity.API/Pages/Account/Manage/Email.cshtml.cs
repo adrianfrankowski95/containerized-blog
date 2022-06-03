@@ -134,7 +134,7 @@ public class EmailModel : PageModel
             var callbackUrl = Url.Page(
                 "/Account/ConfirmEmailChange",
                 pageHandler: null,
-                values: new { area = "Identity", userId = user.Id, email = Input.NewEmail, code },
+                values: new { userId = user.Id, email = Input.NewEmail, code },
                 protocol: Request.Scheme);
             // await _emailSender.SendEmailAsync(
             //     Input.NewEmail,
@@ -179,7 +179,7 @@ public class EmailModel : PageModel
         var callbackUrl = Url.Page(
             "/Account/ConfirmEmail",
             pageHandler: null,
-            values: new { area = "Identity", userId = user.Id, code = code },
+            values: new { userId = user.Id, code },
             protocol: Request.Scheme);
         // await _emailSender.SendEmailAsync(
         //     user.Email,

@@ -146,7 +146,7 @@ public class UpdateEmailModel : PageModel
             var callbackUrl = Url.Page(
                 "/Account/ConfirmEmail",
                 pageHandler: null,
-                values: new { area = "Identity", userId = user.Id, email = Input.NewEmail, code = code },
+                values: new { userId = user.Id, email = Input.NewEmail, code },
                 protocol: Request.Scheme);
             await _emailSender.SendEmailAsync(
                 Input.NewEmail,
@@ -160,6 +160,6 @@ public class UpdateEmailModel : PageModel
         }
 
         ModelState.AddModelError(string.Empty, "The New email and Old email must be different.");
-        return RedirectToPage();
+        return Page();
     }
 }

@@ -11,6 +11,6 @@ public class PasswordResetError : IdentityError
     public static PasswordResetError ExpiredPasswordResetCode
          => new(IdentityErrorCode.ExpiredPasswordResetCode, "The Password reset code has expired.");
 
-    public static PasswordResetError PasswordResetNotRequested
-        => new(IdentityErrorCode.PasswordResetNotRequested, "The Password reset has not been requested.");
+    public static PasswordResetError NewAndOldPasswordsAreEqual
+        => new(IdentityErrorCode.NewAndOldPasswordsAreEqual, "The New password and Old password must be different.");
 }

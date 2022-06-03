@@ -15,6 +15,7 @@ public class UserManager<TUser> where TUser : User
     private readonly ISysTime _sysTime;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IUserValidator<TUser> _userValidator;
+    private readonly IUserStateValidator<TUser> _userStateValidator;
     private readonly IPasswordValidator<TUser> _passwordValidator;
     private readonly IUserClaimsPrincipalFactory<TUser> _claimsPrincipalFactory;
 
@@ -25,6 +26,7 @@ public class UserManager<TUser> where TUser : User
         IOptionsMonitor<LockoutOptions> lockoutOptions,
         IOptionsMonitor<EmailOptions> emailOptions,
         IUserValidator<TUser> userValidator,
+        IUserStateValidator<TUser> userStateValidator,
         IPasswordValidator<TUser> passwordValidator,
         IUserClaimsPrincipalFactory<TUser> claimsPrincipalFactory,
         ISysTime sysTime)
@@ -36,6 +38,7 @@ public class UserManager<TUser> where TUser : User
         _sysTime = sysTime ?? throw new ArgumentNullException(nameof(sysTime));
         _passwordHasher = passwordHasher ?? throw new ArgumentNullException(nameof(passwordHasher));
         _userValidator = userValidator ?? throw new ArgumentNullException(nameof(userValidator));
+        _userStateValidator = userStateValidator ?? throw new ArgumentNullException(nameof(userStateValidator));
         _passwordValidator = passwordValidator ?? throw new ArgumentNullException(nameof(passwordValidator));
         _claimsPrincipalFactory = claimsPrincipalFactory ?? throw new ArgumentNullException(nameof(claimsPrincipalFactory));
     }
@@ -68,6 +71,9 @@ public class UserManager<TUser> where TUser : User
 
     public ValueTask<IdentityResult> ValidateUserAsync(TUser user)
         => _userValidator.ValidateAsync(user);
+
+    public ValueTask<IdentityResult> ValidateUserStateAsync(TUser user)
+        => _userStateValidator.ValidateAsync(user);
 
     public ValueTask<IdentityResult> ValidatePasswordAsync(string password)
         => _passwordValidator.ValidateAsync(password);
@@ -209,13 +215,9 @@ public class UserManager<TUser> where TUser : User
         user.PasswordResetCode = null;
         user.PasswordResetCodeIssuedAt = null;
 
-        user.EmailConfirmed = false;
-        user.EmailConfirmationCode = GenerateEmailConfirmationCode();
-        user.EmailConfirmationCodeIssuedAt = _sysTime.Now;
-
         UpdatePasswordHash(user, password);
 
-        return await UpdateUserAsync(user, true).ConfigureAwait(false);
+        return await GenerateEmailConfirmationAsync(user).ConfigureAwait(false);
     }
 
     public Task<IdentityResult> UpdateRoleAsync(TUser user, Role role)
@@ -245,13 +247,7 @@ public class UserManager<TUser> where TUser : User
 
         user.Email = newEmail;
 
-        user.EmailConfirmed = false;
-        user.EmailConfirmationCode = GenerateEmailConfirmationCode();
-        user.EmailConfirmationCodeIssuedAt = _sysTime.Now;
-
-        user.SecurityStamp = GenerateSecurityStamp();
-
-        return UpdateUserAsync(user, true);
+        return GenerateEmailConfirmationAsync(user);
     }
 
     public Task<IdentityResult> UpdateUsernameAsync(TUser user, string newUsername)
@@ -274,10 +270,10 @@ public class UserManager<TUser> where TUser : User
         ThrowIfNull(user);
 
         if (!IsConfirmingEmail(user))
-            return Task.FromResult(IdentityResult.Fail(EmailConfirmationError.EmailAlreadyConfirmed));
+            return Task.FromResult(IdentityResult.Fail(EmailConfirmationError.InvalidEmailConfirmationCode));
 
         if (emailConfirmationCode == default)
-            throw new ArgumentNullException(nameof(emailConfirmationCode));
+            return Task.FromResult(IdentityResult.Fail(EmailConfirmationError.InvalidEmailConfirmationCode));
 
         if (!user.EmailConfirmationCode.Equals(emailConfirmationCode))
             return Task.FromResult(IdentityResult.Fail(EmailConfirmationError.InvalidEmailConfirmationCode));
@@ -318,6 +314,17 @@ public class UserManager<TUser> where TUser : User
         }
 
         return !emailConfirmed;
+    }
+
+    public Task<IdentityResult> GenerateEmailConfirmationAsync(TUser user)
+    {
+        user.EmailConfirmed = false;
+        user.EmailConfirmationCode = GenerateEmailConfirmationCode();
+        user.EmailConfirmationCodeIssuedAt = _sysTime.Now;
+
+        user.SecurityStamp = GenerateSecurityStamp();
+
+        return UpdateUserAsync(user);
     }
 
     public bool IsEmailConfirmationCodeExpired(TUser user)
@@ -395,7 +402,7 @@ public class UserManager<TUser> where TUser : User
         ThrowIfNull(user);
 
         if (!IsResettingPassword(user))
-            return IdentityResult.Fail(PasswordResetError.PasswordResetNotRequested);
+            return IdentityResult.Fail(PasswordResetError.InvalidPasswordResetCode);
 
         if (IsPasswordResetCodeExpired(user))
             return IdentityResult.Fail(PasswordResetError.ExpiredPasswordResetCode);
@@ -408,8 +415,8 @@ public class UserManager<TUser> where TUser : User
             return passwordValidationResult;
 
         var passwordVerificationResult = VerifyPassword(user, newPassword);
-        if (passwordVerificationResult is PasswordVerificationResult.Fail)
-            return IdentityResult.Fail(PasswordValidationError.NewAndOldPasswordsAreEqual);
+        if (passwordVerificationResult is not PasswordVerificationResult.Fail)
+            return IdentityResult.Fail(PasswordResetError.NewAndOldPasswordsAreEqual);
 
         user.PasswordResetCode = null;
         user.PasswordResetCodeIssuedAt = null;
@@ -439,18 +446,13 @@ public class UserManager<TUser> where TUser : User
 
     public async Task<IdentityResult> UpdateUserAsync(
         TUser user,
-        bool ignoreUnconfirmedEmail = false,
         CancellationToken cancellationToken = default)
     {
         ThrowIfNull(user);
 
         var result = await ValidateUserAsync(user).ConfigureAwait(false);
 
-        bool successOrUnconfirmedEmail = result.Succeeded ||
-            (ignoreUnconfirmedEmail && result.Errors.Count == 1 &&
-            result.Errors.Contains(EmailValidationError.EmailUnconfirmed));
-
-        if (!successOrUnconfirmedEmail)
+        if (!result.Succeeded)
             return result;
 
         _unitOfWork.Users.Update(user);

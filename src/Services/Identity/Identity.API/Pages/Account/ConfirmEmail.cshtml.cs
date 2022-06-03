@@ -12,15 +12,18 @@ namespace Blog.Services.Identity.API.Pages.Account;
 public class ConfirmEmailModel : PageModel
 {
     private readonly UserManager<User> _userManager;
+    private readonly ILogger<ConfirmEmailModel> _logger;
 
-    public ConfirmEmailModel(UserManager<User> userManager)
+    public ConfirmEmailModel(UserManager<User> userManager, ILogger<ConfirmEmailModel> logger)
     {
         _userManager = userManager;
+        _logger = logger;
     }
 
 
     [TempData]
     public string StatusMessage { get; set; }
+
     public async Task<IActionResult> OnGetAsync(Guid userId, Guid code)
     {
         if (userId == default || code == default)
@@ -35,11 +38,40 @@ public class ConfirmEmailModel : PageModel
         }
 
         var result = await _userManager.ConfirmEmailAsync(user, code);
+        if (!result.Succeeded)
+        {
+            if (result.Errors.Single().Equals(EmailConfirmationError.ExpiredEmailConfirmationCode))
+            {
+                return RedirectToPage("./EmailConfirmationExpiration");
+            }
+            else if (result.Errors.Single() is EmailConfirmationError)
+            {
+                ModelState.AddModelError(string.Empty, result.Errors.Single().ErrorDescription);
+                return Page();
+            }
+            else if (result.Errors.All(x => x is UsernameValidationError or EmailValidationError))
+            {
+                if (result.Errors.Any(x => x is UsernameValidationError))
+                {
+                    _logger.LogWarning("User username does not meet validation requirements anymore.");
+                    return RedirectToPage("./UpdateUsername",
+                        new { returnUrl = Url.Page("./ConfirmEmail", new { userId, code }) });
+                }
+                else if (result.Errors.Any(x => x is EmailValidationError))
+                {
+                    _logger.LogWarning("User email does not meet validation requirements anymore.");
+                    return RedirectToPage("./UpdateEmail",
+                        new { returnUrl = Url.Page("./ConfirmEmail", new { userId, code }) });
+                }
+            }
 
-        bool successOrAlreadyConfirmed = result.Succeeded ||
-            (result.Errors.Count == 1 && result.Errors.Single().Equals(EmailConfirmationError.EmailAlreadyConfirmed));
+            StatusMessage = "Error confirming your email.";
+        }
+        else
+        {
+            StatusMessage = "Thank you for confirming your email.";
+        }
 
-        StatusMessage = successOrAlreadyConfirmed ? "Thank you for confirming your email." : "Error confirming your email.";
         return Page();
     }
 }

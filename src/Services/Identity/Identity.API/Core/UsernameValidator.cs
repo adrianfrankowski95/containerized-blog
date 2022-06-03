@@ -8,7 +8,7 @@ public class UsernameValidator<TUser> : IUserAttributeValidator<TUser> where TUs
 {
     private readonly IUserRepository<TUser> _userRepository;
     private readonly IOptionsMonitor<UsernameOptions> _options;
-    public int ValidationOrder { get; } = 3;
+    public int ValidationOrder { get; } = 2;
 
     public UsernameValidator(IUserRepository<TUser> userRepository, IOptionsMonitor<UsernameOptions> options)
     {

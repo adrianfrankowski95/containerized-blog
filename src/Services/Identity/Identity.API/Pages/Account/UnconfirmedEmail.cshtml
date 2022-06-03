@@ -1,0 +1,11 @@
+﻿@page
+@namespace Blog.Services.Identity.API.Pages.Account
+@model UnconfirmedEmailModel
+@{
+    ViewData["Title"] = "Unconfirmed email";
+}
+
+<h1>@ViewData["Title"]</h1>
+<p>
+    Your email address has not been confirmed. Please <a asp-page="./ResendEmailConfirmation">click here to resend email confirmation</a>.
+</p>

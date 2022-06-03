@@ -6,5 +6,5 @@ namespace Blog.Services.Identity.API.Services;
 
 public interface ILoginService<TUser> where TUser : User
 {
-    public Task<(IdentityResult result, TUser? user)> LoginAsync(string email, string password);
+    public ValueTask<(IdentityResult result, TUser? user)> LoginAsync(string email, string password);
 }

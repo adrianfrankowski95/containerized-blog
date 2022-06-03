@@ -85,56 +85,63 @@ public class LoginModel : PageModel
         if (ModelState.IsValid)
         {
             (IdentityResult result, User user) = await _loginService.LoginAsync(Input.Email, Input.Password);
-            if (result.Succeeded)
+            if (!result.Succeeded)
             {
-                _logger.LogInformation("User logged in.");
-                await _signInManager.SignInAsync(HttpContext, user, Input.RememberMe);
-                return LocalRedirect(returnUrl);
-            }
-
-            //Reveal details about account state only if provided credentials are valid
-            if (!result.Errors.Contains(CredentialsError.InvalidCredentials))
-            {
-                if (result.Errors.Contains(UserStateValidationError.AccountSuspended))
+                if (result.Errors.Single().Equals(CredentialsError.InvalidCredentials))
                 {
-                    _logger.LogWarning("User account suspended.");
-                    return RedirectToPage("./Suspension", new { suspendedUntil = user.SuspendedUntil.Value });
+                    ModelState.AddModelError(string.Empty, CredentialsError.InvalidCredentials.ErrorDescription);
+                    return Page();
                 }
-                else if (result.Errors.Contains(UserStateValidationError.AccountLockedOut))
+                else if (result.Errors.Single().Equals(UserStateValidationError.AccountLockedOut))
                 {
                     _logger.LogWarning("User account locked out.");
                     return RedirectToPage("./Lockout");
                 }
-                else if (result.Errors.Contains(UserStateValidationError.ResettingPassword))
+                else if (result.Errors.Single().Equals(UserStateValidationError.AccountSuspended))
+                {
+                    _logger.LogWarning("User account suspended.");
+                    return RedirectToPage("./Suspension", new { suspendedUntil = user.SuspendedUntil.Value });
+                }
+                else if (result.Errors.Single().Equals(UserStateValidationError.EmailUnconfirmed))
+                {
+                    _logger.LogWarning("User email address has not been confirmed.");
+                    return RedirectToPage("./UnconfirmedEmail");
+                }
+                else if (result.Errors.Single().Equals(UserStateValidationError.ResettingPassword))
                 {
                     _logger.LogWarning("User password has not been confirmed.");
                     return RedirectToPage("./UnconfirmedPassword");
                 }
-                else if (result.Errors.Contains(UsernameValidationError.InvalidUsernameFormat))
+                else if (result.Errors.All(x => x is UsernameValidationError or EmailValidationError or PasswordValidationError))
                 {
-                    _logger.LogWarning("User username does not meet validation requirements anymore.");
                     SaveInput();
-                    return RedirectToPage("./UpdateUsername",
-                        new { returntUrl = Url.Page("./Login", new { returnUrl = returnUrl }) });
+                    if (result.Errors.Any(x => x is UsernameValidationError))
+                    {
+                        _logger.LogWarning("User username does not meet validation requirements anymore.");
+                        return RedirectToPage("./UpdateUsername",
+                            new { returntUrl = Url.Page("./Login", new { returnUrl }) });
+                    }
+                    else if (result.Errors.Any(x => x is EmailValidationError))
+                    {
+                        _logger.LogWarning("User email does not meet validation requirements anymore.");
+                        return RedirectToPage("./UpdateEmail",
+                            new { returntUrl = Url.Page("./Login", new { returnUrl }) });
+                    }
+                    else if (result.Errors.Any(x => x is PasswordValidationError))
+                    {
+                        _logger.LogWarning("User password does not meet validation requirements anymore.");
+                        return RedirectToPage("./UpdatePassword",
+                            new { returntUrl = Url.Page("./Login", new { returnUrl }) });
+                    }
                 }
-                else if (result.Errors.Contains(EmailValidationError.InvalidEmailFormat))
-                {
-                    _logger.LogWarning("User email does not meet validation requirements anymore.");
-                    SaveInput();
-                    return RedirectToPage("./UpdateEmail",
-                        new { returntUrl = Url.Page("./Login", new { returnUrl = returnUrl }) });
-                }
-                else if (result.Errors.Any(x => x is PasswordValidationError))
-                {
-                    _logger.LogWarning("User password does not meet validation requirements anymore.");
-                    SaveInput();
-                    return RedirectToPage("./UpdatePassword",
-                        new { returntUrl = Url.Page("./Login", new { returnUrl = returnUrl }) });
-                }
+
+                ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                return Page();
             }
 
-            ModelState.AddModelError(string.Empty, "Invalid login attempt.");
-            return RedirectToPage();
+            _logger.LogInformation("User logged in.");
+            await _signInManager.SignInAsync(HttpContext, user, Input.RememberMe);
+            return LocalRedirect(returnUrl);
         }
 
         // If we got this far, something failed, redisplay form

@@ -68,19 +68,21 @@ public class ResendEmailConfirmationModel : PageModel
             return Page();
         }
 
-        var userId = await _userManager.GetUserIdAsync(user);
-        var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-        code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
-        var callbackUrl = Url.Page(
-            "/Account/ConfirmEmail",
-            pageHandler: null,
-            values: new { userId = userId, code = code },
-            protocol: Request.Scheme);
-        await _emailSender.SendEmailAsync(
-            Input.Email,
-            "Confirm your email",
-            $"Please confirm your email by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>." +
-            $"<br><br>This link will expire at {_sysTime.Now.Plus(Duration.FromTimeSpan(_emailOptions.CurrentValue.EmailConfirmationCodeValidityPeriod)).ToString("dddd, dd mmmm yyyy HH:mm:ss", DateTimeFormatInfo.InvariantInfo)}.");
+        var result = await _userManager.GenerateEmailConfirmationAsync(user);
+        if (result.Succeeded)
+        {
+            var code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(user.EmailConfirmationCode.ToString()));
+            var callbackUrl = Url.Page(
+                "/Account/ConfirmEmail",
+                pageHandler: null,
+                values: new { userId = user.Id, code },
+                protocol: Request.Scheme);
+            await _emailSender.SendEmailAsync(
+                Input.Email,
+                "Confirm your email",
+                $"Please confirm your email by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>." +
+                $"<br><br>This link will expire at {_sysTime.Now.Plus(Duration.FromTimeSpan(_emailOptions.CurrentValue.EmailConfirmationCodeValidityPeriod)).ToString("dddd, dd mmmm yyyy HH:mm:ss", DateTimeFormatInfo.InvariantInfo)}.");
+        }
 
         ModelState.AddModelError(string.Empty, "Verification email sent. Please check your email.");
         return Page();

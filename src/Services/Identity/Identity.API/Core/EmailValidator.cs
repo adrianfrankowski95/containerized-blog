@@ -7,13 +7,11 @@ namespace Blog.Services.Identity.API.Core;
 public class EmailValidator<TUser> : IUserAttributeValidator<TUser> where TUser : User
 {
     private readonly UserManager<TUser> _userManager;
-    private readonly IOptionsMonitor<EmailOptions> _options;
-    public int ValidationOrder { get; } = 2;
+    public int ValidationOrder { get; } = 1;
 
-    public EmailValidator(UserManager<TUser> userManager, IOptionsMonitor<EmailOptions> options)
+    public EmailValidator(UserManager<TUser> userManager)
     {
         _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
-        _options = options ?? throw new ArgumentNullException(nameof(options));
     }
 
     public async ValueTask ValidateAsync(TUser user, ICollection<IdentityError> errors)
@@ -31,11 +29,6 @@ public class EmailValidator<TUser> : IUserAttributeValidator<TUser> where TUser 
 
         if (!new EmailAddressAttribute().IsValid(email))
             errors.Add(EmailValidationError.InvalidEmailFormat);
-
-        var opts = _options.CurrentValue;
-
-        if (opts.RequireConfirmed && _userManager.IsConfirmingEmail(user))
-            errors.Add(EmailValidationError.EmailUnconfirmed);
 
         var owner = await _userManager.FindByEmailAsync(email).ConfigureAwait(false);
 
