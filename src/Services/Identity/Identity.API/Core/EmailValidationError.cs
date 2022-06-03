@@ -6,17 +6,14 @@ public class EmailValidationError : IdentityError
         : base(errorCode, errorDescription) { }
 
     public static EmailValidationError MissingEmail
-        => new(IdentityErrorCode.MissingEmail, "The Email is required.");
+        => new(IdentityErrorCode.MissingEmail, "The Email address is required.");
 
     public static EmailValidationError InvalidEmailFormat
-        => new(IdentityErrorCode.InvalidEmailFormat, "The Email has invalid format.");
+        => new(IdentityErrorCode.InvalidEmailFormat, "The Email address has invalid format.");
 
     public static EmailValidationError EmailDuplicated
-        => new(IdentityErrorCode.EmailDuplicated, "The Email is already in use.");
-
-    public static EmailValidationError EmailUnconfirmed
-        => new(IdentityErrorCode.EmailUnconfirmed, "The Email is unconfirmed.");
+        => new(IdentityErrorCode.EmailDuplicated, "The Email address is already in use.");
 
     public static EmailValidationError NewAndOldEmailsAreEqual
-        => new(IdentityErrorCode.NewAndOldEmailsAreEqual, "The New email and Old email must be different.");
+        => new(IdentityErrorCode.NewAndOldEmailsAreEqual, "The New email and Old email address must be different.");
 }

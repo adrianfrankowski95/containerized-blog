@@ -124,6 +124,6 @@ public class UpdateUsernameModel : PageModel
         }
 
         ModelState.AddModelError(string.Empty, "Your username is unchanged.");
-        return RedirectToPage();
+        return Page();
     }
 }

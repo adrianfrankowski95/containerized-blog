@@ -103,35 +103,36 @@ public class RegisterModel : PageModel
             var user = new User(Input.Email, Input.Username, Input.Name, Input.LastName, Input.Gender!.Value, Input.ReceiveAdditionalEmails);
 
             var result = await _userManager.CreateUserAsync(user, Input.Password);
-            if (result.Succeeded)
+            if (!result.Succeeded)
             {
-                _logger.LogInformation("User created a new account with password.");
-
-                var code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(user.EmailConfirmationCode.ToString()!));
-                var callbackUrl = Url.Page(
-                    "/Account/ConfirmEmail",
-                    pageHandler: null,
-                    values: new { area = "Identity", userId = user.Id, code = code, returnUrl = returnUrl },
-                    protocol: Request.Scheme);
-
-                await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
-                    $"Please confirm your email by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>." +
-                    $"<br><br>This link will expire at {_sysTime.Now.Plus(Duration.FromTimeSpan(_emailOptions.CurrentValue.EmailConfirmationCodeValidityPeriod)).ToString("dddd, dd mmmm yyyy HH:mm:ss", DateTimeFormatInfo.InvariantInfo)}.");
-
-                if (_emailOptions.CurrentValue.RequireConfirmed)
+                foreach (var error in result.Errors)
                 {
-                    return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl });
+                    ModelState.AddModelError(string.Empty, error.ErrorDescription);
                 }
-                else
-                {
-                    await _signInManager.SignInAsync(HttpContext, user, isPersistent: false);
-                    return LocalRedirect(returnUrl);
-                }
+                return Page();
             }
-            foreach (var error in result.Errors.Where(
-                x => x is UsernameValidationError || x is EmailValidationError || x is PasswordValidationError))
+
+
+            _logger.LogInformation("User created a new account with password.");
+            var code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(user.EmailConfirmationCode.ToString()!));
+            var callbackUrl = Url.Page(
+                "/Account/ConfirmEmail",
+                pageHandler: null,
+                values: new { userId = user.Id, code, returnUrl },
+                protocol: Request.Scheme);
+
+            await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
+                $"Please confirm your email by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>." +
+                $"<br><br>This link will expire at {_sysTime.Now.Plus(Duration.FromTimeSpan(_emailOptions.CurrentValue.EmailConfirmationCodeValidityPeriod)).ToString("dddd, dd mmmm yyyy HH:mm:ss", DateTimeFormatInfo.InvariantInfo)}.");
+
+            if (_emailOptions.CurrentValue.RequireConfirmed)
             {
-                ModelState.AddModelError(string.Empty, error.ErrorDescription);
+                return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl });
+            }
+            else
+            {
+                await _signInManager.SignInAsync(HttpContext, user, isPersistent: false);
+                return LocalRedirect(returnUrl);
             }
         }
 

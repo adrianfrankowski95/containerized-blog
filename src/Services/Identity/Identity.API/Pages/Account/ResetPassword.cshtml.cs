@@ -88,49 +88,37 @@ public class ResetPasswordModel : PageModel
         }
 
         var result = await _userManager.ResetPasswordAsync(user, Input.NewPassword, Input.Code);
-        if (!result.Succeeded)
+        if (result.Succeeded)
+            return RedirectToPage("./ResetPasswordConfirmation");
+
+
+        if (result.Errors.Single().Equals(PasswordResetError.ExpiredPasswordResetCode))
         {
-            if (result.Errors.Contains(PasswordResetError.ExpiredPasswordResetCode))
-            {
-                return RedirectToPage("./ResetPasswordExpiration");
-            }
-
-            //Reveal details about account state only if provided credentials are valid
-            if (!result.Errors.Contains(CredentialsError.InvalidCredentials))
-            {
-                if (result.Errors.Contains(UserStateValidationError.AccountSuspended))
-                {
-                    _logger.LogWarning("User account suspended.");
-                    return RedirectToPage("./Suspension", new { suspendedUntil = user.SuspendedUntil.Value });
-                }
-                else if (result.Errors.Contains(UserStateValidationError.AccountLockedOut))
-                {
-                    _logger.LogWarning("User account locked out.");
-                    return RedirectToPage("./Lockout");
-                }
-                else if (result.Errors.Contains(UsernameValidationError.InvalidUsernameFormat))
-                {
-                    _logger.LogWarning("User username does not meet validation requirements anymore.");
-                    SaveUsername(user);
-                    return RedirectToPage("./UpdateUsername",
-                        new { returnUrl = Url.Page("./ResetPassword.cshtml", new { code = Input.Code }) });
-                }
-                else if (result.Errors.Contains(EmailValidationError.InvalidEmailFormat))
-                {
-                    _logger.LogWarning("User email does not meet validation requirements anymore.");
-                    SaveEmail(user);
-                    return RedirectToPage("./UpdateEmail",
-                        new { returnUrl = Url.Page("./ResetPassword.cshtml", new { code = Input.Code }) });
-                }
-            }
-
-            foreach (var error in result.Errors.Where(x => x is EmailValidationError || x is PasswordValidationError))
-            {
-                ModelState.AddModelError(string.Empty, error.ErrorDescription);
-            }
+            return RedirectToPage("./ResetPasswordExpiration");
+        }
+        else if (result.Errors.Single() is PasswordResetError)
+        {
+            ModelState.AddModelError(string.Empty, result.Errors.Single().ErrorDescription);
             return Page();
         }
+        else if (result.Errors.All(x => x is UsernameValidationError or EmailValidationError))
+        {
+            if (result.Errors.Any(x => x is UsernameValidationError))
+            {
+                _logger.LogWarning("User username does not meet validation requirements anymore.");
+                SaveUsername(user);
+                return RedirectToPage("./UpdateUsername",
+                    new { returnUrl = Url.Page("./ResetPassword.cshtml", new { code = Input.Code }) });
+            }
+            else if (result.Errors.Any(x => x is EmailValidationError))
+            {
+                _logger.LogWarning("User email does not meet validation requirements anymore.");
+                SaveEmail(user);
+                return RedirectToPage("./UpdateEmail",
+                    new { returnUrl = Url.Page("./ResetPassword.cshtml", new { code = Input.Code }) });
+            }
+        }
 
-        return RedirectToPage("./ResetPasswordConfirmation");
+        return Page();
     }
 }

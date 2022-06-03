@@ -22,18 +22,22 @@ public class ForgotPasswordModel : PageModel
 {
     private readonly UserManager<User> _userManager;
     private readonly IOptionsMonitor<PasswordOptions> _passwordOptions;
+    private readonly ILogger<ForgotPasswordModel> _logger;
     private readonly ISysTime _sysTime;
     private readonly IEmailSender _emailSender;
+
 
     public ForgotPasswordModel(
         UserManager<User> userManager,
         IOptionsMonitor<PasswordOptions> passwordOptions,
+        ILogger<ForgotPasswordModel> logger,
         ISysTime sysTime,
         IEmailSender emailSender)
     {
         _userManager = userManager;
         _emailSender = emailSender;
         _passwordOptions = passwordOptions;
+        _logger = logger;
         _sysTime = sysTime;
     }
 
@@ -61,13 +65,15 @@ public class ForgotPasswordModel : PageModel
             }
 
             var result = await _userManager.ResetPasswordAsync(user);
+
+            // Don't reveal any validation details
             if (result.Succeeded)
             {
                 var code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(user.PasswordResetCode));
                 var callbackUrl = Url.Page(
                     "/Account/ResetPassword",
                     pageHandler: null,
-                    values: new { area = "Identity", code = code },
+                    values: new { code },
                     protocol: Request.Scheme);
 
                 await _emailSender.SendEmailAsync(
