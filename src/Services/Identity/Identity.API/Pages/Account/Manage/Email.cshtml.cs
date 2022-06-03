@@ -43,7 +43,6 @@ public class EmailModel : PageModel
         _logger = logger;
     }
 
-
     public bool IsEmailConfirmed { get; set; }
 
     [TempData]

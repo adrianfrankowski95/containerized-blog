@@ -25,7 +25,6 @@ public class UpdateUsernameModel : PageModel
 
     [TempData]
     public string StatusMessage { get; set; }
-
     public InputModel Input { get; set; }
     public string ReturnUrl { get; set; }
 
