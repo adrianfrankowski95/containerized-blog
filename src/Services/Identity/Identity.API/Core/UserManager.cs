@@ -226,7 +226,7 @@ public class UserManager<TUser> where TUser : User
             throw new ArgumentNullException(nameof(role));
 
         if (user.Role.Equals(role))
-            throw new InvalidOperationException("User already is in a provided role");
+            throw new InvalidOperationException("User is already in a provided role");
 
         user.Role = role;
 

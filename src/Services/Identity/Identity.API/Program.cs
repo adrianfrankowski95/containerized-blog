@@ -14,7 +14,13 @@ var config = GetConfiguration(isDevelopment);
 
 // Add services to the container.
 
-builder.Services.AddRazorPages();
+builder.Services.AddRazorPages().AddCookieTempDataProvider(opts =>
+{
+    opts.Cookie.HttpOnly = true;
+    opts.Cookie.IsEssential = true;
+    opts.Cookie.SameSite = SameSiteMode.Strict;
+    opts.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+});
 
 builder.Services
     .AddNodaTimeClock()
