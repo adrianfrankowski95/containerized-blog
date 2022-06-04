@@ -56,7 +56,7 @@ public class ResetPasswordModel : PageModel
 
     private void LoadInput(string code)
     {
-        Input = new InputModel()
+        Input = new InputModel
         {
             Email = (string)TempData["Email"],
             Code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(code))

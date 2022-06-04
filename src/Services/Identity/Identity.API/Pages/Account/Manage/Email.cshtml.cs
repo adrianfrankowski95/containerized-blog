@@ -168,7 +168,7 @@ public class EmailModel : PageModel
             return Page();
         }
 
-        var result = await _userManager.UpdateEmailAsync(user, user.Email);
+        var result = await _userManager.GenerateEmailConfirmationAsync(user);
         if (!result.Succeeded)
         {
             ModelState.AddModelError(string.Empty, "Invalid email verification send attempt.");

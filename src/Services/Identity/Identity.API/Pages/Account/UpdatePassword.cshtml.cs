@@ -53,11 +53,6 @@ public class UpdatePasswordModel : PageModel
 
     private string LoadEmail() => (string)TempData.Peek("Email");
 
-    private void SaveEmail(User user)
-    {
-        TempData["Email"] = user.Email;
-    }
-
     public IActionResult OnGet(string returnUrl = null)
     {
         ReturnUrl = returnUrl ?? Url.Content("~/");
@@ -108,9 +103,9 @@ public class UpdatePasswordModel : PageModel
                 }
                 else if (result.Errors.All(x => x is UsernameValidationError or EmailValidationError))
                 {
-                    SaveEmail(user);
                     object returnRoute = new { returntUrl = Url.Page("./UpdatePassword", new { returnUrl }) };
 
+                    // No need to persist Email in TempData, because it was loaded using Peek()
                     if (result.Errors.Any(x => x is UsernameValidationError))
                     {
                         _logger.LogWarning("User username does not meet validation requirements anymore.");

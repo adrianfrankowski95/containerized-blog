@@ -52,7 +52,7 @@ public class LoginModel : PageModel
 
     private void LoadInput()
     {
-        Input = new InputModel()
+        Input = new InputModel
         {
             Email = (string)TempData["Email"],
             RememberMe = (bool?)TempData["RememberMe"] ?? false

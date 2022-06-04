@@ -79,11 +79,6 @@ public class UpdateEmailModel : PageModel
         TempData["Email"] = Input.NewEmail;
     }
 
-    private void SaveEmail(User user)
-    {
-        TempData["Email"] = user.Email;
-    }
-
     public IActionResult OnGet(string returnUrl = null)
     {
         ReturnUrl = returnUrl ?? Url.Content("~/");
@@ -135,7 +130,6 @@ public class UpdateEmailModel : PageModel
                 else if (result.Errors.Any(x => x is UsernameValidationError))
                 {
                     _logger.LogWarning("User username does not meet validation requirements anymore.");
-                    SaveEmail(user);
                     return RedirectToPage("./UpdateUsername", new { returnUrl = Url.Page("./UpdateEmail", new { returnUrl }) });
                 }
 
