@@ -89,7 +89,7 @@ public class LoginModel : PageModel
             {
                 if (result.Errors.Single().Equals(CredentialsError.InvalidCredentials))
                 {
-                    ModelState.AddModelError(string.Empty, CredentialsError.InvalidCredentials.ErrorDescription);
+                    ModelState.AddModelError(string.Empty, result.Errors.Single().ErrorDescription);
                     return Page();
                 }
                 else if (result.Errors.Single().Equals(UserStateValidationError.AccountLockedOut))
