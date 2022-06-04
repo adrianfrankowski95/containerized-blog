@@ -37,14 +37,15 @@
             <div class="form-floating">
                 <input asp-for="Input.FirstName" class="form-control" autocomplete="firstname" aria-required="true" />
                 <label asp-for="Input.FirstName"></label>
-                <span asp-validation-for="Input.Name" class="text-danger"></span>
+                <span asp-validation-for="Input.FirstName" class="text-danger"></span>
             </div>
             <div class="form-floating">
                 <input asp-for="Input.LastName" class="form-control" autocomplete="lastName" aria-required="true" />
                 <label asp-for="Input.LastName"></label>
                 <span asp-validation-for="Input.LastName" class="text-danger"></span>
             </div>
-            <select asp-for="Input.Gender" class="form-select" name="gender" asp-items="Html.GetEnumSelectList<Gender>()" aria-required="true" >
+            <select asp-for="Input.Gender" class="form-select" name="gender"
+                asp-items="Html.GetEnumSelectList<Gender>()" aria-required="true">
                 <span asp-validation-for="Input.Gender" class="text-danger"></span>
             </select>
             <div class="checkbox">
