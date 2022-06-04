@@ -55,7 +55,7 @@ public class UpdatePasswordModel : PageModel
 
     private void SaveEmail(User user)
     {
-        TempData[nameof(user.Email)] = user.Email;
+        TempData["Email"] = user.Email;
     }
 
     public IActionResult OnGet(string returnUrl = null)

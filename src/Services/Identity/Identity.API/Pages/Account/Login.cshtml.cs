@@ -54,15 +54,15 @@ public class LoginModel : PageModel
     {
         Input = new InputModel()
         {
-            Email = (string)TempData[nameof(Input.Email)],
-            RememberMe = (bool?)TempData[nameof(Input.RememberMe)] ?? false
+            Email = (string)TempData["Email"],
+            RememberMe = (bool?)TempData["RememberMe"] ?? false
         };
     }
 
     private void SaveInput()
     {
-        TempData[nameof(Input.Email)] = Input.Email;
-        TempData[nameof(Input.RememberMe)] = Input.RememberMe;
+        TempData["Email"] = Input.Email;
+        TempData["RememberMe"] = Input.RememberMe;
     }
 
     public async Task<IActionResult> OnGetAsync(string returnUrl = null)
