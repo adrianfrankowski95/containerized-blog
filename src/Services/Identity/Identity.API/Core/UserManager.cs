@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Blog.Services.Identity.API.Infrastructure;
 using Blog.Services.Identity.API.Models;
 using Blog.Services.Identity.API.Services;
 using Microsoft.Extensions.Options;
@@ -15,9 +16,7 @@ public class UserManager<TUser> where TUser : User
     private readonly ISysTime _sysTime;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IUserValidator<TUser> _userValidator;
-    private readonly IUserStateValidator<TUser> _userStateValidator;
     private readonly IPasswordValidator<TUser> _passwordValidator;
-    private readonly IUserClaimsPrincipalFactory<TUser> _claimsPrincipalFactory;
 
     public UserManager(
         IUnitOfWork<TUser> unitOfWork,
@@ -26,9 +25,7 @@ public class UserManager<TUser> where TUser : User
         IOptionsMonitor<LockoutOptions> lockoutOptions,
         IOptionsMonitor<EmailOptions> emailOptions,
         IUserValidator<TUser> userValidator,
-        IUserStateValidator<TUser> userStateValidator,
         IPasswordValidator<TUser> passwordValidator,
-        IUserClaimsPrincipalFactory<TUser> claimsPrincipalFactory,
         ISysTime sysTime)
     {
         _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
@@ -38,9 +35,7 @@ public class UserManager<TUser> where TUser : User
         _sysTime = sysTime ?? throw new ArgumentNullException(nameof(sysTime));
         _passwordHasher = passwordHasher ?? throw new ArgumentNullException(nameof(passwordHasher));
         _userValidator = userValidator ?? throw new ArgumentNullException(nameof(userValidator));
-        _userStateValidator = userStateValidator ?? throw new ArgumentNullException(nameof(userStateValidator));
         _passwordValidator = passwordValidator ?? throw new ArgumentNullException(nameof(passwordValidator));
-        _claimsPrincipalFactory = claimsPrincipalFactory ?? throw new ArgumentNullException(nameof(claimsPrincipalFactory));
     }
 
     public Task<TUser?> FindByEmailAsync(string email)
@@ -71,9 +66,6 @@ public class UserManager<TUser> where TUser : User
 
     public ValueTask<IdentityResult> ValidateUserAsync(TUser user)
         => _userValidator.ValidateAsync(user);
-
-    public ValueTask<IdentityResult> ValidateUserStateAsync(TUser user)
-        => _userStateValidator.ValidateAsync(user);
 
     public ValueTask<IdentityResult> ValidatePasswordAsync(string password)
         => _passwordValidator.ValidateAsync(password);

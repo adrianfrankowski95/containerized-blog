@@ -1,8 +1,7 @@
-using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Models;
 using Microsoft.Extensions.Options;
 
-namespace Blog.Services.Identity.API.Services;
+namespace Blog.Services.Identity.API.Core;
 
 public class LoginService<TUser> : ILoginService<TUser> where TUser : User
 {

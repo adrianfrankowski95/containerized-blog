@@ -1,9 +1,8 @@
 using System.Security.Claims;
-using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Models;
 using Microsoft.AspNetCore.Authentication;
 
-namespace Blog.Services.Identity.API.Services;
+namespace Blog.Services.Identity.API.Core;
 
 public class SignInManager<TUser> : ISignInManager<TUser> where TUser : User
 {

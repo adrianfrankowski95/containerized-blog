@@ -2,7 +2,7 @@
 using System.Security.Claims;
 using Blog.Services.Identity.API.Models;
 
-namespace Blog.Services.Identity.API.Services;
+namespace Blog.Services.Identity.API.Core;
 
 public interface ISignInManager<TUser> where TUser : User
 {
