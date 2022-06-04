@@ -53,6 +53,7 @@ public class EmailModel : PageModel
 
     public class InputModel
     {
+        [Display(Name = "Current email")]
         public string Email { get; set; }
 
         [BindProperty]
@@ -144,11 +145,13 @@ public class EmailModel : PageModel
             if (!_emailOptions.CurrentValue.RequireConfirmed)
                 await _signInManager.RefreshSignInAsync(HttpContext, user);
 
+            _logger.LogInformation("User changed their email successfully.");
+            StatusMessage = "Your email has been changed.";
             return RedirectToPage();
         }
 
-        StatusMessage = "The New email and Old email must be different.";
-        return RedirectToPage();
+        ModelState.AddModelError(null, "The New email and Current email must be different.");
+        return Page();
     }
 
     public async Task<IActionResult> OnPostSendVerificationEmailAsync()

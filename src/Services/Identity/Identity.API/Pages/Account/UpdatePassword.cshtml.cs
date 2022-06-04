@@ -42,12 +42,12 @@ public class UpdatePasswordModel : PageModel
         [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 8)]
         [DataType(DataType.Password)]
         [Display(Name = "New password")]
-        [Unlike("Old Password", ErrorMessage = "The {0} and {1} must be different.")]
+        [Unlike("OldPassword", ErrorMessage = "The {0} and {1} must be different.")]
         public string NewPassword { get; set; }
 
         [DataType(DataType.Password)]
         [Display(Name = "Confirm new password")]
-        [Compare("NewPassword", ErrorMessage = "The New Password and Confirmation Password do not match.")]
+        [Compare("NewPassword", ErrorMessage = "The New password and Confirmation password do not match.")]
         public string ConfirmPassword { get; set; }
     }
 
@@ -131,7 +131,7 @@ public class UpdatePasswordModel : PageModel
             return LocalRedirect(returnUrl);
         }
 
-        ModelState.AddModelError(string.Empty, "The New password and Old password must be different.");
+        ModelState.AddModelError(string.Empty, "The New password and Current password must be different.");
         return Page();
     }
 }

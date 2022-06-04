@@ -87,54 +87,52 @@ public class ChangePasswordModel : PageModel
             return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
         }
 
-        var result = await _userManager.UpdatePasswordAsync(user, Input.OldPassword, Input.NewPassword);
-        if (!result.Succeeded)
+        if (!string.Equals(Input.NewPassword, Input.OldPassword, StringComparison.Ordinal))
         {
-            if (result.Errors.Single().Equals(CredentialsError.InvalidCredentials))
+            var result = await _userManager.UpdatePasswordAsync(user, Input.OldPassword, Input.NewPassword);
+            if (!result.Succeeded)
             {
-                ModelState.AddModelError(string.Empty, "The Old password is invalid.");
+                if (result.Errors.Single().Equals(CredentialsError.InvalidCredentials))
+                {
+                    ModelState.AddModelError(string.Empty, "The Old password is invalid.");
+                    return Page();
+                }
+                else if (result.Errors.Any(x => x is PasswordValidationError))
+                {
+                    foreach (var error in result.Errors.Where(x => x is EmailValidationError))
+                    {
+                        ModelState.AddModelError(string.Empty, error.ErrorDescription);
+                    }
+                    return Page();
+                }
+                else if (result.Errors.All(x => x is UsernameValidationError or EmailValidationError))
+                {
+                    SaveEmail(user);
+                    object returnRoute = new { returntUrl = Url.Page("./ChangePassword") };
+
+                    if (result.Errors.Any(x => x is UsernameValidationError))
+                    {
+                        _logger.LogWarning("User username does not meet validation requirements anymore.");
+                        return RedirectToPage("../UpdateUsername", returnRoute);
+                    }
+                    else if (result.Errors.Any(x => x is EmailValidationError))
+                    {
+                        _logger.LogWarning("User email does not meet validation requirements anymore.");
+                        return RedirectToPage("../UpdateEmail", returnRoute);
+                    }
+                }
+
+                ModelState.AddModelError(string.Empty, "Invalid password change attempt.");
                 return Page();
             }
-            else if (result.Errors.Any(x => x is PasswordValidationError))
-            {
-                foreach (var error in result.Errors.Where(x => x is EmailValidationError))
-                {
-                    ModelState.AddModelError(string.Empty, error.ErrorDescription);
-                }
-                return Page();
-            }
-            else if (result.Errors.All(x => x is UsernameValidationError or EmailValidationError))
-            {
-                SaveEmail(user);
-                object returnRoute = new { returntUrl = Url.Page("./ChangePassword") };
 
-                if (result.Errors.Any(x => x is UsernameValidationError))
-                {
-                    _logger.LogWarning("User username does not meet validation requirements anymore.");
-                    return RedirectToPage("../UpdateUsername", returnRoute);
-                }
-                else if (result.Errors.Any(x => x is EmailValidationError))
-                {
-                    _logger.LogWarning("User email does not meet validation requirements anymore.");
-                    return RedirectToPage("../UpdateEmail", returnRoute);
-                }
-            }
-
-            ModelState.AddModelError(string.Empty, "Invalid password change attempt.");
-            return Page();
+            await _signInManager.RefreshSignInAsync(HttpContext, user);
+            _logger.LogInformation("User changed their password successfully.");
+            StatusMessage = "Your password has been changed.";
+            return RedirectToPage();
         }
 
-        bool success = await _signInManager.RefreshSignInAsync(HttpContext, user);
-        if (!success)
-        {
-            _logger.LogWarning("User cannot be signed-in again.");
-            StatusMessage = "Your password has been changed, please re-login.";
-            return RedirectToPage("../Login");
-        }
-
-        _logger.LogInformation("User changed their password successfully.");
-        StatusMessage = "Your password has been changed.";
-
-        return RedirectToPage();
+        ModelState.AddModelError(string.Empty, "The New password and Current password must be different.");
+        return Page();
     }
 }
