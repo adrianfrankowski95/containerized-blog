@@ -115,23 +115,22 @@ public class LoginModel : PageModel
                 else if (result.Errors.All(x => x is UsernameValidationError or EmailValidationError or PasswordValidationError))
                 {
                     SaveInput();
+                    object returnRoute = new { returntUrl = Url.Page("./Login", new { returnUrl }) };
+
                     if (result.Errors.Any(x => x is UsernameValidationError))
                     {
                         _logger.LogWarning("User username does not meet validation requirements anymore.");
-                        return RedirectToPage("./UpdateUsername",
-                            new { returntUrl = Url.Page("./Login", new { returnUrl }) });
+                        return RedirectToPage("./UpdateUsername", returnRoute);
                     }
                     else if (result.Errors.Any(x => x is EmailValidationError))
                     {
                         _logger.LogWarning("User email does not meet validation requirements anymore.");
-                        return RedirectToPage("./UpdateEmail",
-                            new { returntUrl = Url.Page("./Login", new { returnUrl }) });
+                        return RedirectToPage("./UpdateEmail", returnRoute);
                     }
                     else if (result.Errors.Any(x => x is PasswordValidationError))
                     {
                         _logger.LogWarning("User password does not meet validation requirements anymore.");
-                        return RedirectToPage("./UpdatePassword",
-                            new { returntUrl = Url.Page("./Login", new { returnUrl }) });
+                        return RedirectToPage("./UpdatePassword", returnRoute);
                     }
                 }
 

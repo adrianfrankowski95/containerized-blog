@@ -20,9 +20,13 @@ public class ConfirmEmailModel : PageModel
         _logger = logger;
     }
 
-
     [TempData]
     public string StatusMessage { get; set; }
+
+    private void SaveEmail(User user)
+    {
+        TempData[nameof(user.Email)] = user.Email;
+    }
 
     public async Task<IActionResult> OnGetAsync(Guid userId, Guid code)
     {
@@ -51,17 +55,18 @@ public class ConfirmEmailModel : PageModel
             }
             else if (result.Errors.All(x => x is UsernameValidationError or EmailValidationError))
             {
+                SaveEmail(user);
+                object returnRoute = new { returnUrl = Url.Page("./ConfirmEmail", new { userId, code }) };
+
                 if (result.Errors.Any(x => x is UsernameValidationError))
                 {
-                    _logger.LogWarning("User username does not meet validation requirements anymore.");
-                    return RedirectToPage("./UpdateUsername",
-                        new { returnUrl = Url.Page("./ConfirmEmail", new { userId, code }) });
+                    _logger.LogWarning("User username does not meet validation requirements anymore.");       
+                    return RedirectToPage("./UpdateUsername", returnRoute);
                 }
                 else if (result.Errors.Any(x => x is EmailValidationError))
                 {
                     _logger.LogWarning("User email does not meet validation requirements anymore.");
-                    return RedirectToPage("./UpdateEmail",
-                        new { returnUrl = Url.Page("./ConfirmEmail", new { userId, code }) });
+                    return RedirectToPage("./UpdateEmail", returnRoute);
                 }
             }
 

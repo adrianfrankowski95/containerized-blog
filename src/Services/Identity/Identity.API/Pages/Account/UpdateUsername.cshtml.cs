@@ -51,6 +51,11 @@ public class UpdateUsernameModel : PageModel
         };
     }
 
+    private void SaveEmail(User user)
+    {
+        TempData[nameof(user.Email)] = user.Email;
+    }
+
     public async Task<IActionResult> OnGetAsync(string returnUrl = null)
     {
         ReturnUrl = returnUrl ?? Url.Content("~/");
@@ -95,35 +100,30 @@ public class UpdateUsernameModel : PageModel
             var result = await _userManager.UpdateUsernameAsync(user, Input.NewUsername);
             if (!result.Succeeded)
             {
-                //Reveal details about account state only if provided credentials are valid
-                if (!result.Errors.Contains(CredentialsError.InvalidCredentials))
+                if (result.Errors.Any(x => x is UsernameValidationError))
                 {
-                    if (result.Errors.Contains(UserStateValidationError.AccountSuspended))
+                    foreach (var error in result.Errors.Where(x => x is UsernameValidationError))
                     {
-                        _logger.LogWarning("User account suspended.");
-                        return RedirectToPage("./Suspension", new { suspendedUntil = user.SuspendedUntil.Value });
+                        ModelState.AddModelError(string.Empty, error.ErrorDescription);
                     }
-                    else if (result.Errors.Contains(UserStateValidationError.AccountLockedOut))
-                    {
-                        _logger.LogWarning("User account locked out.");
-                        return RedirectToPage("./Lockout");
-                    }
-                    else if (result.Errors.Contains(UsernameValidationError.UsernameDuplicated))
-                    {
-                        ModelState.AddModelError(string.Empty, "The Username is already in use.");
-                        return Page();
-                    }
+                    return Page();
+                }
+                else if (result.Errors.Any(x => x is EmailValidationError))
+                {
+                    _logger.LogWarning("User email does not meet validation requirements anymore.");
+                    SaveEmail(user);
+                    return RedirectToPage("./UpdateEmail", new { returnUrl = Url.Page("./UpdateUsername", new { returnUrl }) });
                 }
 
                 ModelState.AddModelError(string.Empty, "Invalid username update attempt.");
                 return Page();
             }
 
-            StatusMessage = "Your username has been changed.";
+            StatusMessage = "Your username has been updated.";
             return LocalRedirect(returnUrl);
         }
 
-        ModelState.AddModelError(string.Empty, "Your username is unchanged.");
+        ModelState.AddModelError(string.Empty, "The New username and Old username must be different.");
         return Page();
     }
 }

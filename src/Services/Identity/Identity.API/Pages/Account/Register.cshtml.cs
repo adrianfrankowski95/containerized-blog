@@ -112,7 +112,6 @@ public class RegisterModel : PageModel
                 return Page();
             }
 
-
             _logger.LogInformation("User created a new account with password.");
             var code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(user.EmailConfirmationCode.ToString()!));
             var callbackUrl = Url.Page(

@@ -240,7 +240,7 @@ public class UserManager<TUser> where TUser : User
         ThrowIfNull(user);
 
         if (string.IsNullOrWhiteSpace(newEmail))
-            throw new ArgumentNullException(nameof(newEmail));
+            return Task.FromResult(IdentityResult.Fail(EmailValidationError.MissingEmail));
 
         if (string.Equals(user.Email, newEmail, StringComparison.OrdinalIgnoreCase))
             return Task.FromResult(IdentityResult.Fail(EmailValidationError.NewAndOldEmailsAreEqual));
@@ -347,6 +347,9 @@ public class UserManager<TUser> where TUser : User
         if (string.IsNullOrWhiteSpace(oldPassword) || string.IsNullOrWhiteSpace(oldPassword))
             return IdentityResult.Fail(PasswordValidationError.MissingPassword);
 
+        if (string.Equals(newPassword, oldPassword, StringComparison.Ordinal))
+            return IdentityResult.Fail(PasswordValidationError.NewAndOldPasswordsAreEqual);
+
         var passwordValidationResult = await ValidatePasswordAsync(newPassword).ConfigureAwait(false);
         if (!passwordValidationResult.Succeeded)
             return passwordValidationResult;
@@ -354,12 +357,6 @@ public class UserManager<TUser> where TUser : User
         var passwordVerificationResult = VerifyPassword(user, oldPassword);
         if (passwordVerificationResult is PasswordVerificationResult.Fail)
             return IdentityResult.Fail(CredentialsError.InvalidCredentials);
-
-        if (IsResettingPassword(user))
-            return IdentityResult.Fail(UserStateValidationError.ResettingPassword);
-
-        if (string.Equals(newPassword, oldPassword, StringComparison.Ordinal))
-            return IdentityResult.Fail(PasswordValidationError.NewAndOldPasswordsAreEqual);
 
         UpdatePasswordHash(user, newPassword);
 
