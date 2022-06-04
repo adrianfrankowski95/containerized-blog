@@ -1,4 +1,4 @@
-namespace Emailing.API;
+namespace Blog.Services.Emailing.API;
 
 public class WeatherForecast
 {

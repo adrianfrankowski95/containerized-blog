@@ -1,6 +1,7 @@
+using Blog.Services.Emailing.API;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Emailing.API.Controllers;
+namespace Blog.Services.Emailing.API.Controllers;
 
 [ApiController]
 [Route("[controller]")]

@@ -29,6 +29,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Authorization", "Authorizat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Authorization.API", "Services\Authorization\Authorization.API\Authorization.API.csproj", "{0910B6D5-23EF-4EE6-86AA-B65E7932DA37}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Emailing", "Emailing", "{8EC96C95-B340-4214-97A3-AF127ADA8B65}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Emailing.API", "Services\Emailing\Emailing.API\Emailing.API.csproj", "{CC65613C-0CC6-45F0-9587-8BAFE31B7CEF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -63,6 +67,10 @@ Global
 		{0910B6D5-23EF-4EE6-86AA-B65E7932DA37}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0910B6D5-23EF-4EE6-86AA-B65E7932DA37}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0910B6D5-23EF-4EE6-86AA-B65E7932DA37}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CC65613C-0CC6-45F0-9587-8BAFE31B7CEF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CC65613C-0CC6-45F0-9587-8BAFE31B7CEF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CC65613C-0CC6-45F0-9587-8BAFE31B7CEF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CC65613C-0CC6-45F0-9587-8BAFE31B7CEF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -79,6 +87,8 @@ Global
 		{264C49D7-CFCF-47A4-B186-CBE878F6A17B} = {D35F234C-633C-47AD-8ABB-4F5C9D7CCB98}
 		{C261596F-E9CB-4E24-BD65-725B92D811D6} = {14C6DD11-FD06-4A05-8886-F3477F9EF436}
 		{0910B6D5-23EF-4EE6-86AA-B65E7932DA37} = {C261596F-E9CB-4E24-BD65-725B92D811D6}
+		{8EC96C95-B340-4214-97A3-AF127ADA8B65} = {14C6DD11-FD06-4A05-8886-F3477F9EF436}
+		{CC65613C-0CC6-45F0-9587-8BAFE31B7CEF} = {8EC96C95-B340-4214-97A3-AF127ADA8B65}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {61FC2AD3-FD08-4F32-A1F9-8D08B3731704}
