@@ -72,8 +72,8 @@ public class RegisterModel : PageModel
 
         [Required]
         [StringLength(50, ErrorMessage = "The {0} must be at at max {1} characters long.")]
-        [Display(Name = "Name")]
-        public string Name { get; set; }
+        [Display(Name = "First name")]
+        public string FirstName { get; set; }
 
         [Required]
         [StringLength(100, ErrorMessage = "The {0} must be at max {1} characters long.")]
@@ -100,7 +100,7 @@ public class RegisterModel : PageModel
 
         if (ModelState.IsValid)
         {
-            var user = new User(Input.Email, Input.Username, Input.Name, Input.LastName, Input.Gender!.Value, Input.ReceiveAdditionalEmails);
+            var user = new User(Input.Email, Input.Username, Input.FirstName, Input.LastName, Input.Gender!.Value, Input.ReceiveAdditionalEmails);
 
             var result = await _userManager.CreateUserAsync(user, Input.Password);
             if (!result.Succeeded)

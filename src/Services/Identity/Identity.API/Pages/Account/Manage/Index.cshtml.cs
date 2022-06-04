@@ -15,13 +15,16 @@ public class IndexModel : PageModel
 {
     private readonly UserManager<User> _userManager;
     private readonly ISignInManager<User> _signInManager;
+    private readonly ILogger<IndexModel> _logger;
 
     public IndexModel(
         UserManager<User> userManager,
-        ISignInManager<User> signInManager)
+        ISignInManager<User> signInManager,
+        ILogger<IndexModel> logger)
     {
         _userManager = userManager;
         _signInManager = signInManager;
+        _logger = logger;
     }
 
 
@@ -39,25 +42,34 @@ public class IndexModel : PageModel
     public class InputModel
     {
         [Required]
+        [StringLength(50, ErrorMessage = "The {0} must be at at max {1} characters long.")]
         [Display(Name = "First name")]
         public string FirstName { get; set; }
 
         [Required]
+        [StringLength(100, ErrorMessage = "The {0} must be at max {1} characters long.")]
         [Display(Name = "Last name")]
         public string LastName { get; set; }
+
+        [Display(Name = "I would like to receive additional updates and announcements via email")]
+        public bool ReceiveAdditionalEmails { get; set; }
     }
 
-    private async Task LoadAsync(User user)
+    private void Load(User user)
     {
-        var userName = await _userManager.GetUserNameAsync(user);
-        var phoneNumber = await _userManager.GetPhoneNumberAsync(user);
-
         Username = user.Username;
 
         Input = new InputModel
         {
-            FirstName = user.FirstName
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            ReceiveAdditionalEmails = user.ReceiveAdditionalEmails
         };
+    }
+
+    private void SaveEmail(User user)
+    {
+        TempData["Email"] = user.Email;
     }
 
     public async Task<IActionResult> OnGetAsync()
@@ -68,7 +80,7 @@ public class IndexModel : PageModel
             return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
         }
 
-        await LoadAsync(user);
+        Load(user);
         return Page();
     }
 
@@ -82,23 +94,59 @@ public class IndexModel : PageModel
 
         if (!ModelState.IsValid)
         {
-            await LoadAsync(user);
+            Load(user);
             return Page();
         }
 
-        var phoneNumber = await _userManager.GetPhoneNumberAsync(user);
-        if (Input.FirstName != phoneNumber)
+        bool isChanged = false;
+        if (!string.Equals(Input.FirstName, user.FirstName, StringComparison.Ordinal))
         {
-            var setPhoneResult = await _userManager.SetPhoneNumberAsync(user, Input.FirstName);
-            if (!setPhoneResult.Succeeded)
-            {
-                StatusMessage = "Unexpected error when trying to set phone number.";
-                return RedirectToPage();
-            }
+            user.FirstName = Input.FirstName;
+            isChanged = true;
+        }
+        if (!string.Equals(Input.LastName, user.LastName, StringComparison.Ordinal))
+        {
+            user.LastName = Input.LastName;
+            isChanged = true;
+        }
+        if (!Input.ReceiveAdditionalEmails != user.ReceiveAdditionalEmails)
+        {
+            user.ReceiveAdditionalEmails = Input.ReceiveAdditionalEmails;
+            isChanged = true;
         }
 
-        await _signInManager.RefreshSignInAsync(user);
-        StatusMessage = "Your profile has been updated";
+        if (isChanged)
+        {
+            var result = await _userManager.UpdateUserAsync(user);
+            if (!result.Succeeded)
+            {
+                if (result.Errors.All(x => x is UsernameValidationError or EmailValidationError))
+                {
+                    SaveEmail(user);
+                    object returnRoute = new { returntUrl = Url.Page("./Index") };
+
+                    if (result.Errors.Any(x => x is UsernameValidationError))
+                    {
+                        _logger.LogWarning("User username does not meet validation requirements anymore.");
+                        return RedirectToPage("./UpdateUsername", returnRoute);
+                    }
+                    else if (result.Errors.Any(x => x is EmailValidationError))
+                    {
+                        _logger.LogWarning("User email does not meet validation requirements anymore.");
+                        return RedirectToPage("./UpdateEmail", returnRoute);
+                    }
+                }
+
+                StatusMessage = "Unexpected error when trying to update the profile.";
+                return RedirectToPage();
+            }
+
+            await _signInManager.RefreshSignInAsync(HttpContext, user);
+            StatusMessage = "Your profile has been updated.";
+            return RedirectToPage();
+        }
+
+        StatusMessage = "No changes have been made.";
         return RedirectToPage();
     }
 }

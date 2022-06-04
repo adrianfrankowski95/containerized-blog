@@ -52,11 +52,6 @@ public class UpdateUsernameModel : PageModel
         };
     }
 
-    private void SaveEmail(User user)
-    {
-        TempData["Email"] = user.Email;
-    }
-
     public async Task<IActionResult> OnGetAsync(string returnUrl = null)
     {
         ReturnUrl = returnUrl ?? Url.Content("~/");
@@ -111,8 +106,8 @@ public class UpdateUsernameModel : PageModel
                 }
                 else if (result.Errors.Any(x => x is EmailValidationError))
                 {
+                    // No need to persist Email in TempData, because it was loaded using Peek()
                     _logger.LogWarning("User email does not meet validation requirements anymore.");
-                    SaveEmail(user);
                     return RedirectToPage("./UpdateEmail", new { returnUrl = Url.Page("./UpdateUsername", new { returnUrl }) });
                 }
 
