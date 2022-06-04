@@ -51,14 +51,14 @@ public class ResetPasswordModel : PageModel
 
     private void SaveEmail(User user)
     {
-        TempData[nameof(InputModel.Email)] = user.Email;
+        TempData["Email"] = user.Email;
     }
 
     private void LoadInput(string code)
     {
         Input = new InputModel()
         {
-            Email = (string)TempData[nameof(InputModel.Email)],
+            Email = (string)TempData["Email"],
             Code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(code))
         };
     }

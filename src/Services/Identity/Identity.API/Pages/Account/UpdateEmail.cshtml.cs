@@ -75,12 +75,12 @@ public class UpdateEmailModel : PageModel
 
     private void SetNewEmail()
     {
-        TempData[nameof(Input.Email)] = Input.NewEmail;
+        TempData["Email"] = Input.NewEmail;
     }
 
     private void SaveEmail(User user)
     {
-        TempData[nameof(user.Email)] = user.Email;
+        TempData["Email"] = user.Email;
     }
 
     public IActionResult OnGet(string returnUrl = null)

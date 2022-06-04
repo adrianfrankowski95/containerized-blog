@@ -53,7 +53,7 @@ public class UpdateUsernameModel : PageModel
 
     private void SaveEmail(User user)
     {
-        TempData[nameof(user.Email)] = user.Email;
+        TempData["Email"] = user.Email;
     }
 
     public async Task<IActionResult> OnGetAsync(string returnUrl = null)

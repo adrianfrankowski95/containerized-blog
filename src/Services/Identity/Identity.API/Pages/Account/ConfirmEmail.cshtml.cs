@@ -25,7 +25,7 @@ public class ConfirmEmailModel : PageModel
 
     private void SaveEmail(User user)
     {
-        TempData[nameof(user.Email)] = user.Email;
+        TempData["Email"] = user.Email;
     }
 
     public async Task<IActionResult> OnGetAsync(Guid userId, Guid code)
