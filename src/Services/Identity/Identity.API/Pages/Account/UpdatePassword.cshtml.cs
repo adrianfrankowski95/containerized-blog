@@ -53,6 +53,11 @@ public class UpdatePasswordModel : PageModel
 
     private string LoadEmail() => (string)TempData.Peek("Email");
 
+    private void SaveEmail(User user)
+    {
+        TempData[nameof(user.Email)] = user.Email;
+    }
+
     public IActionResult OnGet(string returnUrl = null)
     {
         ReturnUrl = returnUrl ?? Url.Content("~/");
@@ -85,14 +90,40 @@ public class UpdatePasswordModel : PageModel
 
         if (!string.Equals(Input.NewPassword, Input.OldPassword, StringComparison.Ordinal))
         {
-            var changePasswordResult = await _userManager.UpdatePasswordAsync(user, Input.OldPassword, Input.NewPassword);
-            if (!changePasswordResult.Succeeded)
+            var result = await _userManager.UpdatePasswordAsync(user, Input.OldPassword, Input.NewPassword);
+            if (!result.Succeeded)
             {
-                foreach (var error in changePasswordResult.Errors)
+                if (result.Errors.Single().Equals(CredentialsError.InvalidCredentials))
                 {
-                    ModelState.AddModelError(string.Empty, error.ErrorDescription);
+                    ModelState.AddModelError(string.Empty, "The Old password is invalid.");
+                    return Page();
+                }
+                else if (result.Errors.Any(x => x is PasswordValidationError))
+                {
+                    foreach (var error in result.Errors.Where(x => x is EmailValidationError))
+                    {
+                        ModelState.AddModelError(string.Empty, error.ErrorDescription);
+                    }
+                    return Page();
+                }
+                else if (result.Errors.All(x => x is UsernameValidationError or EmailValidationError))
+                {
+                    SaveEmail(user);
+                    object returnRoute = new { returntUrl = Url.Page("./UpdatePassword", new { returnUrl }) };
+
+                    if (result.Errors.Any(x => x is UsernameValidationError))
+                    {
+                        _logger.LogWarning("User username does not meet validation requirements anymore.");
+                        return RedirectToPage("./UpdateUsername", returnRoute);
+                    }
+                    else if (result.Errors.Any(x => x is EmailValidationError))
+                    {
+                        _logger.LogWarning("User email does not meet validation requirements anymore.");
+                        return RedirectToPage("./UpdateEmail", returnRoute);
+                    }
                 }
 
+                ModelState.AddModelError(string.Empty, "Invalid password update attempt.");
                 return Page();
             }
 

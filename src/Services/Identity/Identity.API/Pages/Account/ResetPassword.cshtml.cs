@@ -51,12 +51,16 @@ public class ResetPasswordModel : PageModel
 
     private void SaveEmail(User user)
     {
-        TempData[nameof(user.Email)] = user.Email;
+        TempData[nameof(InputModel.Email)] = user.Email;
     }
 
-    private void SaveUsername(User user)
+    private void LoadInput(string code)
     {
-        TempData[nameof(user.Username)] = user.Username;
+        Input = new InputModel()
+        {
+            Email = (string)TempData[nameof(InputModel.Email)],
+            Code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(code))
+        };
     }
 
     public IActionResult OnGet(string code)
@@ -66,10 +70,7 @@ public class ResetPasswordModel : PageModel
             return BadRequest("A code must be supplied for password reset.");
         }
 
-        Input = new InputModel
-        {
-            Code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(code))
-        };
+        LoadInput(code);
         return Page();
     }
 
@@ -88,37 +89,47 @@ public class ResetPasswordModel : PageModel
         }
 
         var result = await _userManager.ResetPasswordAsync(user, Input.NewPassword, Input.Code);
-        if (result.Succeeded)
-            return RedirectToPage("./ResetPasswordConfirmation");
 
+        if (!result.Succeeded)
+        {
+            if (result.Errors.Single().Equals(PasswordResetError.ExpiredPasswordResetCode))
+            {
+                return RedirectToPage("./ResetPasswordExpiration");
+            }
+            else if (result.Errors.Single() is PasswordResetError)
+            {
+                ModelState.AddModelError(string.Empty, result.Errors.Single().ErrorDescription);
+                return Page();
+            }
+            else if (result.Errors.Any(x => x is PasswordValidationError))
+            {
+                foreach (var error in result.Errors.Where(x => x is PasswordValidationError))
+                {
+                    ModelState.AddModelError(null, error.ErrorDescription);
+                }
+                return Page();
+            }
+            else if (result.Errors.All(x => x is UsernameValidationError or EmailValidationError))
+            {
+                SaveEmail(user);
+                object returnRoute = new { returnUrl = Url.Page("./ResetPassword.cshtml", new { code = Input.Code }) };
 
-        if (result.Errors.Single().Equals(PasswordResetError.ExpiredPasswordResetCode))
-        {
-            return RedirectToPage("./ResetPasswordExpiration");
-        }
-        else if (result.Errors.Single() is PasswordResetError)
-        {
-            ModelState.AddModelError(string.Empty, result.Errors.Single().ErrorDescription);
+                if (result.Errors.Any(x => x is UsernameValidationError))
+                {
+                    _logger.LogWarning("User username does not meet validation requirements anymore.");
+                    return RedirectToPage("./UpdateUsername", returnRoute);
+                }
+                else if (result.Errors.Any(x => x is EmailValidationError))
+                {
+                    _logger.LogWarning("User email does not meet validation requirements anymore.");
+                    return RedirectToPage("./UpdateEmail", returnRoute);
+                }
+            }
+
+            ModelState.AddModelError(string.Empty, "Invalid password reset attempt.");
             return Page();
         }
-        else if (result.Errors.All(x => x is UsernameValidationError or EmailValidationError))
-        {
-            if (result.Errors.Any(x => x is UsernameValidationError))
-            {
-                _logger.LogWarning("User username does not meet validation requirements anymore.");
-                SaveUsername(user);
-                return RedirectToPage("./UpdateUsername",
-                    new { returnUrl = Url.Page("./ResetPassword.cshtml", new { code = Input.Code }) });
-            }
-            else if (result.Errors.Any(x => x is EmailValidationError))
-            {
-                _logger.LogWarning("User email does not meet validation requirements anymore.");
-                SaveEmail(user);
-                return RedirectToPage("./UpdateEmail",
-                    new { returnUrl = Url.Page("./ResetPassword.cshtml", new { code = Input.Code }) });
-            }
-        }
 
-        return Page();
+        return RedirectToPage("./ResetPasswordConfirmation");
     }
 }

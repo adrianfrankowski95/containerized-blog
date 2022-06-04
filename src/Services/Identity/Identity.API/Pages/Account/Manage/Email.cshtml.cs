@@ -24,7 +24,7 @@ public class EmailModel : PageModel
     private readonly ISignInManager<User> _signInManager;
     private readonly IOptionsMonitor<EmailOptions> _emailOptions;
     private readonly ISysTime _sysTime;
-    //private readonly IEmailSender _emailSender;
+    private readonly IEmailSender _emailSender;
     private readonly ILogger<EmailModel> _logger;
 
     public EmailModel(
@@ -32,14 +32,14 @@ public class EmailModel : PageModel
         ISignInManager<User> signInManager,
         IOptionsMonitor<EmailOptions> emailOptions,
         ISysTime sysTime,
-        //IEmailSender emailSender,
+        IEmailSender emailSender,
         ILogger<EmailModel> logger)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _emailOptions = emailOptions;
         _sysTime = sysTime;
-        //_emailSender = emailSender;
+        _emailSender = emailSender;
         _logger = logger;
     }
 
@@ -63,7 +63,7 @@ public class EmailModel : PageModel
         public string NewEmail { get; set; }
     }
 
-    private void Load(User user)
+    private void LoadInput(User user)
     {
         Input = new InputModel
         {
@@ -74,13 +74,18 @@ public class EmailModel : PageModel
         IsEmailConfirmed = !_userManager.IsConfirmingEmail(user);
     }
 
+    private void SaveEmail(User user)
+    {
+        TempData[nameof(user.Email)] = user.Email;
+    }
+
     public async Task<IActionResult> OnGetAsync()
     {
         var user = await _userManager.GetUserAsync(User);
         if (user is null)
             return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
 
-        Load(user);
+        LoadInput(user);
         return Page();
     }
 
@@ -94,7 +99,7 @@ public class EmailModel : PageModel
 
         if (!ModelState.IsValid)
         {
-            Load(user);
+            LoadInput(user);
             return Page();
         }
 
@@ -103,27 +108,19 @@ public class EmailModel : PageModel
             var result = await _userManager.UpdateEmailAsync(user, Input.NewEmail);
             if (!result.Succeeded)
             {
-                //Reveal details about account state only if provided credentials are valid
-                if (!result.Errors.Contains(CredentialsError.InvalidCredentials))
+                if (result.Errors.Any(x => x is EmailValidationError))
                 {
-                    if (result.Errors.Contains(UserStateValidationError.AccountSuspended))
+                    foreach (var error in result.Errors.Where(x => x is EmailValidationError))
                     {
-                        if (user is not null)
-                        {
-                            _logger.LogWarning("User account suspended.");
-                            return RedirectToPage("./Suspension", new { suspendedUntil = user.SuspendedUntil.Value });
-                        }
+                        ModelState.AddModelError(string.Empty, error.ErrorDescription);
                     }
-                    else if (result.Errors.Contains(UserStateValidationError.AccountLockedOut))
-                    {
-                        _logger.LogWarning("User account locked out.");
-                        return RedirectToPage("./Lockout");
-                    }
-                    else if (result.Errors.Contains(EmailValidationError.EmailDuplicated))
-                    {
-                        ModelState.AddModelError(string.Empty, "Provided email is already in use.");
-                        return Page();
-                    }
+                    return Page();
+                }
+                else if (result.Errors.Any(x => x is UsernameValidationError))
+                {
+                    _logger.LogWarning("User username does not meet validation requirements anymore.");
+                    SaveEmail(user);
+                    return RedirectToPage("./UpdateUsername", new { returnUrl = Url.Page("./Email") });
                 }
 
                 ModelState.AddModelError(string.Empty, "Invalid email change attempt.");
@@ -132,15 +129,15 @@ public class EmailModel : PageModel
 
             var code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(user.EmailConfirmationCode.ToString()));
             var callbackUrl = Url.Page(
-                "/Account/ConfirmEmailChange",
+                "/Account/ConfirmEmail",
                 pageHandler: null,
                 values: new { userId = user.Id, email = Input.NewEmail, code },
                 protocol: Request.Scheme);
-            // await _emailSender.SendEmailAsync(
-            //     Input.NewEmail,
-            //     "Confirm your email",
-            //     $"Please confirm your email by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>." +
-            //     $"<br><br>This link will expire at {_sysTime.Now.Plus(Duration.FromTimeSpan(_emailOptions.CurrentValue.EmailConfirmationCodeValidityPeriod)).ToString("dddd, dd mmmm yyyy HH:mm:ss", DateTimeFormatInfo.InvariantInfo)}.");
+            await _emailSender.SendEmailAsync(
+                 Input.NewEmail,
+                 "Confirm your email",
+                 $"Please confirm your email by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>." +
+                 $"<br><br>This link will expire at {_sysTime.Now.Plus(Duration.FromTimeSpan(_emailOptions.CurrentValue.EmailConfirmationCodeValidityPeriod)).ToString("dddd, dd mmmm yyyy HH:mm:ss", DateTimeFormatInfo.InvariantInfo)}.");
 
             StatusMessage = "Confirmation link to change email sent. Please check your email.";
 
@@ -164,7 +161,7 @@ public class EmailModel : PageModel
 
         if (!ModelState.IsValid)
         {
-            Load(user);
+            LoadInput(user);
             return Page();
         }
 

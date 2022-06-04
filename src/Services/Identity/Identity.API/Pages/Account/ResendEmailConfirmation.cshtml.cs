@@ -69,6 +69,8 @@ public class ResendEmailConfirmationModel : PageModel
         }
 
         var result = await _userManager.GenerateEmailConfirmationAsync(user);
+
+        // Don't reveal any validation details
         if (result.Succeeded)
         {
             var code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(user.EmailConfirmationCode.ToString()));

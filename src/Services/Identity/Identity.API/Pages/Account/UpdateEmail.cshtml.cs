@@ -75,7 +75,12 @@ public class UpdateEmailModel : PageModel
 
     private void SetNewEmail()
     {
-        TempData["Email"] = Input.NewEmail;
+        TempData[nameof(Input.Email)] = Input.NewEmail;
+    }
+
+    private void SaveEmail(User user)
+    {
+        TempData[nameof(user.Email)] = user.Email;
     }
 
     public IActionResult OnGet(string returnUrl = null)
@@ -118,27 +123,22 @@ public class UpdateEmailModel : PageModel
             var result = await _userManager.UpdateEmailAsync(user, Input.NewEmail);
             if (!result.Succeeded)
             {
-                //Reveal details about account state only if provided credentials are valid
-                if (!result.Errors.Contains(CredentialsError.InvalidCredentials))
+                if (result.Errors.Any(x => x is EmailValidationError))
                 {
-                    if (result.Errors.Contains(UserStateValidationError.AccountSuspended))
+                    foreach (var error in result.Errors.Where(x => x is EmailValidationError))
                     {
-                        _logger.LogWarning("User account suspended.");
-                        return RedirectToPage("./Suspension", new { suspendedUntil = user.SuspendedUntil.Value });
+                        ModelState.AddModelError(string.Empty, error.ErrorDescription);
                     }
-                    else if (result.Errors.Contains(UserStateValidationError.AccountLockedOut))
-                    {
-                        _logger.LogWarning("User account locked out.");
-                        return RedirectToPage("./Lockout");
-                    }
-                    else if (result.Errors.Contains(EmailValidationError.EmailDuplicated))
-                    {
-                        ModelState.AddModelError(string.Empty, "The Email is already in use.");
-                        return Page();
-                    }
+                    return Page();
+                }
+                else if (result.Errors.Any(x => x is UsernameValidationError))
+                {
+                    _logger.LogWarning("User username does not meet validation requirements anymore.");
+                    SaveEmail(user);
+                    return RedirectToPage("./UpdateUsername", new { returnUrl = Url.Page("./UpdateEmail", new { returnUrl }) });
                 }
 
-                ModelState.AddModelError(string.Empty, "Invalid email change attempt.");
+                ModelState.AddModelError(string.Empty, "Invalid email update attempt.");
                 return Page();
             }
 
@@ -146,7 +146,7 @@ public class UpdateEmailModel : PageModel
             var callbackUrl = Url.Page(
                 "/Account/ConfirmEmail",
                 pageHandler: null,
-                values: new { userId = user.Id, email = Input.NewEmail, code },
+                values: new { userId = user.Id, code },
                 protocol: Request.Scheme);
             await _emailSender.SendEmailAsync(
                 Input.NewEmail,
