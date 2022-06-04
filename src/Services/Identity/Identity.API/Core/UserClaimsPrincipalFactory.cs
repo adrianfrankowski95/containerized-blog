@@ -3,9 +3,9 @@ using Blog.Services.Identity.API.Models;
 
 namespace Blog.Services.Identity.API.Core;
 
-public class UserClaimsPrincipalFactory : IUserClaimsPrincipalFactory<User>
+public class UserClaimsPrincipalFactory<TUser> : IUserClaimsPrincipalFactory<TUser> where TUser : User
 {
-    public async ValueTask<ClaimsPrincipal> CreateAsync(User user)
+    public async ValueTask<ClaimsPrincipal> CreateAsync(TUser user)
     {
         if (user is null)
             throw new ArgumentNullException(nameof(user));
@@ -13,7 +13,7 @@ public class UserClaimsPrincipalFactory : IUserClaimsPrincipalFactory<User>
         return new ClaimsPrincipal(await GenerateClaimsAsync(user).ConfigureAwait(false));
     }
 
-    public ValueTask<ClaimsIdentity> GenerateClaimsAsync(User user)
+    public ValueTask<ClaimsIdentity> GenerateClaimsAsync(TUser user)
     {
         if (user is null)
             throw new ArgumentNullException(nameof(user));

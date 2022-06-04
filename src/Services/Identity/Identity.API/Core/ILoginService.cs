@@ -1,8 +1,6 @@
-
-using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Models;
 
-namespace Blog.Services.Identity.API.Services;
+namespace Blog.Services.Identity.API.Core;
 
 public interface ILoginService<TUser> where TUser : User
 {

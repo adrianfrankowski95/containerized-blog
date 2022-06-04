@@ -1,6 +1,7 @@
 using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Infrastructure;
 using Blog.Services.Identity.API.Models;
+using Blog.Services.Identity.API.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using NodaTime;
@@ -23,9 +24,9 @@ builder.Services.AddRazorPages().AddCookieTempDataProvider(opts =>
 });
 
 builder.Services
-    .AddNodaTimeClock()
-    .AddIdentityInfrastructure<User, Role>(config)
-    .AddIdentityAuthentication<User>()
+    .AddCustomIdentityInfrastructure<User, Role>(config)
+    .AddCustomIdentityCore<User>()
+    .AddCustomServices()
     .AddControllers();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -61,34 +62,4 @@ static IConfiguration GetConfiguration(bool isDevelopment)
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile(configFileName, optional: false, reloadOnChange: true)
                 .Build();
-}
-
-static class ServiceCollectionExtensions
-{
-    public static IServiceCollection AddNodaTimeClock(this IServiceCollection services)
-    {
-        services.TryAddSingleton<IClock, SystemClock>();
-
-        return services;
-    }
-
-    public static IServiceCollection AddIdentityAuthentication<TUser>(this IServiceCollection services)
-        where TUser : User
-    {
-        services
-            .AddAuthentication(IdentityConstants.AuthenticationScheme)
-            .AddCookie(IdentityConstants.AuthenticationScheme, opts =>
-            {
-                opts.Cookie.HttpOnly = true;
-                opts.Cookie.IsEssential = true;
-                opts.Cookie.SameSite = SameSiteMode.Strict;
-                opts.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-                opts.LoginPath = new PathString("/Account/Login");
-            }).Services
-            .AddOptions<CookieAuthenticationOptions>(IdentityConstants.AuthenticationScheme)
-            .Configure<ISecurityStampValidator<TUser>>((opts, validator)
-                => opts.Events = new() { OnValidatePrincipal = validator.ValidateAsync });
-
-        return services;
-    }
 }
