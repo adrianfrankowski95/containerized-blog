@@ -49,6 +49,7 @@ public class UpdateEmailModel : PageModel
 
     public class InputModel
     {
+        [Display(Name = "Current email")]
         public string Email { get; set; }
 
         [BindProperty]
@@ -159,7 +160,7 @@ public class UpdateEmailModel : PageModel
             return LocalRedirect(returnUrl);
         }
 
-        ModelState.AddModelError(string.Empty, "The New email and Old email must be different.");
+        ModelState.AddModelError(string.Empty, "The New email and Current email must be different.");
         return Page();
     }
 }

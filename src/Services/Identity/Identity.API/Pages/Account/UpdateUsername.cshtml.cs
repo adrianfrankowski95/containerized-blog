@@ -30,6 +30,7 @@ public class UpdateUsernameModel : PageModel
 
     public class InputModel
     {
+        [Display(Name = "Current username")]
         public string Username { get; set; }
 
         [BindProperty]
@@ -123,7 +124,7 @@ public class UpdateUsernameModel : PageModel
             return LocalRedirect(returnUrl);
         }
 
-        ModelState.AddModelError(string.Empty, "The New username and Old username must be different.");
+        ModelState.AddModelError(string.Empty, "The New username and Current username must be different.");
         return Page();
     }
 }
