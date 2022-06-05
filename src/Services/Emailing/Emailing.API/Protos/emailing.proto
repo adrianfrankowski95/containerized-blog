@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+option csharp_namespace = "Blog.Services.Emailing.Emailing.API.Protos";
+
+package Emailing.API;
+
+service Emailing {
+    rpc SendEmailConfirmationEmail(SendEmailConfirmationEmailRequest) returns (SendEmailResponse) {};
+    rpc SendPasswordResetEmail(SendPasswordResetEmailRequest) returns (SendEmailResponse) {};
+    rpc SendNewPostEmail(SendNewPostEmailRequest) returns (SendEmailResponse) {};
+    rpc SendCustomEmail(SendCustomEmailRequest) returns (SendEmailResponse) {};
+}
+
+message SendEmailResponse {
+    bool success = 1;
+}
+
+message SendEmailConfirmationEmailRequest {
+    Recipient recipient = 1;
+    string callbackUrl = 2;
+}
+
+message SendPasswordResetEmailRequest {
+    Recipient recipient = 1;
+    string callbackUrl = 2;
+}
+
+message SendNewPostEmailRequest {
+    repeated Recipient recipients = 1;
+    string postId = 2;
+    string postTitle = 3;
+    string postCategory = 4;
+    string postDescription = 5;
+    string postAuthorName = 6;
+    optional string headerImgUrl = 7;
+}
+
+message SendCustomEmailRequest {
+    repeated Recipient recipients = 1;
+    string title = 2;
+    string body = 3;
+    optional string attachment = 4;
+}
+
+message Recipient {
+    string emailAddress = 1;
+}

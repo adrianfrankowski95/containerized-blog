@@ -2,7 +2,6 @@ using Blog.Services.Blogging.Infrastructure;
 using Blog.Services.Blogging.API.Application;
 using Blog.Services.Blogging.API.Controllers;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Blog.Services.Blogging.API.Application.Models;
 using Microsoft.IdentityModel.Tokens;
 using Blog.Services.Blogging.API.Infrastructure.Services;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -11,6 +10,7 @@ using NodaTime;
 using Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate;
 using SysTime = Blog.Services.Blogging.API.Infrastructure.Services.SysTime;
 using Blog.Services.Blogging.API.Options;
+using Blog.Services.Blogging.API.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
