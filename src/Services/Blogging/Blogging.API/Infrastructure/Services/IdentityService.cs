@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using Blog.Services.Blogging.API.Application.Models;
+using Blog.Services.Blogging.API.Models;
 using Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate;
 
 namespace Blog.Services.Blogging.API.Infrastructure.Services;
