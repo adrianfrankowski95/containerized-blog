@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-option csharp_namespace = "Blog.Services.Emailing.Emailing.API.Protos";
+option csharp_namespace = "Blog.Services.Emailing.Emailing.API";
 
 package Emailing.API;
 
@@ -31,8 +31,9 @@ message SendNewPostEmailRequest {
     string postTitle = 3;
     string postCategory = 4;
     string postDescription = 5;
-    string postAuthorName = 6;
-    optional string headerImgUrl = 7;
+    string authorId = 6;
+    string authorName = 7;
+    optional string headerImgUrl = 8;
 }
 
 message SendCustomEmailRequest {
@@ -44,4 +45,5 @@ message SendCustomEmailRequest {
 
 message Recipient {
     string emailAddress = 1;
+    string name = 2;
 }
