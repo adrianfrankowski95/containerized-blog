@@ -1,0 +1,63 @@
+services:
+  
+  rabbitmq:
+    image: masstransit/rabbitmq:latest
+
+  serviceregisterdb:
+    image: redis:alpine
+
+  identitydb:
+    image: postgres:alpine
+
+  bloggingdb:
+    image: postgres:alpine
+
+  commentsdb:
+    image: postgres:alpine
+
+  eventstoredb:
+    image: postgres:alpine
+
+  identity-api:
+    image: blog/identity-api
+    build:
+      context: .
+      dockerfile: Services/Identity/Identity.API
+    depends_on:
+      - rabbitmq
+      - identitydb
+
+  blogging-api:
+    image: blog/blogging-api
+    build:
+      context: .
+      dockerfile: Services/Blogging/Blogging.API
+    depends_on:
+      - rabbitmq
+      - bloggingdb
+
+  comments-api:
+    image: blog/comments-api
+    build:
+      context: .
+      dockerfile: Services/Comments/Comments.API
+    depends_on:
+      - rabbitmq
+      - commentsdb
+
+  emailing-api:
+    image: blog/emailing-api
+    build:
+      context: .
+      dockerfile: Services/Emailing/Emailing.API
+    depends_on:
+      - rabbitmq
+
+  eventstore-api:
+    image: blog/eventstore-api
+    build:
+      context: .
+      dockerfile: Services/EventStore/EventStore.API
+    depends_on:
+      - rabbitmq
+      - eventstoredb

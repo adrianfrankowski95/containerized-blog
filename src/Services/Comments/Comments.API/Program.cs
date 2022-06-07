@@ -1,4 +1,6 @@
 var builder = WebApplication.CreateBuilder(args);
+var env = builder.Environment;
+var config = GetConfiguration(env);
 
 // Add services to the container.
 
@@ -10,7 +12,7 @@ builder.Services.AddSwaggerGen();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+if (env.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
@@ -23,3 +25,12 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+
+static IConfiguration GetConfiguration(IWebHostEnvironment env)
+    => new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: false, reloadOnChange: true)
+                .AddEnvironmentVariables()
+                .Build();

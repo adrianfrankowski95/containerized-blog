@@ -13,9 +13,8 @@ using OpenIddict.Server;
 using Quartz;
 
 var builder = WebApplication.CreateBuilder(args);
-
-bool isDevelopment = builder.Environment.IsDevelopment();
-var config = GetConfiguration(isDevelopment);
+var env = builder.Environment;
+var config = GetConfiguration(env);
 
 var services = builder.Services;
 
@@ -25,7 +24,7 @@ services
     .AddRazorPages();
 
 services
-    .AddAuthControllers(isDevelopment)
+    .AddAuthControllers(env.IsDevelopment())
     //.AddCustomJwtAuthentication(config)
     .AddConfiguredQuartz()
     .AddSigningCertificatesManagement(config)
@@ -39,7 +38,7 @@ services
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (isDevelopment)
+if (env.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
@@ -54,15 +53,14 @@ app.MapControllers();
 
 app.Run();
 
-static IConfiguration GetConfiguration(bool isDevelopment)
-{
-    string configFileName = isDevelopment ? "appsettings.Development.json" : "appsettings.json";
-
-    return new ConfigurationBuilder()
+static IConfiguration GetConfiguration(IWebHostEnvironment env)
+    => new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile(configFileName, optional: false, reloadOnChange: true)
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: false, reloadOnChange: true)
+                .AddEnvironmentVariables()
                 .Build();
-}
+
 static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddCustomJwtAuthentication(this IServiceCollection services, IConfiguration config)
