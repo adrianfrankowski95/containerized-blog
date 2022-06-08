@@ -47,7 +47,7 @@ static class ServiceCollectionExtensions
     {
         services.AddMassTransit(x =>
         {
-            x.AddConsumer<EmailConfirmationRequestedEventConsumer, EmailConfirmationRequestedEventConsumerDefinition>();
+            x.AddConsumersFromNamespaceContaining<UserRegisteredEventConsumer>();
 
             x.UsingRabbitMq((context, cfg) =>
             {
@@ -59,7 +59,12 @@ static class ServiceCollectionExtensions
                     opts.Password(rabbitMqConfig.Password);
                 });
 
-                cfg.ConfigureEndpoints(context);
+                cfg.ReceiveEndpoint(RabbitMqConfig.ReceiveEndpoint, opts =>
+                {
+                    opts.UseInMemoryOutbox();
+                    opts.UseMessageRetry(r => r.Intervals(100, 200, 500, 800, 1000));
+                    opts.ConfigureConsumers(context);
+                });
             });
         });
 
