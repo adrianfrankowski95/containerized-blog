@@ -1,12 +1,20 @@
+using Blog.Services.Emailing.API.Config;
+using Blog.Services.Emailing.API.Consumers;
+using MassTransit;
+
 var builder = WebApplication.CreateBuilder(args);
 var env = builder.Environment;
 var config = GetConfiguration(env);
 
+var services = builder.Services;
+
 // Add services to the container.
-builder.Services.AddControllers();
+services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+services.AddEndpointsApiExplorer();
+services.AddSwaggerGen();
+
+services.AddOptions<UrlsConfig>().Bind(config.GetRequiredSection(UrlsConfig.Section));
 
 var app = builder.Build();
 
@@ -29,6 +37,40 @@ static IConfiguration GetConfiguration(IWebHostEnvironment env)
     => new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: false, reloadOnChange: true)
+                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true, reloadOnChange: true)
                 .AddEnvironmentVariables()
                 .Build();
+
+static class ServiceCollectionExtensions
+{
+    public static IServiceCollection AddMassTransitRabbitMqBus(this IServiceCollection services, IConfiguration config)
+    {
+        services.AddMassTransit(x =>
+        {
+            x.AddConsumer<EmailConfirmationRequestedEventConsumer, EmailConfirmationRequestedEventConsumerDefinition>();
+
+            x.UsingRabbitMq((context, cfg) =>
+            {
+                var rabbitMqConfig = config.GetValue<RabbitMqConfig>(RabbitMqConfig.Section);
+
+                cfg.Host(rabbitMqConfig.Host, rabbitMqConfig.VirtualHost, opts =>
+                {
+                    opts.Username(rabbitMqConfig.Username);
+                    opts.Password(rabbitMqConfig.Password);
+                });
+
+                cfg.ConfigureEndpoints(context);
+            });
+        });
+
+        services.AddOptions<MassTransitHostOptions>()
+            .Configure(opts =>
+            {
+                opts.WaitUntilStarted = true;
+                opts.StartTimeout = TimeSpan.FromSeconds(10);
+                opts.StopTimeout = TimeSpan.FromSeconds(30);
+            });
+
+        return services;
+    }
+}
