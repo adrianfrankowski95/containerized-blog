@@ -1,5 +1,7 @@
+using Blog.Services.Emailing.API;
 using Blog.Services.Emailing.API.Config;
 using Blog.Services.Emailing.API.Consumers;
+using Blog.Services.Emailing.API.Events;
 using MassTransit;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -28,6 +30,16 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.Lifetime.ApplicationStarted.Register(async () =>
+{
+    IPublishEndpoint publishEndpoint = app.Services.GetRequiredService<IPublishEndpoint>();
+
+    await publishEndpoint.Publish<ServiceInstanceStartedEvent>(
+            new ServiceInstanceStartedEvent(
+                ServiceType: "emailing-api",
+                ServiceBaseUrls: app.Urls)).ConfigureAwait(false);
+});
 
 app.Run();
 
@@ -59,7 +71,6 @@ static class ServiceCollectionExtensions
 
                 cfg.ReceiveEndpoint(RabbitMqConfig.ReceiveEndpoint, opts =>
                 {
-                    opts.UseInMemoryOutbox();
                     opts.UseMessageRetry(r => r.Intervals(100, 200, 500, 800, 1000));
                     opts.ConfigureConsumers(context);
                 });
@@ -77,3 +88,4 @@ static class ServiceCollectionExtensions
         return services;
     }
 }
+
