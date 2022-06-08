@@ -36,11 +36,13 @@ app.Lifetime.ApplicationStarted.Register(async () =>
     IPublishEndpoint publishEndpoint = app.Services.GetRequiredService<IPublishEndpoint>();
 
     await publishEndpoint.Publish<ServiceInstanceStartedEvent>(
-        new { ServiceType = "emailing-api", ServiceBaseUrls = app.Urls })
-        .ConfigureAwait(false);
+            new ServiceInstanceStartedEvent(
+                ServiceType: "emailing-api",
+                ServiceBaseUrls: app.Urls)).ConfigureAwait(false);
 });
 
 app.Run();
+
 
 static IConfiguration GetConfiguration(IWebHostEnvironment env)
     => new ConfigurationBuilder()
