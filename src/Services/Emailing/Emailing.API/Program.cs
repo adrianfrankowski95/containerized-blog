@@ -14,8 +14,6 @@ services.AddControllers();
 services.AddEndpointsApiExplorer();
 services.AddSwaggerGen();
 
-services.AddOptions<UrlsConfig>().Bind(config.GetRequiredSection(UrlsConfig.Section));
-
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
