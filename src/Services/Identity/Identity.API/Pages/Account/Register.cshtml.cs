@@ -7,6 +7,8 @@ using System.Text.Encodings.Web;
 using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Models;
 using Blog.Services.Identity.API.Services;
+using Blog.Services.Messaging.Events;
+using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
@@ -20,24 +22,24 @@ public class RegisterModel : PageModel
     private readonly UserManager<User> _userManager;
     private readonly ISignInManager<User> _signInManager;
     private readonly IOptionsMonitor<EmailOptions> _emailOptions;
+    private readonly IPublishEndpoint _publishEndpoint;
     private readonly ISysTime _sysTime;
     private readonly ILogger<RegisterModel> _logger;
-    private readonly IEmailSender _emailSender;
 
     public RegisterModel(
         UserManager<User> userManager,
         ISignInManager<User> signInManager,
         IOptionsMonitor<EmailOptions> emailOptions,
+        IPublishEndpoint publishEndpoint,
         ISysTime sysTime,
-        ILogger<RegisterModel> logger,
-        IEmailSender emailSender)
+        ILogger<RegisterModel> logger)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _emailOptions = emailOptions;
+        _publishEndpoint = publishEndpoint;
         _sysTime = sysTime;
         _logger = logger;
-        _emailSender = emailSender;
     }
 
 
@@ -120,9 +122,15 @@ public class RegisterModel : PageModel
                 values: new { userId = user.Id, code, returnUrl },
                 protocol: Request.Scheme);
 
-            await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
-                $"Please confirm your email by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>." +
-                $"<br><br>This link will expire at {_sysTime.Now.Plus(Duration.FromTimeSpan(_emailOptions.CurrentValue.EmailConfirmationCodeValidityPeriod)).ToString("dddd, dd mmmm yyyy HH:mm:ss", DateTimeFormatInfo.InvariantInfo)}.");
+            await _publishEndpoint.Publish<UserRegisteredEvent>(
+                    new(Username: user.FullName,
+                        EmailAddress: user.EmailAddress,
+                        CallbackUrl: callbackUrl,
+                        UrlValidUntil: _sysTime.Now.Plus(Duration.FromTimeSpan(_emailOptions.CurrentValue.EmailConfirmationCodeValidityPeriod))));
+
+            // await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
+            //     $"Please confirm your email by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>." +
+            //     $"<br><br>This link will expire at {_sysTime.Now.Plus(Duration.FromTimeSpan(_emailOptions.CurrentValue.EmailConfirmationCodeValidityPeriod)).ToString("dddd, dd mmmm yyyy HH:mm:ss", DateTimeFormatInfo.InvariantInfo)}.");
 
             if (_emailOptions.CurrentValue.RequireConfirmed)
             {

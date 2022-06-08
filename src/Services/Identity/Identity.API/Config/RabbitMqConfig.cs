@@ -1,4 +1,4 @@
-namespace Blog.Services.Emailing.API.Config;
+namespace Blog.Services.Identity.API.Config;
 
 public class RabbitMqConfig
 {
@@ -8,5 +8,5 @@ public class RabbitMqConfig
     public string Username { get; set; }
     public string Password { get; set; }
 
-    public const string QueueName = "emailing-api";
+    public const string QueueName = "identity-api";
 }

@@ -1,7 +1,10 @@
+using Blog.Services.Identity.API.Config;
 using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Infrastructure;
 using Blog.Services.Identity.API.Models;
 using Blog.Services.Identity.API.Services;
+using Blog.Services.Messaging.Events;
+using MassTransit;
 
 var builder = WebApplication.CreateBuilder(args);
 var env = builder.Environment;
@@ -54,3 +57,59 @@ static IConfiguration GetConfiguration(IWebHostEnvironment env)
                 .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true, reloadOnChange: true)
                 .AddEnvironmentVariables()
                 .Build();
+
+internal static class ServiceCollectionExtensions
+{
+    public static IServiceCollection AddMassTransitRabbitMqBus(this IServiceCollection services, IConfiguration config)
+    {
+        services.AddMassTransit(x =>
+        {
+            x.UsingRabbitMq((context, cfg) =>
+            {
+                var rabbitMqConfig = config.GetValue<RabbitMqConfig>(RabbitMqConfig.Section);
+
+                cfg.Host(rabbitMqConfig.Host, rabbitMqConfig.VirtualHost, opts =>
+                {
+                    opts.Username(rabbitMqConfig.Username);
+                    opts.Password(rabbitMqConfig.Password);
+                });
+
+                cfg.ReceiveEndpoint(RabbitMqConfig.QueueName, opts =>
+                {
+                    opts.UseMessageRetry(r => r.Intervals(100, 200, 500, 800, 1000));
+                });
+            });
+        });
+
+        services.AddOptions<MassTransitHostOptions>()
+            .Configure(opts =>
+            {
+                opts.WaitUntilStarted = true;
+                opts.StartTimeout = TimeSpan.FromSeconds(10);
+                opts.StopTimeout = TimeSpan.FromSeconds(30);
+            });
+
+        return services;
+    }
+}
+
+internal static class WebApplicationExtensions
+{
+    public static void RegisterLifetimeEvents(this WebApplication app)
+    {
+        IBus bus = app.Services.GetRequiredService<IBus>();
+        string serviceType = "identity-api";
+
+        app.Lifetime.ApplicationStarted.Register(async () =>
+        {
+            await bus.Publish<ServiceInstanceStartedEvent>(new(ServiceType: serviceType, ServiceBaseUrls: app.Urls))
+                .ConfigureAwait(false);
+        });
+
+        app.Lifetime.ApplicationStopped.Register(async () =>
+        {
+            await bus.Publish<ServiceInstanceStoppedEvent>(new(ServiceType: serviceType, ServiceBaseUrls: app.Urls))
+            .ConfigureAwait(false);
+        });
+    }
+}

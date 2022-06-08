@@ -39,7 +39,7 @@ public class EfUserRepository<TUser, TRole> : IUserRepository<TUser>
     public async Task<TUser?> FindByEmailAsync(string email)
     {
         return await _users
-            .SingleOrDefaultAsync(x => x.Email.Equals(email))
+            .SingleOrDefaultAsync(x => x.EmailAddress.Equals(email))
             .ConfigureAwait(false);
     }
 

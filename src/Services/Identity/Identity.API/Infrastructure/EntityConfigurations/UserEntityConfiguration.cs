@@ -37,12 +37,12 @@ public class UserEntityConfiguration<TUser> : IEntityTypeConfiguration<TUser> wh
             .Ignore(x => x.FullName);
 
         builder
-            .Property(x => x.Email)
+            .Property(x => x.EmailAddress)
             .HasColumnType("varchar(50)")
             .IsRequired();
 
         builder
-            .HasIndex(x => x.Email)
+            .HasIndex(x => x.EmailAddress)
             .HasMethod("hash")
             .IsUnique();
 

@@ -25,7 +25,7 @@ public class UserClaimsPrincipalFactory<TUser> : IUserClaimsPrincipalFactory<TUs
 
         identity.AddClaim(new Claim(IdentityConstants.ClaimTypes.Id, user.Id.ToString()));
         identity.AddClaim(new Claim(IdentityConstants.ClaimTypes.Username, user.Username.ToString()));
-        identity.AddClaim(new Claim(IdentityConstants.ClaimTypes.Email, user.Email.ToString()));
+        identity.AddClaim(new Claim(IdentityConstants.ClaimTypes.Email, user.EmailAddress.ToString()));
         identity.AddClaim(new Claim(IdentityConstants.ClaimTypes.EmailConfirmed, user.EmailConfirmed.ToString()));
         identity.AddClaim(new Claim(IdentityConstants.ClaimTypes.Role, user.Role.ToString()));
         identity.AddClaim(new Claim(IdentityConstants.ClaimTypes.SecurityStamp, user.SecurityStamp.ToString()));

@@ -19,7 +19,7 @@ public class EmailValidator<TUser> : IUserAttributeValidator<TUser> where TUser 
         if (user is null)
             throw new ArgumentNullException(nameof(user));
 
-        var email = user.Email;
+        var email = user.EmailAddress;
 
         if (string.IsNullOrWhiteSpace(email))
         {

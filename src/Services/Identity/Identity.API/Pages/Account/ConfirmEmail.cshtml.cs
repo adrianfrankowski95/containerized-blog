@@ -25,7 +25,7 @@ public class ConfirmEmailModel : PageModel
 
     private void SaveEmail(User user)
     {
-        TempData["Email"] = user.Email;
+        TempData["Email"] = user.EmailAddress;
     }
 
     public async Task<IActionResult> OnGetAsync(Guid userId, Guid code)
@@ -60,7 +60,7 @@ public class ConfirmEmailModel : PageModel
 
                 if (result.Errors.Any(x => x is UsernameValidationError))
                 {
-                    _logger.LogWarning("User username does not meet validation requirements anymore.");       
+                    _logger.LogWarning("User username does not meet validation requirements anymore.");
                     return RedirectToPage("./UpdateUsername", returnRoute);
                 }
                 else if (result.Errors.Any(x => x is EmailValidationError))

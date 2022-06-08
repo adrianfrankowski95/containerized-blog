@@ -1,7 +1,6 @@
-using Blog.Services.Emailing.API;
 using Blog.Services.Emailing.API.Config;
 using Blog.Services.Emailing.API.Consumers;
-using Blog.Services.Emailing.API.Events;
+using Blog.Services.Messaging.Events;
 using MassTransit;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -31,14 +30,7 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.Lifetime.ApplicationStarted.Register(async () =>
-{
-    IPublishEndpoint publishEndpoint = app.Services.GetRequiredService<IPublishEndpoint>();
-
-    await publishEndpoint.Publish(new ServiceInstanceStartedEvent(
-                ServiceType: "emailing-api", ServiceBaseUrls: app.Urls))
-                .ConfigureAwait(false);
-});
+app.RegisterLifetimeEvents();
 
 app.Run();
 
@@ -51,7 +43,7 @@ static IConfiguration GetConfiguration(IWebHostEnvironment env)
                 .AddEnvironmentVariables()
                 .Build();
 
-static class ServiceCollectionExtensions
+internal static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddMassTransitRabbitMqBus(this IServiceCollection services, IConfiguration config)
     {
@@ -69,7 +61,7 @@ static class ServiceCollectionExtensions
                     opts.Password(rabbitMqConfig.Password);
                 });
 
-                cfg.ReceiveEndpoint(RabbitMqConfig.ReceiveEndpoint, opts =>
+                cfg.ReceiveEndpoint(RabbitMqConfig.QueueName, opts =>
                 {
                     opts.UseMessageRetry(r => r.Intervals(100, 200, 500, 800, 1000));
                     opts.ConfigureConsumers(context);
@@ -89,3 +81,23 @@ static class ServiceCollectionExtensions
     }
 }
 
+internal static class WebApplicationExtensions
+{
+    public static void RegisterLifetimeEvents(this WebApplication app)
+    {
+        IBus bus = app.Services.GetRequiredService<IBus>();
+        string serviceType = "emailing-api";
+
+        app.Lifetime.ApplicationStarted.Register(async () =>
+        {
+            await bus.Publish<ServiceInstanceStartedEvent>(new(ServiceType: serviceType, ServiceBaseUrls: app.Urls))
+                .ConfigureAwait(false);
+        });
+
+        app.Lifetime.ApplicationStopped.Register(async () =>
+        {
+            await bus.Publish<ServiceInstanceStoppedEvent>(new(ServiceType: serviceType, ServiceBaseUrls: app.Urls))
+            .ConfigureAwait(false);
+        });
+    }
+}
