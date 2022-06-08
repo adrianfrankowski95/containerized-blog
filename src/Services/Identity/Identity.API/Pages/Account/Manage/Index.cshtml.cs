@@ -68,7 +68,7 @@ public class IndexModel : PageModel
 
     private void SaveEmail(User user)
     {
-        TempData["Email"] = user.Email;
+        TempData["Email"] = user.EmailAddress;
     }
 
     public async Task<IActionResult> OnGetAsync()

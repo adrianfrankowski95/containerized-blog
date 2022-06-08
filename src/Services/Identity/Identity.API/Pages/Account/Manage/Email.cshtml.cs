@@ -68,8 +68,8 @@ public class EmailModel : PageModel
     {
         Input = new InputModel
         {
-            Email = user.Email,
-            NewEmail = user.Email
+            Email = user.EmailAddress,
+            NewEmail = user.EmailAddress
         };
 
         IsEmailConfirmed = !_userManager.IsConfirmingEmail(user);
@@ -77,7 +77,7 @@ public class EmailModel : PageModel
 
     private void SaveEmail(User user)
     {
-        TempData["Email"] = user.Email;
+        TempData["Email"] = user.EmailAddress;
     }
 
     public async Task<IActionResult> OnGetAsync()
@@ -104,7 +104,7 @@ public class EmailModel : PageModel
             return Page();
         }
 
-        if (!string.Equals(Input.NewEmail, user.Email, StringComparison.OrdinalIgnoreCase))
+        if (!string.Equals(Input.NewEmail, user.EmailAddress, StringComparison.OrdinalIgnoreCase))
         {
             var result = await _userManager.UpdateEmailAsync(user, Input.NewEmail);
             if (!result.Succeeded)

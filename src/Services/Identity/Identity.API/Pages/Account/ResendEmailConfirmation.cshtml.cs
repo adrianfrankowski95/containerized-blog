@@ -9,6 +9,8 @@ using System.Text.Encodings.Web;
 using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Models;
 using Blog.Services.Identity.API.Services;
+using Blog.Services.Messaging.Events;
+using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -23,17 +25,17 @@ public class ResendEmailConfirmationModel : PageModel
 {
     private readonly UserManager<User> _userManager;
     private readonly IOptionsMonitor<EmailOptions> _emailOptions;
+    private readonly IPublishEndpoint _publishEndpoint;
     private readonly ISysTime _sysTime;
-    private readonly IEmailSender _emailSender;
 
     public ResendEmailConfirmationModel(
         UserManager<User> userManager,
         IOptionsMonitor<EmailOptions> emailOptions,
-        ISysTime sysTime,
-        IEmailSender emailSender)
+        IPublishEndpoint publishEndpoint,
+        ISysTime sysTime)
     {
         _userManager = userManager;
-        _emailSender = emailSender;
+        _publishEndpoint = publishEndpoint;
         _emailOptions = emailOptions;
         _sysTime = sysTime;
     }
@@ -79,11 +81,18 @@ public class ResendEmailConfirmationModel : PageModel
                 pageHandler: null,
                 values: new { userId = user.Id, code },
                 protocol: Request.Scheme);
-            await _emailSender.SendEmailAsync(
-                Input.Email,
-                "Confirm your email",
-                $"Please confirm your email by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>." +
-                $"<br><br>This link will expire at {_sysTime.Now.Plus(Duration.FromTimeSpan(_emailOptions.CurrentValue.EmailConfirmationCodeValidityPeriod)).ToString("dddd, dd mmmm yyyy HH:mm:ss", DateTimeFormatInfo.InvariantInfo)}.");
+
+            await _publishEndpoint.Publish<UserEmailConfirmationRequestedEvent>(
+                    new(Username: user.FullName,
+                        EmailAddress: user.EmailAddress,
+                        CallbackUrl: callbackUrl,
+                        UrlValidUntil: _sysTime.Now.Plus(Duration.FromTimeSpan(_emailOptions.CurrentValue.EmailConfirmationCodeValidityPeriod))));
+
+            // await _emailSender.SendEmailAsync(
+            //     Input.Email,
+            //     "Confirm your email",
+            //     $"Please confirm your email by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>." +
+            //     $"<br><br>This link will expire at {_sysTime.Now.Plus(Duration.FromTimeSpan(_emailOptions.CurrentValue.EmailConfirmationCodeValidityPeriod)).ToString("dddd, dd mmmm yyyy HH:mm:ss", DateTimeFormatInfo.InvariantInfo)}.");
         }
 
         ModelState.AddModelError(string.Empty, "Verification email sent. Please check your email.");

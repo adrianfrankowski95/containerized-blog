@@ -114,7 +114,7 @@ public class UpdateEmailModel : PageModel
         if (user is null)
             return NotFound($"Unable to load user with email '{email}'.");
 
-        if (!string.Equals(Input.NewEmail, user.Email, StringComparison.OrdinalIgnoreCase))
+        if (!string.Equals(Input.NewEmail, user.EmailAddress, StringComparison.OrdinalIgnoreCase))
         {
             var result = await _userManager.UpdateEmailAsync(user, Input.NewEmail);
             if (!result.Succeeded)

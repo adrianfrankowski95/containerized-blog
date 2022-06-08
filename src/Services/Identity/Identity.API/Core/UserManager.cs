@@ -234,10 +234,10 @@ public class UserManager<TUser> where TUser : User
         if (string.IsNullOrWhiteSpace(newEmail))
             return Task.FromResult(IdentityResult.Fail(EmailValidationError.MissingEmail));
 
-        if (string.Equals(user.Email, newEmail, StringComparison.OrdinalIgnoreCase))
+        if (string.Equals(user.EmailAddress, newEmail, StringComparison.OrdinalIgnoreCase))
             return Task.FromResult(IdentityResult.Fail(EmailValidationError.NewAndOldEmailsAreEqual));
 
-        user.Email = newEmail;
+        user.EmailAddress = newEmail;
 
         return GenerateEmailConfirmationAsync(user);
     }

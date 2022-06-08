@@ -12,7 +12,7 @@ public class User
     }
 
     public User(
-        NonEmptyString email,
+        NonEmptyString emailAddress,
         NonEmptyString username,
         NonEmptyString firstName,
         NonEmptyString lastName,
@@ -21,7 +21,7 @@ public class User
     {
         Id = Guid.NewGuid();
 
-        Email = email;
+        EmailAddress = emailAddress;
         Username = username;
         FirstName = firstName;
         LastName = lastName;
@@ -30,7 +30,7 @@ public class User
     }
 
     public Guid Id { get; set; }
-    public NonEmptyString Email { get; set; }
+    public NonEmptyString EmailAddress { get; set; }
     public bool EmailConfirmed { get; set; }
     public NonEmptyString Username { get; set; }
     public NonEmptyString FirstName { get; set; }

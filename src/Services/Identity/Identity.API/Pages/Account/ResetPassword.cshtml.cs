@@ -51,7 +51,7 @@ public class ResetPasswordModel : PageModel
 
     private void SaveEmail(User user)
     {
-        TempData["Email"] = user.Email;
+        TempData["Email"] = user.EmailAddress;
     }
 
     private void LoadInput(string code)
