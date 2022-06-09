@@ -3,13 +3,12 @@
 #nullable disable
 
 using System.ComponentModel.DataAnnotations;
-using System.Globalization;
 using System.Text;
-using System.Text.Encodings.Web;
 using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Models;
 using Blog.Services.Identity.API.Services;
-using Blog.Services.Messaging.Events;
+using Blog.Services.Messaging.Requests;
+using Blog.Services.Messaging.Responses;
 using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -25,25 +24,26 @@ public class ResendEmailConfirmationModel : PageModel
 {
     private readonly UserManager<User> _userManager;
     private readonly IOptionsMonitor<EmailOptions> _emailOptions;
-    private readonly IPublishEndpoint _publishEndpoint;
+    private readonly IRequestClient<SendEmailConfirmationRequest> _sender;
     private readonly ISysTime _sysTime;
 
     public ResendEmailConfirmationModel(
         UserManager<User> userManager,
         IOptionsMonitor<EmailOptions> emailOptions,
-        IPublishEndpoint publishEndpoint,
+        IRequestClient<SendEmailConfirmationRequest> sender,
         ISysTime sysTime)
     {
         _userManager = userManager;
-        _publishEndpoint = publishEndpoint;
+        _sender = sender;
         _emailOptions = emailOptions;
         _sysTime = sysTime;
     }
 
+    [TempData]
+    public string StatusMessage { get; set; }
 
     [BindProperty]
     public InputModel Input { get; set; }
-
 
     public class InputModel
     {
@@ -82,11 +82,17 @@ public class ResendEmailConfirmationModel : PageModel
                 values: new { userId = user.Id, code },
                 protocol: Request.Scheme);
 
-            await _publishEndpoint.Publish<UserEmailConfirmationRequestedEvent>(
+            var response = await _sender.GetResponse<SendEmailConfirmationResponse>(
                     new(Username: user.FullName,
                         EmailAddress: user.EmailAddress,
                         CallbackUrl: callbackUrl,
                         UrlValidUntil: _sysTime.Now.Plus(Duration.FromTimeSpan(_emailOptions.CurrentValue.EmailConfirmationCodeValidityPeriod))));
+
+            if (!response.Message.Success)
+            {
+                StatusMessage = "Error sending an email. Please try again later.";
+                return RedirectToPage();
+            }
 
             // await _emailSender.SendEmailAsync(
             //     Input.Email,

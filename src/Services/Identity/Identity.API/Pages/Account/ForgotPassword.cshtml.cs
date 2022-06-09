@@ -11,6 +11,8 @@ using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Models;
 using Blog.Services.Identity.API.Services;
 using Blog.Services.Messaging.Events;
+using Blog.Services.Messaging.Requests;
+using Blog.Services.Messaging.Responses;
 using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -24,26 +26,26 @@ public class ForgotPasswordModel : PageModel
 {
     private readonly UserManager<User> _userManager;
     private readonly IOptionsMonitor<PasswordOptions> _passwordOptions;
-    private readonly IPublishEndpoint _publishEndpoint;
+    private readonly IRequestClient<SendPasswordResetRequest> _sender;
     private readonly ILogger<ForgotPasswordModel> _logger;
     private readonly ISysTime _sysTime;
-
-
 
     public ForgotPasswordModel(
         UserManager<User> userManager,
         IOptionsMonitor<PasswordOptions> passwordOptions,
-        IPublishEndpoint publishEndpoint,
+        IRequestClient<SendPasswordResetRequest> sender,
         ILogger<ForgotPasswordModel> logger,
         ISysTime sysTime)
     {
         _userManager = userManager;
-        _publishEndpoint = publishEndpoint;
+        _sender = sender;
         _passwordOptions = passwordOptions;
         _logger = logger;
         _sysTime = sysTime;
     }
 
+    [TempData]
+    public string StatusMessage { get; set; }
 
     [BindProperty]
     public InputModel Input { get; set; }
@@ -79,11 +81,17 @@ public class ForgotPasswordModel : PageModel
                     values: new { code },
                     protocol: Request.Scheme);
 
-                await _publishEndpoint.Publish<UserPasswordResetEvent>(
+                var response = await _sender.GetResponse<SendPasswordResetResponse>(
                     new(Username: user.FullName,
                         EmailAddress: user.EmailAddress,
                         CallbackUrl: callbackUrl,
                         UrlValidUntil: _sysTime.Now.Plus(Duration.FromTimeSpan(_passwordOptions.CurrentValue.PasswordResetCodeValidityPeriod))));
+
+                if (!response.Message.Success)
+                {
+                    StatusMessage = "Error sending an email. Please try again later.";
+                    return RedirectToPage();
+                }
 
                 // await _emailSender.SendEmailAsync(
                 //     Input.Email,
