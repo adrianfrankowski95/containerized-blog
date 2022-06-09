@@ -1,5 +1,5 @@
 using Blog.Services.Emailing.API.Config;
-using Blog.Services.Emailing.API.Consumers;
+using Blog.Services.Emailing.API.Messaging.Consumers;
 using Blog.Services.Messaging.Events;
 using MassTransit;
 
@@ -49,7 +49,7 @@ internal static class ServiceCollectionExtensions
     {
         services.AddMassTransit(x =>
         {
-            x.AddConsumersFromNamespaceContaining<UserRegisteredEventConsumer>();
+            x.AddConsumersFromNamespaceContaining<SendEmailConfirmationRequestConsumer>();
 
             x.UsingRabbitMq((context, cfg) =>
             {

@@ -1,0 +1,11 @@
+﻿@page
+@namespace Blog.Services.Identity.API.Pages.Account
+@model EmailConfirmationSendErrorModel
+@{
+    ViewData["Title"] = "Email confirmation send error";
+}
+
+<h1>@ViewData["Title"]</h1>
+<p>
+    There was an error sending your email confirmation. Please <a asp-page="./ResendEmailConfirmation">click here to generate a new one</a>.
+</p>

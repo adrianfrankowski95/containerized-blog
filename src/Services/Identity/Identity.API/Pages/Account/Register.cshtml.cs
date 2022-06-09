@@ -7,7 +7,8 @@ using System.Text.Encodings.Web;
 using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Models;
 using Blog.Services.Identity.API.Services;
-using Blog.Services.Messaging.Events;
+using Blog.Services.Messaging.Requests;
+using Blog.Services.Messaging.Responses;
 using MassTransit;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -22,7 +23,7 @@ public class RegisterModel : PageModel
     private readonly UserManager<User> _userManager;
     private readonly ISignInManager<User> _signInManager;
     private readonly IOptionsMonitor<EmailOptions> _emailOptions;
-    private readonly IPublishEndpoint _publishEndpoint;
+    private readonly IRequestClient<SendEmailConfirmationRequest> _sender;
     private readonly ISysTime _sysTime;
     private readonly ILogger<RegisterModel> _logger;
 
@@ -30,18 +31,17 @@ public class RegisterModel : PageModel
         UserManager<User> userManager,
         ISignInManager<User> signInManager,
         IOptionsMonitor<EmailOptions> emailOptions,
-        IPublishEndpoint publishEndpoint,
+        IRequestClient<SendEmailConfirmationRequest> sender,
         ISysTime sysTime,
         ILogger<RegisterModel> logger)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _emailOptions = emailOptions;
-        _publishEndpoint = publishEndpoint;
+        _sender = sender;
         _sysTime = sysTime;
         _logger = logger;
     }
-
 
     [BindProperty]
     public InputModel Input { get; set; }
@@ -122,11 +122,16 @@ public class RegisterModel : PageModel
                 values: new { userId = user.Id, code, returnUrl },
                 protocol: Request.Scheme);
 
-            await _publishEndpoint.Publish<UserRegisteredEvent>(
+            var response = await _sender.GetResponse<SendEmailConfirmationResponse>(
                     new(Username: user.FullName,
                         EmailAddress: user.EmailAddress,
                         CallbackUrl: callbackUrl,
                         UrlValidUntil: _sysTime.Now.Plus(Duration.FromTimeSpan(_emailOptions.CurrentValue.EmailConfirmationCodeValidityPeriod))));
+
+            if (!response.Message.Success)
+            {
+                return RedirectToPage("./EmailConfirmationSendError");
+            }
 
             // await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
             //     $"Please confirm your email by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>." +

@@ -4,6 +4,7 @@ using Blog.Services.Identity.API.Infrastructure;
 using Blog.Services.Identity.API.Models;
 using Blog.Services.Identity.API.Services;
 using Blog.Services.Messaging.Events;
+using Blog.Services.Messaging.Requests;
 using MassTransit;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,19 +12,13 @@ var env = builder.Environment;
 var config = GetConfiguration(env);
 
 // Add services to the container.
-builder.Services.AddRazorPages().AddCookieTempDataProvider(opts =>
-{
-    opts.Cookie.HttpOnly = true;
-    opts.Cookie.IsEssential = true;
-    opts.Cookie.SameSite = SameSiteMode.Strict;
-    opts.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-});
+builder.Services.AddRazorPages();
 
 builder.Services
     .AddCustomIdentityInfrastructure<User, Role>(config)
     .AddCustomIdentityCore<User>()
     .AddCustomServices()
-    .AddControllers();
+    .AddMassTransitRabbitMqBus(config);
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -44,8 +39,9 @@ app.UseStaticFiles(); //html, css, images, js in wwwroot folder
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllers();
 app.MapRazorPages();
+
+app.RegisterLifetimeEvents();
 
 app.Run();
 
@@ -79,6 +75,9 @@ internal static class ServiceCollectionExtensions
                     opts.UseMessageRetry(r => r.Intervals(100, 200, 500, 800, 1000));
                 });
             });
+
+            x.AddRequestClient<SendEmailConfirmationRequest>(TimeSpan.FromSeconds(5));
+            x.AddRequestClient<SendPasswordResetRequest>(TimeSpan.FromSeconds(5));
         });
 
         services.AddOptions<MassTransitHostOptions>()
@@ -109,7 +108,7 @@ internal static class WebApplicationExtensions
         app.Lifetime.ApplicationStopped.Register(async () =>
         {
             await bus.Publish<ServiceInstanceStoppedEvent>(new(ServiceType: serviceType, ServiceBaseUrls: app.Urls))
-            .ConfigureAwait(false);
+                .ConfigureAwait(false);
         });
     }
 }
