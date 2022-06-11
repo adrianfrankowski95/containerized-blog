@@ -26,21 +26,21 @@ public class UpdateEmailModel : PageModel
 {
     private readonly UserManager<User> _userManager;
     private readonly IOptionsMonitor<EmailOptions> _emailOptions;
-    private readonly IRequestClient<SendEmailConfirmationRequest> _sender;
+    private readonly IRequestClient<SendEmailConfirmationEmailRequest> _emailSender;
     private readonly ISysTime _sysTime;
     private readonly ILogger<UpdateEmailModel> _logger;
 
     public UpdateEmailModel(
         UserManager<User> userManager,
         IOptionsMonitor<EmailOptions> emailOptions,
-        IRequestClient<SendEmailConfirmationRequest> sender,
+        IRequestClient<SendEmailConfirmationEmailRequest> emailSender,
         ISysTime sysTime,
         ILogger<UpdateEmailModel> logger)
     {
         _userManager = userManager;
         _emailOptions = emailOptions;
         _sysTime = sysTime;
-        _sender = sender;
+        _emailSender = emailSender;
         _logger = logger;
     }
 
@@ -148,7 +148,7 @@ public class UpdateEmailModel : PageModel
                 values: new { userId = user.Id, code },
                 protocol: Request.Scheme);
 
-            var response = await _sender.GetResponse<SendEmailConfirmationResponse>(
+            var response = await _emailSender.GetResponse<SendEmailConfirmationEmailResponse>(
                     new(Username: user.FullName,
                         EmailAddress: user.EmailAddress,
                         CallbackUrl: callbackUrl,

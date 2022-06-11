@@ -26,19 +26,19 @@ public class ForgotPasswordModel : PageModel
 {
     private readonly UserManager<User> _userManager;
     private readonly IOptionsMonitor<PasswordOptions> _passwordOptions;
-    private readonly IRequestClient<SendPasswordResetRequest> _sender;
+    private readonly IRequestClient<SendPasswordResetEmailRequest> _emailSender;
     private readonly ILogger<ForgotPasswordModel> _logger;
     private readonly ISysTime _sysTime;
 
     public ForgotPasswordModel(
         UserManager<User> userManager,
         IOptionsMonitor<PasswordOptions> passwordOptions,
-        IRequestClient<SendPasswordResetRequest> sender,
+        IRequestClient<SendPasswordResetEmailRequest> emailSender,
         ILogger<ForgotPasswordModel> logger,
         ISysTime sysTime)
     {
         _userManager = userManager;
-        _sender = sender;
+        _emailSender = emailSender;
         _passwordOptions = passwordOptions;
         _logger = logger;
         _sysTime = sysTime;
@@ -81,7 +81,7 @@ public class ForgotPasswordModel : PageModel
                     values: new { code },
                     protocol: Request.Scheme);
 
-                var response = await _sender.GetResponse<SendPasswordResetResponse>(
+                var response = await _emailSender.GetResponse<SendPasswordResetEmailResponse>(
                     new(Username: user.FullName,
                         EmailAddress: user.EmailAddress,
                         CallbackUrl: callbackUrl,

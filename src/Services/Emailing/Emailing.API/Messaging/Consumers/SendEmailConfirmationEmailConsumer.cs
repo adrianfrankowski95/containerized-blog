@@ -3,9 +3,9 @@ using MassTransit;
 
 namespace Blog.Services.Emailing.API.Messaging.Consumers;
 
-public class SendPasswordResetRequestConsumer : IConsumer<SendPasswordResetRequest>
+public class SendEmailConfirmationEmailConsumer : IConsumer<SendEmailConfirmationEmailRequest>
 {
-    public Task Consume(ConsumeContext<SendPasswordResetRequest> context)
+    public Task Consume(ConsumeContext<SendEmailConfirmationEmailRequest> context)
     {
         throw new NotImplementedException();
     }

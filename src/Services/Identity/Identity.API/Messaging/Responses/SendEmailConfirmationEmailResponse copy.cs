@@ -2,5 +2,5 @@
 //in order to make it work through the MassTransit
 namespace Blog.Services.Messaging.Responses;
 
-public record SendPasswordResetResponse(bool Success);
+public record SendEmailConfirmationEmailResponse(bool Success);
 
