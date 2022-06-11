@@ -49,7 +49,7 @@ internal static class ServiceCollectionExtensions
     {
         services.AddMassTransit(x =>
         {
-            x.AddConsumersFromNamespaceContaining<SendEmailConfirmationRequestConsumer>();
+            x.AddConsumersFromNamespaceContaining<SendEmailConfirmationEmailConsumer>();
 
             x.UsingRabbitMq((context, cfg) =>
             {

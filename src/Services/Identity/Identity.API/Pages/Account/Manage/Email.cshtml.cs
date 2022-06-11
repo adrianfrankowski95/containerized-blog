@@ -27,7 +27,7 @@ public class EmailModel : PageModel
     private readonly UserManager<User> _userManager;
     private readonly ISignInManager<User> _signInManager;
     private readonly IOptionsMonitor<EmailOptions> _emailOptions;
-    private readonly IRequestClient<SendEmailConfirmationRequest> _sender;
+    private readonly IRequestClient<SendEmailConfirmationEmailRequest> _emailSender;
     private readonly ISysTime _sysTime;
     private readonly ILogger<EmailModel> _logger;
 
@@ -35,14 +35,14 @@ public class EmailModel : PageModel
         UserManager<User> userManager,
         ISignInManager<User> signInManager,
         IOptionsMonitor<EmailOptions> emailOptions,
-        IRequestClient<SendEmailConfirmationRequest> sender,
+        IRequestClient<SendEmailConfirmationEmailRequest> emailSender,
         ISysTime sysTime,
         ILogger<EmailModel> logger)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _emailOptions = emailOptions;
-        _sender = sender;
+        _emailSender = emailSender;
         _sysTime = sysTime;
         _logger = logger;
     }
@@ -139,7 +139,7 @@ public class EmailModel : PageModel
                 values: new { userId = user.Id, email = Input.NewEmail, code },
                 protocol: Request.Scheme);
 
-            var response = await _sender.GetResponse<SendEmailConfirmationResponse>(
+            var response = await _emailSender.GetResponse<SendEmailConfirmationEmailResponse>(
                     new(Username: user.FullName,
                         EmailAddress: user.EmailAddress,
                         CallbackUrl: callbackUrl,
@@ -199,7 +199,7 @@ public class EmailModel : PageModel
             values: new { userId = user.Id, code },
             protocol: Request.Scheme);
 
-        var response = await _sender.GetResponse<SendEmailConfirmationResponse>(
+        var response = await _emailSender.GetResponse<SendEmailConfirmationEmailResponse>(
                     new(Username: user.FullName,
                         EmailAddress: user.EmailAddress,
                         CallbackUrl: callbackUrl,

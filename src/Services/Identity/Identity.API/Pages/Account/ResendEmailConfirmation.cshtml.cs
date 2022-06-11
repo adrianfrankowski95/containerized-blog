@@ -24,17 +24,17 @@ public class ResendEmailConfirmationModel : PageModel
 {
     private readonly UserManager<User> _userManager;
     private readonly IOptionsMonitor<EmailOptions> _emailOptions;
-    private readonly IRequestClient<SendEmailConfirmationRequest> _sender;
+    private readonly IRequestClient<SendEmailConfirmationEmailRequest> _emailSender;
     private readonly ISysTime _sysTime;
 
     public ResendEmailConfirmationModel(
         UserManager<User> userManager,
         IOptionsMonitor<EmailOptions> emailOptions,
-        IRequestClient<SendEmailConfirmationRequest> sender,
+        IRequestClient<SendEmailConfirmationEmailRequest> emailSender,
         ISysTime sysTime)
     {
         _userManager = userManager;
-        _sender = sender;
+        _emailSender = emailSender;
         _emailOptions = emailOptions;
         _sysTime = sysTime;
     }
@@ -82,7 +82,7 @@ public class ResendEmailConfirmationModel : PageModel
                 values: new { userId = user.Id, code },
                 protocol: Request.Scheme);
 
-            var response = await _sender.GetResponse<SendEmailConfirmationResponse>(
+            var response = await _emailSender.GetResponse<SendEmailConfirmationEmailResponse>(
                     new(Username: user.FullName,
                         EmailAddress: user.EmailAddress,
                         CallbackUrl: callbackUrl,

@@ -4,7 +4,7 @@ using NodaTime;
 //in order to make it work through the MassTransit
 namespace Blog.Services.Messaging.Requests;
 
-public record SendEmailConfirmationRequest(
+public record SendPasswordResetEmailRequest(
     string Username,
     string EmailAddress,
     string CallbackUrl,
