@@ -1,9 +1,9 @@
 services:
-  
+
   rabbitmq:
     image: masstransit/rabbitmq:latest
 
-  serviceregisterdb:
+  serviceregistrydb:
     image: redis:alpine
 
   identitydb:
