@@ -1,6 +1,7 @@
 using Blog.Services.Emailing.API.Config;
 using Blog.Services.Emailing.API.Messaging.Consumers;
 using Blog.Services.Messaging.Events;
+using FluentEmail.MailKitSmtp;
 using MassTransit;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,25 +11,12 @@ var config = GetConfiguration(env);
 var services = builder.Services;
 
 // Add services to the container.
-services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-services.AddEndpointsApiExplorer();
-services.AddSwaggerGen();
+services
+    .AddMassTransitRabbitMqBus(config)
+    .AddConfiguredFluentEmail(config);
+
 
 var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (env.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
-
-app.MapControllers();
 
 app.RegisterLifetimeEvents();
 
@@ -75,6 +63,27 @@ internal static class ServiceCollectionExtensions
                 opts.WaitUntilStarted = true;
                 opts.StartTimeout = TimeSpan.FromSeconds(10);
                 opts.StopTimeout = TimeSpan.FromSeconds(30);
+            });
+
+        return services;
+    }
+
+    public static IServiceCollection AddConfiguredFluentEmail(this IServiceCollection services, IConfiguration config)
+    {
+        var emailConfig = config.GetValue<EmailConfig>(EmailConfig.Section);
+
+        services
+            .AddFluentEmail(emailConfig.From)
+            .AddRazorRenderer("./Templates")
+            .AddMailKitSender(new SmtpClientOptions()
+            {
+                Server = emailConfig.Host,
+                Port = emailConfig.Port,
+                UseSsl = emailConfig.UseSsl,
+                User = emailConfig.Username,
+                Password = emailConfig.Password,
+                RequiresAuthentication = emailConfig.RequireAuthentication,
+                SocketOptions = Enum.Parse<MailKit.Security.SecureSocketOptions>(emailConfig.SocketOptions)
             });
 
         return services;

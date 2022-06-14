@@ -76,8 +76,8 @@ internal static class ServiceCollectionExtensions
                 });
             });
 
-            x.AddRequestClient<SendEmailConfirmationRequest>(TimeSpan.FromSeconds(5));
-            x.AddRequestClient<SendPasswordResetRequest>(TimeSpan.FromSeconds(5));
+            x.AddRequestClient<SendEmailConfirmationEmailRequest>(TimeSpan.FromSeconds(10));
+            x.AddRequestClient<SendPasswordResetEmailRequest>(TimeSpan.FromSeconds(10));
         });
 
         services.AddOptions<MassTransitHostOptions>()
