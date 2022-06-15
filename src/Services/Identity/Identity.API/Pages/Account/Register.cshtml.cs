@@ -1,9 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 using System.ComponentModel.DataAnnotations;
-using System.Globalization;
 using System.Text;
-using System.Text.Encodings.Web;
 using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Models;
 using Blog.Services.Identity.API.Services;
@@ -82,9 +80,6 @@ public class RegisterModel : PageModel
         [Display(Name = "Last name")]
         public string LastName { get; set; }
 
-        [Required]
-        public Gender? Gender { get; set; }
-
         [Display(Name = "I would like to receive additional updates and announcements via email")]
         public bool ReceiveAdditionalEmails { get; set; }
     }
@@ -102,7 +97,7 @@ public class RegisterModel : PageModel
 
         if (ModelState.IsValid)
         {
-            var user = new User(Input.Email, Input.Username, Input.FirstName, Input.LastName, Input.Gender!.Value, Input.ReceiveAdditionalEmails);
+            var user = new User(Input.Email, Input.Username, Input.FirstName, Input.LastName, Input.ReceiveAdditionalEmails);
 
             var result = await _userManager.CreateUserAsync(user, Input.Password);
             if (!result.Succeeded)
