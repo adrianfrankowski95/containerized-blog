@@ -11,18 +11,20 @@ var builder = WebApplication.CreateBuilder(args);
 var env = builder.Environment;
 var config = GetConfiguration(env);
 
-// Add services to the container.
-builder.Services.AddRazorPages();
+var services = builder.Services;
 
-builder.Services
+// Add services to the container.
+services.AddRazorPages();
+
+services
     .AddCustomIdentityInfrastructure<User, Role>(config)
     .AddCustomIdentityCore<User>()
     .AddCustomServices()
     .AddMassTransitRabbitMqBus(config);
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+services.AddEndpointsApiExplorer();
+services.AddSwaggerGen();
 
 var app = builder.Build();
 

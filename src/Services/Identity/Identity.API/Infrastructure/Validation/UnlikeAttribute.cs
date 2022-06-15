@@ -1,4 +1,4 @@
-namespace Blog.Services.Identity.API.ValidationAttributes;
+namespace Blog.Services.Identity.API.Infrastructure.Validation;
 
 using System;
 using System.Collections.Generic;

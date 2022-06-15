@@ -11,12 +11,16 @@ var config = GetConfiguration(env);
 var services = builder.Services;
 
 // Add services to the container.
+services.AddRazorPages();
+
 services
     .AddMassTransitRabbitMqBus(config)
     .AddConfiguredFluentEmail(config);
 
 
 var app = builder.Build();
+
+app.UseStaticFiles(); //html, css, images, js in wwwroot folder
 
 app.RegisterLifetimeEvents();
 
