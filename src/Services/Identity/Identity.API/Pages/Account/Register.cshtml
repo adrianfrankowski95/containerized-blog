@@ -44,10 +44,6 @@
                 <label asp-for="Input.LastName"></label>
                 <span asp-validation-for="Input.LastName" class="text-danger"></span>
             </div>
-            <select asp-for="Input.Gender" class="form-select" name="gender"
-                asp-items="Html.GetEnumSelectList<Gender>()" aria-required="true">
-                <span asp-validation-for="Input.Gender" class="text-danger"></span>
-            </select>
             <div class="checkbox">
                 <label asp-for="Input.ReceiveAdditionalEmails" class="form-label">
                     <input class="form-check-input" asp-for="Input.ReceiveAdditionalEmails" />

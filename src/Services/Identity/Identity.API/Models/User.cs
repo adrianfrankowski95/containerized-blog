@@ -16,7 +16,6 @@ public class User
         NonEmptyString username,
         NonEmptyString firstName,
         NonEmptyString lastName,
-        Gender gender,
         bool receiveAdditionalEmails)
     {
         Id = Guid.NewGuid();
@@ -25,7 +24,6 @@ public class User
         Username = username;
         FirstName = firstName;
         LastName = lastName;
-        Gender = gender;
         ReceiveAdditionalEmails = receiveAdditionalEmails;
     }
 
@@ -35,7 +33,6 @@ public class User
     public NonEmptyString Username { get; set; }
     public NonEmptyString FirstName { get; set; }
     public NonEmptyString LastName { get; set; }
-    public Gender Gender { get; set; }
     public Role Role { get; set; }
 
     [JsonIgnore]

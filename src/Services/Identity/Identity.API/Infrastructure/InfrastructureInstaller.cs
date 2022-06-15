@@ -1,3 +1,4 @@
+using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Infrastructure.Repositories;
 using Blog.Services.Identity.API.Models;
 using Microsoft.EntityFrameworkCore;

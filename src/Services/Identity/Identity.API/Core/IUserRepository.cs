@@ -1,6 +1,6 @@
 using Blog.Services.Identity.API.Models;
 
-namespace Blog.Services.Identity.API.Infrastructure.Repositories;
+namespace Blog.Services.Identity.API.Core;
 
 public interface IUserRepository<TUser> where TUser : User
 {
