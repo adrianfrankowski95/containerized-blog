@@ -50,7 +50,6 @@
     </header>
 
     <div class="container">
-        <partial name="_CookieConsentPartial" optional />
         <main role="main" class="pb-1">
             @RenderBody()
         </main>
@@ -58,13 +57,6 @@
     <footer class="footer border-top pl-3 text-muted">
         <div class="container">
         &copy; @DateTime.Now.Year - @Environment.ApplicationName
-            @{
-                var foundPrivacy = Url.Page("/Privacy", new { area = "" });
-            }
-            @if (foundPrivacy != null)
-            {
-                <a asp-area="" asp-page="/Privacy">Privacy</a>
-            }
         </div>
     </footer>
 
