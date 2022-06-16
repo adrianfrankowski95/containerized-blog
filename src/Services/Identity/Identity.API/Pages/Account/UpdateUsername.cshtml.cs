@@ -4,12 +4,12 @@
 
 using System.ComponentModel.DataAnnotations;
 using Blog.Services.Identity.API.Core;
+using Blog.Services.Identity.API.Infrastructure.Validation;
 using Blog.Services.Identity.API.Models;
-using Blog.Services.Identity.API.ValidationAttributes;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace Blog.Services.Identity.API.Pages.Account.Manage;
+namespace Blog.Services.Identity.API.Pages.Account;
 
 public class UpdateUsernameModel : PageModel
 {
@@ -18,8 +18,9 @@ public class UpdateUsernameModel : PageModel
 
     public UpdateUsernameModel(
         UserManager<User> userManager,
-        ILogger<UpdateEmailModel> logger)
+        ILogger<UpdateUsernameModel> logger)
     {
+        _logger = logger;
         _userManager = userManager;
     }
 

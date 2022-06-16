@@ -1,6 +1,5 @@
 using System.Security.Claims;
 using Blog.Services.Identity.API.Models;
-using Blog.Services.Identity.API.Services;
 using Microsoft.Extensions.Options;
 using NodaTime;
 

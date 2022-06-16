@@ -33,11 +33,8 @@ public static class CoreInstaller
         services.TryAddScoped<IUserValidator<TUser>, UserValidator<TUser>>();
         services.TryAddScoped<ISecurityStampValidator<TUser>, SecurityStampValidator<TUser>>();
         services.TryAddScoped<IPasswordValidator<TUser>, PasswordValidator<TUser>>();
-        services.TryAddScoped<IPasswordHasher, BcryptPasswordHasher>();
         services.TryAddScoped<IUserClaimsPrincipalFactory<TUser>, UserClaimsPrincipalFactory<TUser>>();
 
-        services.TryAddScoped<ILoginService<TUser>, LoginService<TUser>>();
-        services.TryAddScoped<ISignInManager<TUser>, SignInManager<TUser>>();
         services.TryAddScoped<UserManager<TUser>>();
 
         return services;

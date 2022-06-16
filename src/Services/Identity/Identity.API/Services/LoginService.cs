@@ -1,27 +1,28 @@
+using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Models;
 using Microsoft.Extensions.Options;
 
-namespace Blog.Services.Identity.API.Core;
+namespace Blog.Services.Identity.API.Services;
 
-public class LoginService<TUser> : ILoginService<TUser> where TUser : User
+public class LoginService : ILoginService
 {
-    private readonly UserManager<TUser> _userManager;
+    private readonly UserManager<User> _userManager;
     private readonly IOptionsMonitor<LockoutOptions> _lockoutOptions;
     private readonly IOptionsMonitor<EmailOptions> _emailOptions;
 
-    public LoginService(UserManager<TUser> userManager, IOptionsMonitor<LockoutOptions> lockoutOptions, IOptionsMonitor<EmailOptions> emailOptions)
+    public LoginService(UserManager<User> userManager, IOptionsMonitor<LockoutOptions> lockoutOptions, IOptionsMonitor<EmailOptions> emailOptions)
     {
         _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         _lockoutOptions = lockoutOptions ?? throw new ArgumentNullException(nameof(lockoutOptions));
         _emailOptions = emailOptions ?? throw new ArgumentNullException(nameof(emailOptions));
     }
 
-    public async ValueTask<(IdentityResult result, TUser? user)> LoginAsync(string email, string password)
+    public async ValueTask<(IdentityResult result, User? user)> LoginAsync(string email, string password)
     {
         if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
             return (IdentityResult.Fail(CredentialsError.InvalidCredentials), null);
 
-        TUser? user = await _userManager.FindByEmailAsync(email).ConfigureAwait(false);
+        User? user = await _userManager.FindByEmailAsync(email).ConfigureAwait(false);
 
         if (user is null)
             return (IdentityResult.Fail(CredentialsError.InvalidCredentials), null);

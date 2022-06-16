@@ -1,13 +1,18 @@
+using FluentEmail.Core.Interfaces;
 using Grpc.Core;
 
 namespace Blog.Services.Emailing.API.Grpc;
 
-public class EmailingService : GrpcEmailing.GrpcEmailingBase
+public class EmailingService : GrpcEmailingService.GrpcEmailingServiceBase
 {
     private readonly ILogger<EmailingService> _logger;
+    private readonly ISender _sender;
 
-    public EmailingService(ILogger<EmailingService> logger)
+    public EmailingService(
+        ISender sender,
+        ILogger<EmailingService> logger)
     {
+        _sender = sender ?? throw new ArgumentNullException(nameof(sender));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 

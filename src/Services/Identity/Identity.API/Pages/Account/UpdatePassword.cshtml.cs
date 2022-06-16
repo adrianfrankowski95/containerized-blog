@@ -4,21 +4,21 @@
 
 using System.ComponentModel.DataAnnotations;
 using Blog.Services.Identity.API.Core;
+using Blog.Services.Identity.API.Infrastructure.Validation;
 using Blog.Services.Identity.API.Models;
-using Blog.Services.Identity.API.ValidationAttributes;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
-namespace Blog.Services.Identity.API.Pages.Account.Manage;
+namespace Blog.Services.Identity.API.Pages.Account;
 
 public class UpdatePasswordModel : PageModel
 {
     private readonly UserManager<User> _userManager;
-    private readonly ILogger<ChangePasswordModel> _logger;
+    private readonly ILogger<UpdatePasswordModel> _logger;
 
     public UpdatePasswordModel(
         UserManager<User> userManager,
-        ILogger<ChangePasswordModel> logger)
+        ILogger<UpdatePasswordModel> logger)
     {
         _userManager = userManager;
         _logger = logger;

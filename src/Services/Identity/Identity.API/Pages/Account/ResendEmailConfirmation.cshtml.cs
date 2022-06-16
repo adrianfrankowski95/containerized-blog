@@ -6,7 +6,6 @@ using System.ComponentModel.DataAnnotations;
 using System.Text;
 using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Models;
-using Blog.Services.Identity.API.Services;
 using Blog.Services.Messaging.Requests;
 using Blog.Services.Messaging.Responses;
 using MassTransit;

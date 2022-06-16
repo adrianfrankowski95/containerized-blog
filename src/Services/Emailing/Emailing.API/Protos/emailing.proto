@@ -1,10 +1,11 @@
 syntax = "proto3";
 
 option csharp_namespace = "Blog.Services.Emailing.API.Grpc";
+import "google/protobuf/timestamp.proto";
 
 package Blog.Services.Emailing.API.Grpc;
 
-service GrpcEmailing {
+service GrpcEmailingService {
     rpc SendEmailConfirmationEmail(SendEmailConfirmationEmailRequest) returns (SendEmailResponse) {};
     rpc SendPasswordResetEmail(SendPasswordResetEmailRequest) returns (SendEmailResponse) {};
     rpc SendNewPostEmail(SendNewPostEmailRequest) returns (SendEmailResponse) {};
@@ -18,11 +19,13 @@ message SendEmailResponse {
 message SendEmailConfirmationEmailRequest {
     Recipient recipient = 1;
     string callbackUrl = 2;
+    google.protobuf.Timestamp urlExpirationAt = 3;
 }
 
 message SendPasswordResetEmailRequest {
     Recipient recipient = 1;
     string callbackUrl = 2;
+    google.protobuf.Timestamp urlExpirationAt = 3;
 }
 
 message SendNewPostEmailRequest {
