@@ -15,7 +15,8 @@ services.AddRazorPages();
 
 services
     .AddMassTransitRabbitMqBus(config)
-    .AddConfiguredFluentEmail(config);
+    .AddConfiguredFluentEmail(config)
+    .AddGrpc();
 
 
 var app = builder.Build();

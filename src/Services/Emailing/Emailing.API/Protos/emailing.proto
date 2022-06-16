@@ -1,10 +1,10 @@
 syntax = "proto3";
 
-option csharp_namespace = "Blog.Services.Emailing.Emailing.API";
+option csharp_namespace = "Blog.Services.Emailing.API.Grpc";
 
-package Emailing.API;
+package Blog.Services.Emailing.API.Grpc;
 
-service Emailing {
+service GrpcEmailing {
     rpc SendEmailConfirmationEmail(SendEmailConfirmationEmailRequest) returns (SendEmailResponse) {};
     rpc SendPasswordResetEmail(SendPasswordResetEmailRequest) returns (SendEmailResponse) {};
     rpc SendNewPostEmail(SendNewPostEmailRequest) returns (SendEmailResponse) {};
