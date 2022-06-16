@@ -47,12 +47,6 @@ public class UserEntityConfiguration<TUser> : IEntityTypeConfiguration<TUser> wh
             .IsUnique();
 
         builder
-            .Property(x => x.Gender)
-            .HasColumnType("varchar(25)")
-            .HasConversion<string>()
-            .IsRequired();
-
-        builder
             .Property(x => x.Role)
             .HasColumnType("varchar(25)")
             .HasConversion(

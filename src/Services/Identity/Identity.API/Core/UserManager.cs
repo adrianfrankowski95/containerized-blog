@@ -62,6 +62,16 @@ public class UserManager<TUser> where TUser : User
         return Guid.TryParse(id, out Guid userId) ? userId : null;
     }
 
+    public string? GetUsername(ClaimsPrincipal? principal)
+    {
+        if (principal is null)
+            return null;
+
+        string username = principal.FindFirstValue(IdentityConstants.ClaimTypes.Username);
+
+        return username;
+    }
+
     public ValueTask<IdentityResult> ValidateUserAsync(TUser user)
         => _userValidator.ValidateAsync(user);
 

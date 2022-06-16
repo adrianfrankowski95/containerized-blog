@@ -150,7 +150,7 @@ public class EmailModel : PageModel
             StatusMessage = "Confirmation link to change email sent. Please check your email.";
 
             if (!_emailOptions.CurrentValue.RequireConfirmed)
-                await _signInManager.RefreshSignInAsync(HttpContext, user);
+                await _signInManager.RefreshSignInAsync(user);
 
             _logger.LogInformation("User changed their email successfully.");
             StatusMessage = "Your email has been changed.";

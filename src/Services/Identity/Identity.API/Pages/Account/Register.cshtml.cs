@@ -137,7 +137,7 @@ public class RegisterModel : PageModel
             }
             else
             {
-                await _signInManager.SignInAsync(HttpContext, user, isPersistent: false);
+                await _signInManager.SignInAsync(user, isPersistent: false);
                 return LocalRedirect(returnUrl);
             }
         }
