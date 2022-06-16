@@ -140,7 +140,7 @@ public class IndexModel : PageModel
                 return RedirectToPage();
             }
 
-            await _signInManager.RefreshSignInAsync(HttpContext, user);
+            await _signInManager.RefreshSignInAsync(user);
             StatusMessage = "Your profile has been updated.";
             return RedirectToPage();
         }
