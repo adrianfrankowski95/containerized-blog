@@ -1,3 +1,4 @@
+using Blog.Services.Identity.API.Adapters;
 using Blog.Services.Identity.API.Config;
 using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Infrastructure;
@@ -19,6 +20,7 @@ services.AddRazorPages();
 services
     .AddCustomIdentityInfrastructure<User, Role>(config)
     .AddCustomIdentityCore<User>()
+    .AddCustomIdentityCoreAdapters()
     .AddCustomServices()
     .AddMassTransitRabbitMqBus(config);
 

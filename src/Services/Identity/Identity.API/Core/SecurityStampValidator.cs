@@ -1,5 +1,4 @@
 using Blog.Services.Identity.API.Models;
-using Blog.Services.Identity.API.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.Extensions.Options;
 using NodaTime;
@@ -43,7 +42,7 @@ public class SecurityStampValidator<TUser> : ISecurityStampValidator<TUser> wher
             if (!isSuccess || user is null)
             {
                 context.RejectPrincipal();
-                await _signInManager.SignOutAsync(context.HttpContext).ConfigureAwait(false);
+                await _signInManager.SignOutAsync().ConfigureAwait(false);
             }
             else
             {

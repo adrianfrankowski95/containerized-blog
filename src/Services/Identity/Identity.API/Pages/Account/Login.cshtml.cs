@@ -6,6 +6,7 @@
 using System.ComponentModel.DataAnnotations;
 using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Models;
+using Blog.Services.Identity.API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -16,10 +17,10 @@ namespace Blog.Services.Identity.API.Pages.Account;
 public class LoginModel : PageModel
 {
     private readonly ISignInManager<User> _signInManager;
-    private readonly ILoginService<User> _loginService;
+    private readonly ILoginService _loginService;
     private readonly ILogger<LoginModel> _logger;
 
-    public LoginModel(ISignInManager<User> signInManager, ILoginService<User> loginService, ILogger<LoginModel> logger)
+    public LoginModel(ISignInManager<User> signInManager, ILoginService loginService, ILogger<LoginModel> logger)
     {
         _signInManager = signInManager;
         _loginService = loginService;
@@ -71,7 +72,7 @@ public class LoginModel : PageModel
 
         ReturnUrl = returnUrl ?? Url.Content("~/");
 
-        await _signInManager.SignOutAsync(HttpContext);
+        await _signInManager.SignOutAsync();
 
         LoadInput();
         return Page();
@@ -138,7 +139,7 @@ public class LoginModel : PageModel
             }
 
             _logger.LogInformation("User logged in.");
-            await _signInManager.SignInAsync(HttpContext, user, Input.RememberMe);
+            await _signInManager.SignInAsync(user, Input.RememberMe);
             return LocalRedirect(returnUrl);
         }
 

@@ -8,7 +8,7 @@ public static class ServicesInstaller
     public static IServiceCollection AddCustomServices(this IServiceCollection services)
     {
         services.TryAddSingleton<IClock, SystemClock>();
-        services.TryAddTransient<ISysTime, SysTime>();
+        services.TryAddTransient<ILoginService, LoginService>();
 
         return services;
     }

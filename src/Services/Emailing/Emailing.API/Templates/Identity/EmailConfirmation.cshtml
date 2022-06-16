@@ -1,0 +1,15 @@
+﻿@page
+@namespace Blog.Services.Emailing.API.Templates.Identity
+@using System.Globalization
+@using System.Text.Encodings.Web
+@model EmailConfirmationModel
+@{
+    ViewData["Title"] = "Email confirmation";
+}
+
+Dear @Model.Username,
+
+<br><br>Please confirm your email by <a href=@HtmlEncoder.Default.Encode(Model.CallbackUrl)>clicking here</a>.
+
+<br><br>This link will expire at @Model.UrlExpirationAt.ToString("dddd, dd mmmm yyyy HH:mm:ss",
+DateTimeFormatInfo.InvariantInfo).

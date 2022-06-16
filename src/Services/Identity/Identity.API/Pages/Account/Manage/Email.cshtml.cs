@@ -3,14 +3,10 @@
 #nullable disable
 
 using System.ComponentModel.DataAnnotations;
-using System.Globalization;
 using System.Text;
-using System.Text.Encodings.Web;
 using Blog.Services.Identity.API.Core;
+using Blog.Services.Identity.API.Infrastructure.Validation;
 using Blog.Services.Identity.API.Models;
-using Blog.Services.Identity.API.Services;
-using Blog.Services.Identity.API.ValidationAttributes;
-using Blog.Services.Messaging.Events;
 using Blog.Services.Messaging.Requests;
 using Blog.Services.Messaging.Responses;
 using MassTransit;
@@ -150,12 +146,6 @@ public class EmailModel : PageModel
                 StatusMessage = "Error sending an email. Please try again later.";
                 return RedirectToPage();
             }
-
-            // await _emailSender.SendEmailAsync(
-            //      Input.NewEmail,
-            //      "Confirm your email",
-            //      $"Please confirm your email by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>." +
-            //      $"<br><br>This link will expire at {_sysTime.Now.Plus(Duration.FromTimeSpan(_emailOptions.CurrentValue.EmailConfirmationCodeValidityPeriod)).ToString("dddd, dd mmmm yyyy HH:mm:ss", DateTimeFormatInfo.InvariantInfo)}.");
 
             StatusMessage = "Confirmation link to change email sent. Please check your email.";
 

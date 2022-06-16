@@ -11,7 +11,10 @@ var config = GetConfiguration(env);
 var services = builder.Services;
 
 // Add services to the container.
-services.AddRazorPages();
+services.AddRazorPages(opts =>
+{
+    opts.RootDirectory = "./Templates";
+});
 
 services
     .AddMassTransitRabbitMqBus(config)
