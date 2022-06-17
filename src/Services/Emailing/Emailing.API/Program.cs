@@ -49,6 +49,12 @@ internal static class ServiceCollectionExtensions
 
             x.UsingRabbitMq((context, cfg) =>
             {
+                services
+                    .AddOptions<RabbitMqConfig>()
+                    .Bind(config.GetRequiredSection(RabbitMqConfig.Section))
+                    .ValidateDataAnnotations()
+                    .ValidateOnStart();
+
                 var rabbitMqConfig = config.GetValue<RabbitMqConfig>(RabbitMqConfig.Section);
 
                 cfg.Host(rabbitMqConfig.Host, rabbitMqConfig.VirtualHost, opts =>
@@ -78,10 +84,27 @@ internal static class ServiceCollectionExtensions
 
     public static IServiceCollection AddConfiguredFluentEmail(this IServiceCollection services, IConfiguration config)
     {
+        services
+            .AddOptions<EmailConfig>()
+            .Bind(config.GetRequiredSection(EmailConfig.Section))
+            .Validate(x =>
+            {
+                if (x.RequireAuthentication)
+                {
+                    if (string.IsNullOrWhiteSpace(x.Password) || string.IsNullOrWhiteSpace(x.Username))
+                        return false;
+                }
+
+                return Enum.TryParse<MailKit.Security.SecureSocketOptions>(x.SocketOptions, true, out _);
+
+            }, "Invalid email configuration.")
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
         var emailConfig = config.GetValue<EmailConfig>(EmailConfig.Section);
 
         services
-            .AddFluentEmail(emailConfig.From)
+            .AddFluentEmail(emailConfig.FromEmail, emailConfig.FromName)
             .AddRazorRenderer("./Templates")
             .AddMailKitSender(new SmtpClientOptions()
             {
@@ -91,7 +114,7 @@ internal static class ServiceCollectionExtensions
                 User = emailConfig.Username,
                 Password = emailConfig.Password,
                 RequiresAuthentication = emailConfig.RequireAuthentication,
-                SocketOptions = Enum.Parse<MailKit.Security.SecureSocketOptions>(emailConfig.SocketOptions)
+                SocketOptions = Enum.Parse<MailKit.Security.SecureSocketOptions>(emailConfig.SocketOptions, true)
             });
 
         return services;
