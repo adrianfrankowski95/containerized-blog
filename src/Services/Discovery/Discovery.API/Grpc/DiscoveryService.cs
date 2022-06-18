@@ -11,12 +11,13 @@ public class DiscoveryService : GrpcDiscoveryService.GrpcDiscoveryServiceBase
         _logger = logger;
     }
 
-    public override Task<DiscoverServiceResponse> DiscoverService(DiscoverServiceRequest request, ServerCallContext context)
+    public override Task<GetActiveServiceUrlsResponse> GetActiveServiceUrls(
+        GetActiveServiceUrlsRequest request, ServerCallContext context)
     {
         throw new NotImplementedException();
     }
 
-    public override Task<DiscoverServicesResponse> DiscoverServices(Empty request, ServerCallContext context)
+    public override Task<GetActiveServicesResponse> GetActiveServices(Empty request, ServerCallContext context)
     {
         throw new NotImplementedException();
     }

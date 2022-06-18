@@ -7,19 +7,19 @@ import "google/protobuf/empty.proto";
 package Blog.Services.Discovery.API.Grpc;
 
 service GrpcDiscoveryService {
-  rpc GetServiceUrls (DiscoverServiceRequest) returns (DiscoverServiceResponse);
-  rpc GetAvailableServices (google.protobuf.Empty) returns (DiscoverServicesResponse);
+  rpc GetActiveServiceUrls (GetActiveServiceUrlsRequest) returns (GetActiveServiceUrlsResponse);
+  rpc GetActiveServices (google.protobuf.Empty) returns (GetActiveServicesResponse);
 }
 
-message DiscoverServiceRequest {
+message GetActiveServiceUrlsRequest {
   ServiceType serviceType = 1;
 }
 
-message DiscoverServiceResponse {
+message GetActiveServiceUrlsResponse {
   repeated string serviceBaseUrls = 1;
 }
 
-message DiscoverServicesResponse {
+message GetActiveServicesResponse {
   repeated ServiceInfo serviceInfo = 1;
 }
 
