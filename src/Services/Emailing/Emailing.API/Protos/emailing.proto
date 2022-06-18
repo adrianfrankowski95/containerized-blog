@@ -1,6 +1,7 @@
 syntax = "proto3";
 
 option csharp_namespace = "Blog.Services.Emailing.API.Grpc";
+
 import "google/protobuf/timestamp.proto";
 
 package Blog.Services.Emailing.API.Grpc;
@@ -41,12 +42,27 @@ message SendNewPostEmailRequest {
 
 message SendCustomEmailRequest {
     repeated Recipient recipients = 1;
-    string title = 2;
-    string body = 3;
-    optional string attachment = 4;
+    repeated Recipient ccRecipients = 2;
+    repeated Recipient bccRecipients = 3;
+    string title = 4;
+    string body = 5;
+    Priority priority = 6;
+    repeated Attachment attachments = 7;
 }
 
 message Recipient {
     string emailAddress = 1;
     string name = 2;
+}
+
+message Attachment {
+    string filename = 1;
+    bytes Data = 2;
+    string ContentType = 3;
+    string ContentId = 4;
+}
+
+enum Priority {
+    Low = 0;
+    High = 1;
 }

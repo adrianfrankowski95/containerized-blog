@@ -1,8 +1,8 @@
-using Blog.Gateways.WebGateway.API.Config;
+using System.Net.Http.Headers;
+using Blog.Gateways.WebGateway.API.Configs;
 using Blog.Gateways.WebGateway.API.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
-using System.Net.Http.Headers;
 
 namespace Blog.Gateways.WebGateway.API.Infrastructure;
 

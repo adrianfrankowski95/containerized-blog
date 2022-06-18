@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+option csharp_namespace = "Blog.Services.Discovery.API.Grpc";
+
+import "google/protobuf/empty.proto";
+
+package Blog.Services.Discovery.API.Grpc;
+
+service GrpcDiscoveryService {
+  rpc GetServiceUrls (DiscoverServiceRequest) returns (DiscoverServiceResponse);
+  rpc GetAvailableServices (google.protobuf.Empty) returns (DiscoverServicesResponse);
+}
+
+message DiscoverServiceRequest {
+  ServiceType serviceType = 1;
+}
+
+message DiscoverServiceResponse {
+  repeated string serviceBaseUrls = 1;
+}
+
+message DiscoverServicesResponse {
+  repeated ServiceInfo serviceInfo = 1;
+}
+
+message ServiceInfo {
+  ServiceType serviceType = 1;
+  repeated string serviceBaseUrls = 2;
+}
+
+enum ServiceType {
+  IdentityApi = 0;
+  EmailingApi = 1;
+  BloggingApi = 2;
+  CommentsApi = 3;
+}

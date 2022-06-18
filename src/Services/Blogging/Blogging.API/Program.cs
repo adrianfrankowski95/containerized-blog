@@ -1,28 +1,28 @@
-using Blog.Services.Blogging.Infrastructure;
 using Blog.Services.Blogging.API.Application;
 using Blog.Services.Blogging.API.Controllers;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using Blog.Services.Blogging.API.Infrastructure.Services;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Blog.Services.Blogging.API.Extensions;
-using NodaTime;
-using Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate;
-using SysTime = Blog.Services.Blogging.API.Infrastructure.Services.SysTime;
-using Blog.Services.Blogging.API.Options;
+using Blog.Services.Blogging.API.Infrastructure.Services;
 using Blog.Services.Blogging.API.Models;
+using Blog.Services.Blogging.API.Options;
+using Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate;
+using Blog.Services.Blogging.Infrastructure;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.IdentityModel.Tokens;
+using NodaTime;
+using SysTime = Blog.Services.Blogging.API.Infrastructure.Services.SysTime;
 
 var builder = WebApplication.CreateBuilder(args);
 
-bool isDevelopment = builder.Environment.IsDevelopment();
-var config = GetConfiguration(isDevelopment);
+var env = builder.Environment;
+var config = GetConfiguration(env);
 
 var services = builder.Services;
 
 // Add services to the container.
-
+services.AddLogging();
 services
-    .AddBloggingControllers(isDevelopment)
+    .AddBloggingControllers(env.IsDevelopment())
     .AddNodaTime()
     .AddBloggingInfrastructure(config)
     .AddBloggingApplication(config)
@@ -35,7 +35,7 @@ services.AddSwaggerGen();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (isDevelopment)
+if (env.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
@@ -51,21 +51,19 @@ app.UseAuthorization();
 app.MapControllers();
 
 //await BloggingContextSeed.SeedAsync(connectionString);
-//var summary = BenchmarkRunner.Run<EfPostQueriesBenchmark>();
+app.RegisterLifetimeEvents();
 
 app.Run();
 
-static IConfiguration GetConfiguration(bool isDevelopment)
-{
-    string configFileName = isDevelopment ? "appsettings.Development.json" : "appsettings.json";
-
-    return new ConfigurationBuilder()
+static IConfiguration GetConfiguration(IWebHostEnvironment env)
+    => new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile(configFileName, optional: false, reloadOnChange: true)
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true, reloadOnChange: true)
+                .AddEnvironmentVariables()
                 .Build();
-}
 
-public static class ServiceCollectionExtensions
+static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddCustomJwtAuthentication(this IServiceCollection services, IConfiguration config)
     {
@@ -114,5 +112,30 @@ public static class ServiceCollectionExtensions
         services.TryAddTransient<ISysTime, SysTime>();
 
         return services;
+    }
+}
+
+internal static class WebApplicationExtensions
+{
+    public static void RegisterLifetimeEvents(this WebApplication app)
+    {
+        IBus bus = app.Services.GetRequiredService<IBus>();
+        var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<Program>();
+
+        string serviceType = "BloggingApi";
+
+        app.Lifetime.ApplicationStarted.Register(async () =>
+        {
+            logger.LogInformation("----- Service started: {Type} - {Urls}", serviceType, string.Join(',', app.Urls));
+            await bus.Publish<ServiceInstanceStartedEvent>(new(ServiceType: serviceType, ServiceBaseUrls: app.Urls))
+                .ConfigureAwait(false);
+        });
+
+        app.Lifetime.ApplicationStopped.Register(async () =>
+        {
+            logger.LogInformation("----- Service stopped: {Type} - {Urls}", serviceType, string.Join(',', app.Urls));
+            await bus.Publish<ServiceInstanceStoppedEvent>(new(ServiceType: serviceType, ServiceBaseUrls: app.Urls))
+            .ConfigureAwait(false);
+        });
     }
 }

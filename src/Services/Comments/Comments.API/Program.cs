@@ -1,13 +1,14 @@
 var builder = WebApplication.CreateBuilder(args);
 var env = builder.Environment;
 var config = GetConfiguration(env);
+var services = builder.Services;
 
 // Add services to the container.
-
-builder.Services.AddControllers();
+services.AddLogging();
+services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+services.AddEndpointsApiExplorer();
+services.AddSwaggerGen();
 
 var app = builder.Build();
 
@@ -24,6 +25,8 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+app.RegisterLifetimeEvents();
+
 app.Run();
 
 
@@ -34,3 +37,28 @@ static IConfiguration GetConfiguration(IWebHostEnvironment env)
                 .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true, reloadOnChange: true)
                 .AddEnvironmentVariables()
                 .Build();
+
+internal static class WebApplicationExtensions
+{
+    public static void RegisterLifetimeEvents(this WebApplication app)
+    {
+        IBus bus = app.Services.GetRequiredService<IBus>();
+        var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<Program>();
+
+        string serviceType = "CommentsApi";
+
+        app.Lifetime.ApplicationStarted.Register(async () =>
+        {
+            logger.LogInformation("----- Service started: {Type} - {Urls}", serviceType, string.Join(',', app.Urls));
+            await bus.Publish<ServiceInstanceStartedEvent>(new(ServiceType: serviceType, ServiceBaseUrls: app.Urls))
+                .ConfigureAwait(false);
+        });
+
+        app.Lifetime.ApplicationStopped.Register(async () =>
+        {
+            logger.LogInformation("----- Service stopped: {Type} - {Urls}", serviceType, string.Join(',', app.Urls));
+            await bus.Publish<ServiceInstanceStoppedEvent>(new(ServiceType: serviceType, ServiceBaseUrls: app.Urls))
+            .ConfigureAwait(false);
+        });
+    }
+}

@@ -3,7 +3,6 @@ using Blog.Services.Blogging.Domain.AggregatesModel.TagAggregate;
 using Blog.Services.Blogging.Domain.SeedWork;
 using Blog.Services.Blogging.Infrastructure.Idempotency;
 using Blog.Services.Blogging.Infrastructure.Repositories;
-using Blog.Services.Blogging.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,7 +17,7 @@ public static class InfrastructureInstaller
 {
     public static IServiceCollection AddBloggingInfrastructure(this IServiceCollection services, IConfiguration config)
     {
-        string connectionString = config.GetConnectionString("BloggingPostgresDb");
+        string connectionString = config.GetConnectionString("Postgres");
 
         services.AddDbContextPool<BloggingDbContext>(opts =>
         {

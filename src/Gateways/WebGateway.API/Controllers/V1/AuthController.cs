@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Net;
 using System.Text.RegularExpressions;
-using Blog.Gateways.WebGateway.API.Config;
+using Blog.Gateways.WebGateway.API.Configs;
 using Blog.Gateways.WebGateway.API.Extensions;
 using Blog.Gateways.WebGateway.API.Models;
 using Blog.Gateways.WebGateway.API.Services;

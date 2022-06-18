@@ -1,8 +1,11 @@
-using Blog.Services.Emailing.API.Config;
-using Blog.Services.Emailing.API.Messaging.Consumers;
-using Blog.Services.Messaging.Events;
+using Blog.Services.Emailing.API.Configs;
+using Blog.Services.Emailing.API.Factories;
+using Blog.Services.Emailing.API.Grpc;
+using Blog.Services.Integration.Events;
+using FluentEmail.Core;
 using FluentEmail.MailKitSmtp;
 using MassTransit;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 var env = builder.Environment;
@@ -11,6 +14,7 @@ var config = GetConfiguration(env);
 var services = builder.Services;
 
 // Add services to the container.
+services.AddLogging();
 services.AddRazorPages(opts =>
 {
     opts.RootDirectory = "./Templates";
@@ -21,10 +25,14 @@ services
     .AddConfiguredFluentEmail(config)
     .AddGrpc();
 
-
 var app = builder.Build();
 
 app.UseStaticFiles(); //html, css, images, js in wwwroot folder
+
+app.UseEndpoints(opts =>
+{
+    opts.MapGrpcService<EmailingService>();
+});
 
 app.RegisterLifetimeEvents();
 
@@ -45,8 +53,6 @@ internal static class ServiceCollectionExtensions
     {
         services.AddMassTransit(x =>
         {
-            x.AddConsumersFromNamespaceContaining<SendEmailConfirmationEmailConsumer>();
-
             x.UsingRabbitMq((context, cfg) =>
             {
                 services
@@ -68,6 +74,8 @@ internal static class ServiceCollectionExtensions
                     opts.UseMessageRetry(r => r.Intervals(100, 200, 500, 800, 1000));
                     opts.ConfigureConsumers(context);
                 });
+
+                cfg.Durable = true;
             });
         });
 
@@ -117,6 +125,9 @@ internal static class ServiceCollectionExtensions
                 SocketOptions = Enum.Parse<MailKit.Security.SecureSocketOptions>(emailConfig.SocketOptions, true)
             });
 
+        services.TryAddTransient<IEmailFactory<IFluentEmail>,
+            Blog.Services.Emailing.API.Factories.FluentEmailFactory>();
+
         return services;
     }
 }
@@ -126,16 +137,20 @@ internal static class WebApplicationExtensions
     public static void RegisterLifetimeEvents(this WebApplication app)
     {
         IBus bus = app.Services.GetRequiredService<IBus>();
-        string serviceType = "emailing-api";
+        var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<Program>();
+
+        string serviceType = "EmailingApi";
 
         app.Lifetime.ApplicationStarted.Register(async () =>
         {
+            logger.LogInformation("----- Service started: {Type} - {Urls}", serviceType, string.Join(',', app.Urls));
             await bus.Publish<ServiceInstanceStartedEvent>(new(ServiceType: serviceType, ServiceBaseUrls: app.Urls))
                 .ConfigureAwait(false);
         });
 
         app.Lifetime.ApplicationStopped.Register(async () =>
         {
+            logger.LogInformation("----- Service stopped: {Type} - {Urls}", serviceType, string.Join(',', app.Urls));
             await bus.Publish<ServiceInstanceStoppedEvent>(new(ServiceType: serviceType, ServiceBaseUrls: app.Urls))
             .ConfigureAwait(false);
         });
