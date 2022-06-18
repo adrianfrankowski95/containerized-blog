@@ -11,6 +11,8 @@ var config = GetConfiguration(env);
 var services = builder.Services;
 
 // Add services to the container.
+services.AddLogging();
+
 services
     .AddMassTransitRabbitMqBus(config)
     .AddInfrastructure(config)

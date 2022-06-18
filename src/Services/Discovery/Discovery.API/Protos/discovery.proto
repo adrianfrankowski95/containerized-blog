@@ -7,25 +7,25 @@ import "google/protobuf/empty.proto";
 package Blog.Services.Discovery.API.Grpc;
 
 service GrpcDiscoveryService {
-  rpc GetActiveServiceUrls (GetActiveServiceUrlsRequest) returns (GetActiveServiceUrlsResponse);
-  rpc GetActiveServices (google.protobuf.Empty) returns (GetActiveServicesResponse);
+  rpc GetRegisteredServiceUrls (GetRegisteredServiceUrlsRequest) returns (GetRegisteredServiceUrlsResponse);
+  rpc GetRegisteredServices (google.protobuf.Empty) returns (GetRegisteredServicesResponse);
 }
 
-message GetActiveServiceUrlsRequest {
+message GetRegisteredServiceUrlsRequest {
   ServiceType serviceType = 1;
 }
 
-message GetActiveServiceUrlsResponse {
-  repeated string serviceBaseUrls = 1;
+message GetRegisteredServiceUrlsResponse {
+  repeated string urls = 1;
 }
 
-message GetActiveServicesResponse {
+message GetRegisteredServicesResponse {
   repeated ServiceInfo serviceInfo = 1;
 }
 
 message ServiceInfo {
-  ServiceType serviceType = 1;
-  repeated string serviceBaseUrls = 2;
+  ServiceType type = 1;
+  repeated string urls = 2;
 }
 
 enum ServiceType {

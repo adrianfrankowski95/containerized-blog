@@ -2,7 +2,7 @@ using StackExchange.Redis;
 
 namespace Blog.Services.Discovery.API.Models;
 
-public class ServiceId
+public struct ServiceId
 {
     private readonly string _value;
     private ServiceId(ServiceType type)

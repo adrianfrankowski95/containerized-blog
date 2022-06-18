@@ -1,4 +1,3 @@
-using Blog.Services.Discovery.API.Infrastructure.Repositories;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using StackExchange.Redis;
 
@@ -11,7 +10,7 @@ public static class InfrastructureInstaller
         services.TryAddSingleton<IConnectionMultiplexer>(opts =>
             ConnectionMultiplexer.Connect(config.GetConnectionString("Redis")));
 
-        services.TryAddScoped<IServiceRepository, RedisServiceRepository>();
+        services.TryAddScoped<IServiceRegistry, RedisServiceRegistry>();
 
         return services;
     }
