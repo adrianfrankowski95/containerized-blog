@@ -1,8 +1,8 @@
 using Blog.Services.Discovery.API.Grpc;
+using Blog.Services.Discovery.API.Infrastructure;
+using Blog.Services.Discovery.API.Integration.Consumers;
 using Blog.Services.Emailing.API.Configs;
 using MassTransit;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 var env = builder.Environment;
@@ -13,6 +13,7 @@ var services = builder.Services;
 // Add services to the container.
 services
     .AddMassTransitRabbitMqBus(config)
+    .AddInfrastructure(config)
     .AddGrpc();
 
 var app = builder.Build();
@@ -36,6 +37,8 @@ internal static class ServiceCollectionExtensions
     {
         services.AddMassTransit(x =>
         {
+            x.AddConsumersFromNamespaceContaining<ServiceInstanceStartedEventConsumer>();
+
             x.UsingRabbitMq((context, cfg) =>
             {
                 services
@@ -69,14 +72,6 @@ internal static class ServiceCollectionExtensions
                 opts.StartTimeout = TimeSpan.FromSeconds(10);
                 opts.StopTimeout = TimeSpan.FromSeconds(30);
             });
-
-        return services;
-    }
-
-    public static IServiceCollection AddConfiguredRedis(this IServiceCollection services, IConfiguration config)
-    {
-        services.TryAddSingleton<IConnectionMultiplexer>(opts =>
-            ConnectionMultiplexer.Connect(config.GetConnectionString("Redis")));
 
         return services;
     }
