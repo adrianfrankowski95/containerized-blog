@@ -1,5 +1,5 @@
 using System.Security.Cryptography;
-using Blog.Gateways.WebGateway.API.Config;
+using Blog.Gateways.WebGateway.API.Configs;
 using Blog.Gateways.WebGateway.API.Controllers;
 using Blog.Gateways.WebGateway.API.Extensions;
 using Blog.Gateways.WebGateway.API.Infrastructure;

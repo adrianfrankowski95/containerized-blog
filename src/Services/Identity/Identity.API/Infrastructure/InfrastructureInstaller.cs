@@ -15,7 +15,7 @@ public static class InfrastructureInstaller
         where TUser : User
         where TRole : Role
     {
-        string connectionString = config.GetConnectionString("IdentityPostgresDb");
+        string connectionString = config.GetConnectionString("Postgres");
 
         services.AddDbContextPool<IdentityDbContext<TUser, TRole>>(opts =>
         {

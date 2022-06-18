@@ -1,11 +1,10 @@
 using Blog.Services.Identity.API.Adapters;
-using Blog.Services.Identity.API.Config;
+using Blog.Services.Identity.API.Configs;
 using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Infrastructure;
 using Blog.Services.Identity.API.Models;
 using Blog.Services.Identity.API.Services;
-using Blog.Services.Messaging.Events;
-using Blog.Services.Messaging.Requests;
+using Blog.Services.Integration.Events;
 using MassTransit;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +14,7 @@ var config = GetConfiguration(env);
 var services = builder.Services;
 
 // Add services to the container.
+services.AddLogging();
 services.AddRazorPages();
 
 services
@@ -78,10 +78,9 @@ internal static class ServiceCollectionExtensions
                 {
                     opts.UseMessageRetry(r => r.Intervals(100, 200, 500, 800, 1000));
                 });
-            });
 
-            x.AddRequestClient<SendEmailConfirmationEmailRequest>(TimeSpan.FromSeconds(10));
-            x.AddRequestClient<SendPasswordResetEmailRequest>(TimeSpan.FromSeconds(10));
+                cfg.Durable = true;
+            });
         });
 
         services.AddOptions<MassTransitHostOptions>()
@@ -101,16 +100,20 @@ internal static class WebApplicationExtensions
     public static void RegisterLifetimeEvents(this WebApplication app)
     {
         IBus bus = app.Services.GetRequiredService<IBus>();
-        string serviceType = "identity-api";
+        var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<Program>();
+
+        string serviceType = "IdentityApi";
 
         app.Lifetime.ApplicationStarted.Register(async () =>
         {
+            logger.LogInformation("----- Service started: {Type} - {Urls}", serviceType, string.Join(',', app.Urls));
             await bus.Publish<ServiceInstanceStartedEvent>(new(ServiceType: serviceType, ServiceBaseUrls: app.Urls))
                 .ConfigureAwait(false);
         });
 
         app.Lifetime.ApplicationStopped.Register(async () =>
         {
+            logger.LogInformation("----- Service stopped: {Type} - {Urls}", serviceType, string.Join(',', app.Urls));
             await bus.Publish<ServiceInstanceStoppedEvent>(new(ServiceType: serviceType, ServiceBaseUrls: app.Urls))
                 .ConfigureAwait(false);
         });

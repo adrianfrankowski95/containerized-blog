@@ -3,8 +3,10 @@ services:
   rabbitmq:
     image: masstransit/rabbitmq:latest
 
-  serviceregistrydb:
+  serviceregistry:
     image: redis:alpine
+    ports:
+      - "6379:6379"
 
   identitydb:
     image: postgres:alpine
@@ -52,6 +54,14 @@ services:
       dockerfile: Services/Emailing/Emailing.API
     depends_on:
       - rabbitmq
+
+  discovery-api:
+    image: blog/discovery-api
+    build:
+      context: .
+      dockerfile: Services/Discovery/Discovery.API
+    depends_on:
+      - serviceregistry
 
   eventstore-api:
     image: blog/eventstore-api

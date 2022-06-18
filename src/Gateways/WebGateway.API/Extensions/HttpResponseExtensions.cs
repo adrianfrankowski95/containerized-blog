@@ -1,4 +1,4 @@
-using Blog.Gateways.WebGateway.API.Config;
+using Blog.Gateways.WebGateway.API.Configs;
 
 namespace Blog.Gateways.WebGateway.API.Extensions;
 
