@@ -151,7 +151,7 @@ internal static class WebApplicationExtensions
         app.Lifetime.ApplicationStopped.Register(async () =>
         {
             logger.LogInformation("----- Service stopped: {Type} - {Urls}", serviceType, string.Join(',', app.Urls));
-            await bus.Publish<ServiceInstanceStoppedEvent>(new(ServiceType: serviceType, ServiceBaseUrls: app.Urls))
+            await bus.Publish<ServiceInstanceStoppedEvent>(new(ServiceType: serviceType, ServiceUrls: app.Urls))
             .ConfigureAwait(false);
         });
     }

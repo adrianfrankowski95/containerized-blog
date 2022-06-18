@@ -2,4 +2,4 @@
 //in order to make it work through the MassTransit
 namespace Blog.Services.Integration.Events;
 
-public record ServiceInstanceStoppedEvent(string ServiceType, IEnumerable<string> serviceUrls);
+public record ServiceInstanceStoppedEvent(string ServiceType, IEnumerable<string> ServiceUrls);
