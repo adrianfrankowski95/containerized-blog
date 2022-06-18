@@ -3,4 +3,4 @@
 namespace Blog.Services.Integration.Events;
 
 
-public record ServiceInstanceStoppedEvent(string ServiceType, IEnumerable<string> ServiceBaseUrls);
+public record ServiceInstanceStoppedEvent(string ServiceType, IEnumerable<string> ServiceUrls);
