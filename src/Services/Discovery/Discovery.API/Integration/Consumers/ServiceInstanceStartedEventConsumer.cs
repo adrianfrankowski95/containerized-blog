@@ -22,7 +22,7 @@ public class ServiceInstanceStartedEventConsumer : IConsumer<ServiceInstanceStar
     public async Task Consume(ConsumeContext<ServiceInstanceStartedEvent> context)
     {
         string serviceType = context.Message.ServiceType;
-        IEnumerable<string> serviceUrls = context.Message.ServiceBaseUrls;
+        IEnumerable<string> serviceUrls = context.Message.serviceUrls;
 
         _logger.LogInformation("----- Handling service started event: {ServiceType} - {Urls}", serviceType, serviceUrls);
 
@@ -41,10 +41,7 @@ public class ServiceInstanceStartedEventConsumer : IConsumer<ServiceInstanceStar
             _logger.LogInformation("----- Successfully registered {UrlsCount} URL(s) of {ServiceType}", changes, serviceType);
 
             await context.Publish(new ServiceRegistryUpdatedEvent(
-                new Dictionary<string, IEnumerable<string>>
-                {
-                    { updatedServiceInfo.Type.ToString(), updatedServiceInfo.Urls }
-                }))
+                updatedServiceInfo.Type.ToString(), updatedServiceInfo.Urls))
                 .ConfigureAwait(false);
         }
 

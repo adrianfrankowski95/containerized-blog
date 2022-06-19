@@ -2,4 +2,4 @@
 //in order to make it work through the MassTransit
 namespace Blog.Services.Integration.Events;
 
-public record ServiceInstanceStartedEvent(string ServiceType, IEnumerable<string> serviceUrls);
+public record ServiceInstanceStartedEvent(string ServiceType, IEnumerable<string> ServiceUrls);

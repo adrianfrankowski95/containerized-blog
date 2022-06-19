@@ -3,4 +3,4 @@
 namespace Blog.Services.Integration.Events;
 
 
-public record ServiceInstanceStartedEvent(string ServiceType, IEnumerable<string> ServiceBaseUrls);
+public record ServiceInstanceStartedEvent(string ServiceType, IEnumerable<string> ServiceUrls);

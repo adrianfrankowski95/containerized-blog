@@ -2,4 +2,4 @@
 //in order to make it work through the MassTransit
 namespace Blog.Services.Integration.Events;
 
-public record ServiceRegistryUpdatedEvent(IDictionary<string, IEnumerable<string>> UpdatedRegistry);
+public record ServiceRegistryUpdatedEvent(string ServiceType, IEnumerable<string> ServiceUrls);
