@@ -144,7 +144,7 @@ internal static class WebApplicationExtensions
         app.Lifetime.ApplicationStarted.Register(async () =>
         {
             logger.LogInformation("----- Service started: {Type} - {Urls}", serviceType, string.Join(',', app.Urls));
-            await bus.Publish<ServiceInstanceStartedEvent>(new(ServiceType: serviceType, ServiceBaseUrls: app.Urls))
+            await bus.Publish<ServiceInstanceStartedEvent>(new(ServiceType: serviceType, ServiceUrls: app.Urls))
                 .ConfigureAwait(false);
         });
 
