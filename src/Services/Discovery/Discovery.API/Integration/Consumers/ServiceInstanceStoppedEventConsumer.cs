@@ -21,7 +21,7 @@ public class ServiceInstanceStoppedEventConsumer : IConsumer<ServiceInstanceStop
     public async Task Consume(ConsumeContext<ServiceInstanceStoppedEvent> context)
     {
         string serviceType = context.Message.ServiceType;
-        IEnumerable<string> serviceUrls = context.Message.ServiceBaseUrls;
+        IEnumerable<string> serviceUrls = context.Message.ServiceUrls;
 
         _logger.LogInformation("----- Handling service stopped event: {ServiceType} - {Urls}", serviceType, serviceUrls);
 
@@ -31,10 +31,19 @@ public class ServiceInstanceStoppedEventConsumer : IConsumer<ServiceInstanceStop
             throw new InvalidEnumArgumentException();
         }
 
-        var result = await _serviceRegistry
+        (long changes, ServiceInfo updatedServiceInfo) = await _serviceRegistry
             .UnregisterService(new ServiceInfo(serviceTypeEnum, serviceUrls))
             .ConfigureAwait(false);
 
-        _logger.LogInformation("----- Successfully removed {UrlsCount} URL(s) of {ServiceType}", result, serviceType);
+        if (changes > 0)
+        {
+            _logger.LogInformation("----- Successfully unregistered {UrlsCount} URL(s) of {ServiceType}", changes, serviceType);
+
+            await context.Publish(new ServiceRegistryUpdatedEvent(
+                updatedServiceInfo.Type.ToString(), updatedServiceInfo.Urls))
+                .ConfigureAwait(false);
+        }
+
+        _logger.LogWarning("----- No URLs have been unregistered for {ServiceType}", serviceType);
     }
 }
