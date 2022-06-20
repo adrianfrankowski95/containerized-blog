@@ -39,12 +39,12 @@ public class EmailingService : GrpcEmailingService.GrpcEmailingServiceBase
 
             if (result.Successful)
             {
-                _logger.LogInformation("----- Confirmation email to {Name} <{EmailAddress}> sent sucessfully", request.Recipient.Name, request.Recipient.EmailAddress);
+                _logger.LogInformation("----- Successfully sent confirmation email to {Name} <{EmailAddress}>", request.Recipient.Name, request.Recipient.EmailAddress);
                 return _success;
             }
 
             _logger.LogError("----- Error sending confirmation email to {Name} <{EmailAddress}>: {Errors}",
-                request.Recipient.Name, request.Recipient.EmailAddress, string.Join(',', result.ErrorMessages));
+                request.Recipient.Name, request.Recipient.EmailAddress, string.Join(", ", result.ErrorMessages));
 
             return _fail;
         }
@@ -71,12 +71,12 @@ public class EmailingService : GrpcEmailingService.GrpcEmailingServiceBase
 
             if (result.Successful)
             {
-                _logger.LogInformation("----- Password reset email to {Name} <{EmailAddress}> sent sucessfully", request.Recipient.Name, request.Recipient.EmailAddress);
+                _logger.LogInformation("----- Successfully sent password reset email to {Name} <{EmailAddress}>", request.Recipient.Name, request.Recipient.EmailAddress);
                 return _success;
             }
 
             _logger.LogError("----- Error sending password reset email to {Name} <{EmailAddress}>: {Errors}",
-                request.Recipient.Name, request.Recipient.EmailAddress, string.Join(',', result.ErrorMessages));
+                request.Recipient.Name, request.Recipient.EmailAddress, string.Join(", ", result.ErrorMessages));
 
             return _fail;
         }

@@ -4,8 +4,9 @@ namespace Blog.Services.Discovery.API.Infrastructure;
 
 public interface IServiceRegistry
 {
-    public Task<(long changes, ServiceInfo updatedServiceInfo)> RegisterService(ServiceInfo service);
-    public Task<(long changes, ServiceInfo updatedServiceInfo)> UnregisterService(ServiceInfo service);
-    public Task<IEnumerable<ServiceInfo>> GetRegisteredServicesAsync();
-    public Task<IEnumerable<string>> GetRegisteredServiceUrlsAsync(ServiceType serviceType);
+    public Task<bool> RegisterServiceInstance(ServiceInfo serviceInfo);
+    public Task<bool> UnregisterServiceInstance(ServiceInfo serviceInfo);
+    public Task<IDictionary<string, HashSet<string>>> GetRegisteredServicesAsync();
+    public Task<IEnumerable<string>> GetRegisteredServiceTypeUrlsAsync(string serviceType);
+    public Task<bool> ServiceInstanceExistsAsync(ServiceInfo serviceInfo, bool refreshExpiration = false);
 }

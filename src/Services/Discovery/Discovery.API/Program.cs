@@ -15,7 +15,7 @@ services.AddLogging();
 
 services
     .AddMassTransitRabbitMqBus(config)
-    .AddInfrastructure(config)
+    .AddServiceRegistry(config)
     .AddGrpc();
 
 var app = builder.Build();

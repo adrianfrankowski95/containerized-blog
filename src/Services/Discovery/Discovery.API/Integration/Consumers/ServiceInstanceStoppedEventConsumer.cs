@@ -20,30 +20,31 @@ public class ServiceInstanceStoppedEventConsumer : IConsumer<ServiceInstanceStop
     }
     public async Task Consume(ConsumeContext<ServiceInstanceStoppedEvent> context)
     {
+        Guid instanceId = context.Message.InstanceId;
         string serviceType = context.Message.ServiceType;
-        IEnumerable<string> serviceUrls = context.Message.ServiceUrls;
+        IEnumerable<string> urls = context.Message.Urls;
 
-        _logger.LogInformation("----- Handling service stopped event: {ServiceType} - {Urls}", serviceType, serviceUrls);
+        if (instanceId.Equals(Guid.Empty))
+            throw new ArgumentNullException(nameof(context.Message.InstanceId));
 
-        if (!Enum.TryParse(serviceType, true, out ServiceType serviceTypeEnum))
+        if (string.IsNullOrWhiteSpace(serviceType))
+            throw new ArgumentNullException(nameof(context.Message.ServiceType));
+
+        if (urls is null || !urls.Any())
+            throw new ArgumentNullException(nameof(context.Message.Urls));
+
+        string urlsString = string.Join("; ", urls);
+
+        _logger.LogInformation("----- Handling {ServiceType} instance stopped event: {InstanceId} - {Urls}", serviceType, instanceId, urlsString);
+
+        bool success = await _serviceRegistry.UnregisterServiceInstance(new ServiceInfo(instanceId, serviceType, urls)).ConfigureAwait(false);
+
+        if (success)
         {
-            _logger.LogCritical("----- Error removing service URLs - unrecognized service type: {ServiceType}", serviceType);
-            throw new InvalidEnumArgumentException();
+            _logger.LogInformation("----- Successfully unregistered {ServiceType} instance: {InstanceId} - {Urls}", serviceType, instanceId, urlsString);
+            await context.Publish(new ServiceInstanceUnregisteredEvent(instanceId, serviceType, urls)).ConfigureAwait(false);
         }
 
-        (long changes, ServiceInfo updatedServiceInfo) = await _serviceRegistry
-            .UnregisterService(new ServiceInfo(serviceTypeEnum, serviceUrls))
-            .ConfigureAwait(false);
-
-        if (changes > 0)
-        {
-            _logger.LogInformation("----- Successfully unregistered {UrlsCount} URL(s) of {ServiceType}", changes, serviceType);
-
-            await context.Publish(new ServiceRegistryUpdatedEvent(
-                updatedServiceInfo.Type.ToString(), updatedServiceInfo.Urls))
-                .ConfigureAwait(false);
-        }
-
-        _logger.LogWarning("----- No URLs have been unregistered for {ServiceType}", serviceType);
+        _logger.LogError("----- Error unregistering {ServiceType} instance: {InstanceId} - {Urls}", serviceType, instanceId, urlsString);
     }
 }
