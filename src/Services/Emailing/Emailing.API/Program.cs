@@ -139,20 +139,23 @@ internal static class WebApplicationExtensions
         IBus bus = app.Services.GetRequiredService<IBus>();
         var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<Program>();
 
-        string serviceType = "EmailingApi";
+        Guid instanceId = Guid.NewGuid();
+        string serviceType = "emailing-api";
+        string urlsString = string.Join("; ", app.Urls);
+
 
         app.Lifetime.ApplicationStarted.Register(async () =>
         {
-            logger.LogInformation("----- Service started: {Type} - {Urls}", serviceType, string.Join(',', app.Urls));
-            await bus.Publish<ServiceInstanceStartedEvent>(new(ServiceType: serviceType, ServiceUrls: app.Urls))
+            logger.LogInformation("----- {Type} service instance started: {Id} - {Urls}", serviceType, instanceId, urlsString);
+            await bus.Publish<ServiceInstanceStartedEvent>(new(instanceId, serviceType, app.Urls))
                 .ConfigureAwait(false);
         });
 
         app.Lifetime.ApplicationStopped.Register(async () =>
         {
-            logger.LogInformation("----- Service stopped: {Type} - {Urls}", serviceType, string.Join(',', app.Urls));
-            await bus.Publish<ServiceInstanceStoppedEvent>(new(ServiceType: serviceType, ServiceUrls: app.Urls))
-            .ConfigureAwait(false);
+            logger.LogInformation("----- {Type} service instance stopped: {Id} - {Urls}", serviceType, instanceId, urlsString);
+            await bus.Publish<ServiceInstanceStoppedEvent>(new(instanceId, serviceType, app.Urls))
+                .ConfigureAwait(false);
         });
     }
 }
