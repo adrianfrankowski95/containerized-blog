@@ -1,6 +1,7 @@
 using Blog.Services.Emailing.API.Configs;
 using Blog.Services.Emailing.API.Factories;
 using Blog.Services.Emailing.API.Grpc;
+using Blog.Services.Emailing.API.Services;
 using Blog.Services.Integration.Events;
 using FluentEmail.Core;
 using FluentEmail.MailKitSmtp;
@@ -21,8 +22,10 @@ services.AddRazorPages(opts =>
 });
 
 services
+    .AddInstanceConfig()
     .AddMassTransitRabbitMqBus(config)
     .AddConfiguredFluentEmail(config)
+    .AddCustomServices()
     .AddGrpc();
 
 var app = builder.Build();
@@ -33,8 +36,6 @@ app.UseEndpoints(opts =>
 {
     opts.MapGrpcService<EmailingService>();
 });
-
-app.RegisterLifetimeEvents();
 
 app.Run();
 
@@ -49,6 +50,20 @@ static IConfiguration GetConfiguration(IWebHostEnvironment env)
 
 internal static class ServiceCollectionExtensions
 {
+    public static IServiceCollection AddInstanceConfig(this IServiceCollection services)
+    {
+        services.AddOptions<ServiceInstanceConfig>().Configure(opts =>
+        {
+            opts.InstanceId = Guid.NewGuid();
+            opts.ServiceType = "emailing-api";
+            opts.HeartbeatInterval = TimeSpan.FromSeconds(15);
+        })
+        .ValidateDataAnnotations()
+        .ValidateOnStart();
+
+        return services;
+    }
+
     public static IServiceCollection AddMassTransitRabbitMqBus(this IServiceCollection services, IConfiguration config)
     {
         services.AddMassTransit(x =>
@@ -129,33 +144,5 @@ internal static class ServiceCollectionExtensions
             Blog.Services.Emailing.API.Factories.FluentEmailFactory>();
 
         return services;
-    }
-}
-
-internal static class WebApplicationExtensions
-{
-    public static void RegisterLifetimeEvents(this WebApplication app)
-    {
-        IBus bus = app.Services.GetRequiredService<IBus>();
-        var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<Program>();
-
-        Guid instanceId = Guid.NewGuid();
-        string serviceType = "emailing-api";
-        string urlsString = string.Join("; ", app.Urls);
-
-
-        app.Lifetime.ApplicationStarted.Register(async () =>
-        {
-            logger.LogInformation("----- {Type} service instance started: {Id} - {Urls}", serviceType, instanceId, urlsString);
-            await bus.Publish<ServiceInstanceStartedEvent>(new(instanceId, serviceType, app.Urls))
-                .ConfigureAwait(false);
-        });
-
-        app.Lifetime.ApplicationStopped.Register(async () =>
-        {
-            logger.LogInformation("----- {Type} service instance stopped: {Id} - {Urls}", serviceType, instanceId, urlsString);
-            await bus.Publish<ServiceInstanceStoppedEvent>(new(instanceId, serviceType, app.Urls))
-                .ConfigureAwait(false);
-        });
     }
 }

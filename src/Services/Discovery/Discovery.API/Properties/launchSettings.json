@@ -9,7 +9,7 @@
     }
   },
   "profiles": {
-    "Emailing.API": {
+    "Discovery.API": {
       "commandName": "Project",
       "dotnetRunMessages": true,
       "launchBrowser": true,

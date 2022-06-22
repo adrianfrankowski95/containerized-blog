@@ -5,19 +5,19 @@ using MassTransit;
 
 namespace Blog.Services.Discovery.API.Integration.Consumers;
 
-public class ServiceInstanceHeartbeatSentEventConsumer : IConsumer<ServiceInstanceHeartbeatSentEvent>
+public class ServiceInstanceHeartbeatEventConsumer : IConsumer<ServiceInstanceHeartbeatEvent>
 {
     private readonly IServiceRegistry _serviceRegistry;
-    private readonly ILogger<ServiceInstanceHeartbeatSentEventConsumer> _logger;
+    private readonly ILogger<ServiceInstanceHeartbeatEventConsumer> _logger;
 
-    public ServiceInstanceHeartbeatSentEventConsumer(
+    public ServiceInstanceHeartbeatEventConsumer(
         IServiceRegistry serviceRegistry,
-        ILogger<ServiceInstanceHeartbeatSentEventConsumer> logger)
+        ILogger<ServiceInstanceHeartbeatEventConsumer> logger)
     {
         _serviceRegistry = serviceRegistry ?? throw new ArgumentNullException(nameof(serviceRegistry));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
-    public async Task Consume(ConsumeContext<ServiceInstanceHeartbeatSentEvent> context)
+    public async Task Consume(ConsumeContext<ServiceInstanceHeartbeatEvent> context)
     {
         Guid instanceId = context.Message.InstanceId;
         string serviceType = context.Message.ServiceType;
@@ -25,10 +25,10 @@ public class ServiceInstanceHeartbeatSentEventConsumer : IConsumer<ServiceInstan
 
         string serviceUrlsString = string.Join("; ", serviceUrls);
 
-        _logger.LogInformation("----- Handling {ServiceType} instance heartbeat sent event: {InstanceId} - {Urls}", serviceType, instanceId, serviceUrlsString);
+        _logger.LogInformation("----- Handling {ServiceType} instance heartbeat event: {InstanceId} - {Urls}", serviceType, instanceId, serviceUrlsString);
 
         var serviceInfo = new ServiceInfo(instanceId, serviceType, serviceUrls);
-        bool exists = await _serviceRegistry.ServiceInstanceExistsAsync(serviceInfo, true).ConfigureAwait(false);
+        bool exists = await _serviceRegistry.TryRefreshServiceInstanceExpiry(serviceInfo).ConfigureAwait(false);
 
         if (!exists)
         {

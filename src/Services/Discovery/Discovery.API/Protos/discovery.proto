@@ -7,30 +7,23 @@ import "google/protobuf/empty.proto";
 package Blog.Services.Discovery.API.Grpc;
 
 service GrpcDiscoveryService {
-  rpc GetRegisteredServiceUrls (GetRegisteredServiceUrlsRequest) returns (GetRegisteredServiceUrlsResponse);
-  rpc GetRegisteredServices (google.protobuf.Empty) returns (GetRegisteredServicesResponse);
+  rpc GetUrlsOfService (GetUrlsOfServiceRequest) returns  (GetUrlsOfServiceResponse);
+  rpc GetUrls (google.protobuf.Empty) returns (GetUrlsResponse);
 }
 
-message GetRegisteredServiceUrlsRequest {
-  ServiceType serviceType = 1;
+message GetUrlsOfServiceRequest {
+  string serviceType = 1;
 }
 
-message GetRegisteredServiceUrlsResponse {
+message GetUrlsOfServiceResponse {
   repeated string urls = 1;
 }
 
-message GetRegisteredServicesResponse {
+message GetUrlsResponse {
   repeated ServiceInfo serviceInfo = 1;
 }
 
 message ServiceInfo {
-  ServiceType type = 1;
+  string serviceType = 1;
   repeated string urls = 2;
-}
-
-enum ServiceType {
-  IdentityApi = 0;
-  EmailingApi = 1;
-  BloggingApi = 2;
-  CommentsApi = 3;
 }
