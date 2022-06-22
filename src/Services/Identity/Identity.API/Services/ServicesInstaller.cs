@@ -9,6 +9,7 @@ public static class ServicesInstaller
     {
         services.TryAddSingleton<IClock, SystemClock>();
         services.TryAddTransient<ILoginService, LoginService>();
+        services.AddHostedService<LifetimeEventsPublisher>();
 
         return services;
     }

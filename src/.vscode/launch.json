@@ -11,7 +11,7 @@
                 "Debug Comments.API",
                 "Debug Identity.API",
                 "Debug WebGateway.API",
-                "Debug Auth.API"
+                "Debug Discovery.API"
             ]
         },
         {
@@ -21,18 +21,19 @@
                 //"Release Comments.API",
                 ////"Release Identity.API",
                 //"Release WebGateway.API"
+                //"Release Discovery.API"
             ]
         }
     ],
     "configurations": [
         {
-            "name": "Debug Auth.API",
+            "name": "Debug Discovery.API",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "build Auth api",
-            "program": "${workspaceFolder}/Services/Auth/Auth.API/bin/Debug/net6.0/Auth.API.dll",
+            "preLaunchTask": "build Discovery api",
+            "program": "${workspaceFolder}/Services/Discovery/Discovery.API/bin/Debug/net6.0/Discovery.API.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/Services/Auth/Auth.API",
+            "cwd": "${workspaceFolder}/Services/Discovery/Discovery.API",
             "stopAtEntry": false,
             "serverReadyAction": {
                 "action": "openExternally",
@@ -46,13 +47,13 @@
             }
         },
         {
-            "name": "Release Auth.API",
+            "name": "Release Discovery.API",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "build release Auth api",
-            "program": "${workspaceFolder}/Services/Auth/Auth.API/bin/Release/net6.0/Auth.API.dll",
+            "preLaunchTask": "build release Discovery api",
+            "program": "${workspaceFolder}/Services/Discovery/Discovery.API/bin/Release/net6.0/Discovery.API.dll",
             "args": [],
-            "cwd": "${workspaceFolder}/Services/Auth/Auth.API",
+            "cwd": "${workspaceFolder}/Services/Discovery/Discovery.API",
             "stopAtEntry": false,
             "serverReadyAction": {
                 "action": "openExternally",

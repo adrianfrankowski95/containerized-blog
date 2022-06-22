@@ -1,23 +1,25 @@
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
+using Blog.Services.Discovery.API.Infrastructure;
 
 namespace Blog.Services.Discovery.API.Grpc;
 
 public class DiscoveryService : GrpcDiscoveryService.GrpcDiscoveryServiceBase
 {
+    private readonly IServiceRegistry _serviceRegistry;
     private readonly ILogger<DiscoveryService> _logger;
-    public DiscoveryService(ILogger<DiscoveryService> logger)
+    public DiscoveryService(IServiceRegistry serviceRegistry, ILogger<DiscoveryService> logger)
     {
-        _logger = logger;
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _serviceRegistry = serviceRegistry ?? throw new ArgumentNullException(nameof(serviceRegistry));
     }
 
-    public override Task<GetRegisteredServiceUrlsResponse> GetRegisteredServiceUrls(
-        GetRegisteredServiceUrlsRequest request, ServerCallContext context)
+    public override Task<GetUrlsOfServiceResponse> GetUrlsOfService(GetUrlsOfServiceRequest request, ServerCallContext context)
     {
         throw new NotImplementedException();
     }
 
-    public override Task<GetRegisteredServicesResponse> GetRegisteredServices(Empty request, ServerCallContext context)
+    public override Task<GetUrlsResponse> GetUrls(Empty request, ServerCallContext context)
     {
         throw new NotImplementedException();
     }

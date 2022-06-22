@@ -36,7 +36,7 @@ public class RedisServiceRegistry : IServiceRegistry
         return _redisDb.KeyDeleteAsync(serviceInfo.Key);
     }
 
-    public async Task<IDictionary<string, HashSet<string>>> GetRegisteredServicesAsync()
+    public async Task<IDictionary<string, HashSet<string>>> GetUrlsAsync()
     {
         //key pattern: services:servicetype:instanceid
         var keys = _redis.GetServer(_redis.GetEndPoints().Single()).Keys(pattern: "services:*");
@@ -71,7 +71,7 @@ public class RedisServiceRegistry : IServiceRegistry
         return ImmutableDictionary<string, HashSet<string>>.Empty;
     }
 
-    public async Task<IEnumerable<string>> GetRegisteredServiceTypeUrlsAsync(string serviceType)
+    public async Task<IEnumerable<string>> GetUrlsOfServiceAsync(string serviceType)
     {
         if (string.IsNullOrWhiteSpace(serviceType))
             throw new ArgumentNullException(nameof(serviceType));
@@ -90,16 +90,11 @@ public class RedisServiceRegistry : IServiceRegistry
         return Enumerable.Empty<string>();
     }
 
-    public async Task<bool> ServiceInstanceExistsAsync(ServiceInfo serviceInfo, bool refreshExpiration = false)
+    public Task<bool> TryRefreshServiceInstanceExpiry(ServiceInfo serviceInfo)
     {
         if (serviceInfo is null)
             throw new ArgumentNullException(nameof(serviceInfo));
 
-        bool exists = await _redisDb.KeyExistsAsync(serviceInfo.Key).ConfigureAwait(false);
-
-        if (exists && refreshExpiration)
-            await _redisDb.KeyExpireAsync(serviceInfo.Key, _options.CurrentValue.Expiry).ConfigureAwait(false);
-
-        return exists;
+        return _redisDb.KeyExpireAsync(serviceInfo.Key, _options.CurrentValue.Expiry);
     }
 }

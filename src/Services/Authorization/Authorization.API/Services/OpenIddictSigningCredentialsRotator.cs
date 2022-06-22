@@ -10,16 +10,16 @@ namespace Blog.Services.Authorization.API.Services
         public static JobKey Id { get; } = new JobKey(
                 name: nameof(OpenIddictSigningCredentialsRotator),
                 group: typeof(OpenIddictSigningCredentialsRotator).Assembly.GetName().Name!);
-        private readonly IServiceProvider _services;
+        private readonly IServiceScopeFactory _scopeFactory;
 
-        public OpenIddictSigningCredentialsRotator(IServiceProvider services)
+        public OpenIddictSigningCredentialsRotator(IServiceScopeFactory services)
         {
-            _services = services ?? throw new ArgumentNullException(nameof(services));
+            _scopeFactory = services ?? throw new ArgumentNullException(nameof(services));
         }
 
         public async Task Execute(IJobExecutionContext context)
         {
-            await using var scope = _services.CreateAsyncScope();
+            await using var scope = _scopeFactory.CreateAsyncScope();
 
             var certificateManager = scope.ServiceProvider.GetRequiredService<ISigningCertificateManager>();
             var certificates = certificateManager.GenerateAndRegisterCertificates();
@@ -32,6 +32,8 @@ namespace Blog.Services.Authorization.API.Services
                 var signingCredential = new SigningCredentials(securityKey, securityKey.PrivateKey.SignatureAlgorithm);
                 options.SigningCredentials.Add(signingCredential);
             }
+
+            await scope.DisposeAsync().ConfigureAwait(false);
         }
     }
 }
