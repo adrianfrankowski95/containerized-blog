@@ -20,10 +20,9 @@ message GetUrlsOfServiceResponse {
 }
 
 message GetUrlsResponse {
-  repeated ServiceInfo serviceInfo = 1;
+  map<string, UrlList> serviceUrls = 1;
 }
 
-message ServiceInfo {
-  string serviceType = 1;
-  repeated string urls = 2;
+message UrlList {
+  repeated string urls = 1;
 }
