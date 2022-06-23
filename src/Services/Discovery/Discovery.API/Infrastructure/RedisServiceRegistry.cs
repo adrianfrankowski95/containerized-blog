@@ -25,7 +25,7 @@ public class RedisServiceRegistry : IServiceRegistry
         if (serviceInfo is null)
             throw new ArgumentNullException(nameof(serviceInfo));
 
-        return _redisDb.StringSetAsync(serviceInfo.Key, string.Join(';', serviceInfo.Urls), _options.CurrentValue.Expiry);
+        return _redisDb.StringSetAsync(serviceInfo.Key, string.Join(';', serviceInfo.Addresses), _options.CurrentValue.Expiry);
     }
 
     public Task<bool> UnregisterServiceInstance(ServiceInfo serviceInfo)
@@ -36,7 +36,7 @@ public class RedisServiceRegistry : IServiceRegistry
         return _redisDb.KeyDeleteAsync(serviceInfo.Key);
     }
 
-    public async Task<IDictionary<string, HashSet<string>>> GetUrlsAsync()
+    public async Task<IDictionary<string, HashSet<string>>> GetAddressesAsync()
     {
         //key pattern: services:servicetype:instanceid
         var keys = _redis.GetServer(_redis.GetEndPoints().Single()).Keys(pattern: "services:*");
@@ -56,10 +56,10 @@ public class RedisServiceRegistry : IServiceRegistry
                         //key pattern: services:servicetype:instanceid
                         string serviceType = keys.ElementAt(i).ToString().Split(':')[1];
 
-                        var urls = entries.ElementAt(i).ToString().Split(';').ToHashSet();
+                        var Addresses = entries.ElementAt(i).ToString().Split(';').ToHashSet();
 
-                        if (!services.TryAdd(serviceType, urls))
-                            services[serviceType].UnionWith(urls);
+                        if (!services.TryAdd(serviceType, Addresses))
+                            services[serviceType].UnionWith(Addresses);
                     }
                 }
 
@@ -71,7 +71,7 @@ public class RedisServiceRegistry : IServiceRegistry
         return ImmutableDictionary<string, HashSet<string>>.Empty;
     }
 
-    public async Task<IEnumerable<string>> GetUrlsOfServiceAsync(string serviceType)
+    public async Task<IEnumerable<string>> GetAddressesOfServiceAsync(string serviceType)
     {
         if (string.IsNullOrWhiteSpace(serviceType))
             throw new ArgumentNullException(nameof(serviceType));

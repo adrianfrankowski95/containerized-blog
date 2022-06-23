@@ -2,22 +2,22 @@ namespace Blog.Services.Discovery.API.Models;
 
 public class ServiceInfo
 {
-    public ServiceInfo(Guid instanceId, string serviceType, IEnumerable<string> urls)
+    public ServiceInfo(Guid instanceId, string serviceType, IEnumerable<string> ServiceAddresses)
     {
         if (string.IsNullOrWhiteSpace(serviceType))
             throw new ArgumentNullException(nameof(serviceType));
 
-        if (urls is null || !urls.Any())
-            throw new ArgumentNullException(nameof(urls));
+        if (Addresses is null || !Addresses.Any())
+            throw new ArgumentNullException(nameof(Addresses));
 
         InstanceId = instanceId;
         ServiceType = serviceType;
-        Urls = urls.ToHashSet();
+        Addresses = Addresses.ToHashSet();
     }
     public string Key => "services:" + ServiceType + ":" + InstanceId;
     public Guid InstanceId { get; }
     public string ServiceType { get; }
-    public HashSet<string> Urls { get; }
+    public HashSet<string> Addresses { get; }
 
     public override bool Equals(object? obj)
     {
@@ -32,9 +32,9 @@ public class ServiceInfo
 
         bool equalIds = InstanceId.Equals(serviceInfo.InstanceId);
         bool equalType = string.Equals(ServiceType, serviceInfo.ServiceType, StringComparison.OrdinalIgnoreCase);
-        bool equalUrls = Urls.SetEquals(serviceInfo.Urls);
+        bool equalAddresses = Addresses.SetEquals(serviceInfo.Addresses);
 
-        return equalIds && equalType && equalUrls;
+        return equalIds && equalType && equalAddresses;
     }
 
     public override int GetHashCode()

@@ -22,7 +22,7 @@ public class ServiceInstanceStartedEventConsumer : IConsumer<ServiceInstanceStar
     {
         Guid instanceId = context.Message.InstanceId;
         string serviceType = context.Message.ServiceType;
-        IEnumerable<string> urls = context.Message.Urls;
+        IEnumerable<string> addresses = context.Message.ServiceAddresses;
 
         if (instanceId.Equals(Guid.Empty))
             throw new ArgumentNullException(nameof(context.Message.InstanceId));
@@ -30,21 +30,21 @@ public class ServiceInstanceStartedEventConsumer : IConsumer<ServiceInstanceStar
         if (string.IsNullOrWhiteSpace(serviceType))
             throw new ArgumentNullException(nameof(context.Message.ServiceType));
 
-        if (urls is null || !urls.Any())
-            throw new ArgumentNullException(nameof(context.Message.Urls));
+        if (addresses is null || !addresses.Any())
+            throw new ArgumentNullException(nameof(context.Message.ServiceAddresses));
 
-        string urlsString = string.Join("; ", urls);
+        string AddressesString = string.Join("; ", addresses);
 
-        _logger.LogInformation("----- Handling {ServiceType} instance started event: {InstanceId} - {Urls}", serviceType, instanceId, urlsString);
+        _logger.LogInformation("----- Handling {ServiceType} instance started event: {InstanceId} - {Addresses}", serviceType, instanceId, AddressesString);
 
-        bool success = await _serviceRegistry.RegisterServiceInstance(new ServiceInfo(instanceId, serviceType, urls)).ConfigureAwait(false);
+        bool success = await _serviceRegistry.RegisterServiceInstance(new ServiceInfo(instanceId, serviceType, addresses)).ConfigureAwait(false);
 
         if (success)
         {
-            _logger.LogInformation("----- Successfully registered {ServiceType} instance: {InstanceId} - {Urls}", serviceType, instanceId, urlsString);
-            await context.Publish(new ServiceInstanceRegisteredEvent(instanceId, serviceType, urls)).ConfigureAwait(false);
+            _logger.LogInformation("----- Successfully registered {ServiceType} instance: {InstanceId} - {Addresses}", serviceType, instanceId, AddressesString);
+            await context.Publish(new ServiceInstanceRegisteredEvent(instanceId, serviceType, addresses)).ConfigureAwait(false);
         }
 
-        _logger.LogError("----- Error registering {ServiceType} instance: {InstanceId} - {Urls}", serviceType, instanceId, urlsString);
+        _logger.LogError("----- Error registering {ServiceType} instance: {InstanceId} - {Addresses}", serviceType, instanceId, AddressesString);
     }
 }

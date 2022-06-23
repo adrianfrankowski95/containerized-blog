@@ -21,30 +21,30 @@ public class ServiceInstanceHeartbeatEventConsumer : IConsumer<ServiceInstanceHe
     {
         Guid instanceId = context.Message.InstanceId;
         string serviceType = context.Message.ServiceType;
-        IEnumerable<string> serviceUrls = context.Message.ServiceUrls;
+        IEnumerable<string> addresses = context.Message.ServiceAddresses;
 
-        string serviceUrlsString = string.Join("; ", serviceUrls);
+        string addressesString = string.Join("; ", addresses);
 
-        _logger.LogInformation("----- Handling {ServiceType} instance heartbeat event: {InstanceId} - {Urls}", serviceType, instanceId, serviceUrlsString);
+        _logger.LogInformation("----- Handling {ServiceType} instance heartbeat event: {InstanceId} - {Addresses}", serviceType, instanceId, addressesString);
 
-        var serviceInfo = new ServiceInfo(instanceId, serviceType, serviceUrls);
+        var serviceInfo = new ServiceInfo(instanceId, serviceType, addresses);
         bool exists = await _serviceRegistry.TryRefreshServiceInstanceExpiry(serviceInfo).ConfigureAwait(false);
 
         if (!exists)
         {
-            _logger.LogInformation("----- Registering new {ServiceType} instance recognized by a heartbeat: {InstanceId} - {Urls}",
-                serviceType, instanceId, serviceUrlsString);
+            _logger.LogInformation("----- Registering new {ServiceType} instance recognized by a heartbeat: {InstanceId} - {Addresses}",
+                serviceType, instanceId, addressesString);
 
             bool success = await _serviceRegistry.RegisterServiceInstance(serviceInfo).ConfigureAwait(false);
 
             if (success)
             {
-                _logger.LogInformation("----- Successfully registered {ServiceType} instance: {InstanceId} - {Urls}", serviceType, instanceId, serviceUrlsString);
-                await context.Publish(new ServiceInstanceRegisteredEvent(instanceId, serviceType, serviceUrls)).ConfigureAwait(false);
+                _logger.LogInformation("----- Successfully registered {ServiceType} instance: {InstanceId} - {Addresses}", serviceType, instanceId, addressesString);
+                await context.Publish(new ServiceInstanceRegisteredEvent(instanceId, serviceType, addresses)).ConfigureAwait(false);
             }
 
-            _logger.LogError("----- Error registering {ServiceType} instance: {InstanceId} - {Urls}", serviceType, instanceId, serviceUrlsString);
+            _logger.LogError("----- Error registering {ServiceType} instance: {InstanceId} - {Addresses}", serviceType, instanceId, addressesString);
         }
-        _logger.LogWarning("----- The {ServiceType} instance already exists: {InstanceId} - {Urls}", serviceType, instanceId, serviceUrlsString);
+        _logger.LogWarning("----- The {ServiceType} instance already exists: {InstanceId} - {Addresses}", serviceType, instanceId, addressesString);
     }
 }

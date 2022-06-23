@@ -14,32 +14,32 @@ public class DiscoveryService : GrpcDiscoveryService.GrpcDiscoveryServiceBase
         _serviceRegistry = serviceRegistry ?? throw new ArgumentNullException(nameof(serviceRegistry));
     }
 
-    public override async Task<GetUrlsOfServiceResponse> GetUrlsOfService(GetUrlsOfServiceRequest request, ServerCallContext context)
+    public override async Task<GetAddressesOfServiceResponse> GetAddressesOfService(GetAddressesOfServiceRequest request, ServerCallContext context)
     {
         if (string.IsNullOrWhiteSpace(request.ServiceType))
             throw new ArgumentNullException(nameof(request.ServiceType));
 
-        _logger.LogInformation("----- Handling Grpc get urls of service request for {ServiceType}", request.ServiceType);
+        _logger.LogInformation("----- Handling Grpc get addresses of service request for {ServiceType}", request.ServiceType);
 
-        var urls = await _serviceRegistry.GetUrlsOfServiceAsync(request.ServiceType).ConfigureAwait(false);
+        var Addresses = await _serviceRegistry.GetAddressesOfServiceAsync(request.ServiceType).ConfigureAwait(false);
 
-        _logger.LogInformation("----- Successfully fetched following {ServiceType} URLs: {Urls}", request.ServiceType, string.Join("; ", urls));
+        _logger.LogInformation("----- Successfully fetched following {ServiceType} addresses: {Addresses}", request.ServiceType, string.Join("; ", Addresses));
 
-        return new GetUrlsOfServiceResponse { Urls = { urls } };
+        return new GetAddressesOfServiceResponse { Addresses = { Addresses } };
     }
 
-    public override async Task<GetUrlsResponse> GetUrls(Empty request, ServerCallContext context)
+    public override async Task<GetAddressesResponse> GetAddresses(Empty request, ServerCallContext context)
     {
-        _logger.LogInformation("----- Handling Grpc get urls request");
+        _logger.LogInformation("----- Handling Grpc get addresses request");
 
-        var servicesUrls = await _serviceRegistry.GetUrlsAsync().ConfigureAwait(false);
+        var servicesAddresses = await _serviceRegistry.GetAddressesAsync().ConfigureAwait(false);
 
-        _logger.LogInformation("----- Successfully fetched following URLs: {ServiceUrls}",
-            servicesUrls.Select((serviceUrls) => $"{serviceUrls.Key}: {string.Join("; ", serviceUrls.Value)}"));
+        _logger.LogInformation("----- Successfully fetched following addresses: {ServiceAddresses}",
+            servicesAddresses.Select((serviceAddresses) => $"{serviceAddresses.Key}: {string.Join("; ", serviceAddresses.Value)}"));
 
-        return new GetUrlsResponse
+        return new GetAddressesResponse
         {
-            ServiceUrls = { servicesUrls.ToDictionary(k => k.Key, k => new UrlList { Urls = { k.Value } }) }
+            ServiceAddresses = { servicesAddresses.ToDictionary(k => k.Key, k => new AddressList { Addresses = { k.Value } }) }
         };
     }
 }
