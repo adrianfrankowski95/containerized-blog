@@ -2,7 +2,6 @@ using System.Data;
 using System.Net;
 using System.Text.Json;
 using Blog.Services.Blogging.API.Application.Exceptions;
-using Blog.Services.Blogging.API.Application.Models;
 using Blog.Services.Blogging.Domain.Exceptions;
 using Microsoft.EntityFrameworkCore;
 
@@ -33,7 +32,7 @@ public class GlobalExceptionHandlerMiddleware
 
             var response = context.Response;
 
-            response.ContentType = "text/plain";
+            response.ContentType = "application/json";
             response.StatusCode = (int)statusCode;
 
             await JsonSerializer.SerializeAsync(response.Body, ex.Message);

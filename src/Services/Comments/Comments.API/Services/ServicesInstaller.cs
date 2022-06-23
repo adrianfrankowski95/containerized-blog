@@ -1,4 +1,4 @@
-namespace Blog.Services.Emailing.API.Services;
+namespace Blog.Services.Comments.API.Services;
 
 public static class ServicesInstaller
 {
