@@ -7,22 +7,22 @@ import "google/protobuf/empty.proto";
 package Blog.Services.Discovery.API.Grpc;
 
 service GrpcDiscoveryService {
-  rpc GetUrlsOfService (GetUrlsOfServiceRequest) returns  (GetUrlsOfServiceResponse);
-  rpc GetUrls (google.protobuf.Empty) returns (GetUrlsResponse);
+  rpc GetAddressesOfService (GetAddressesOfServiceRequest) returns  (GetAddressesOfServiceResponse);
+  rpc GetAddresses (google.protobuf.Empty) returns (GetAddressesResponse);
 }
 
-message GetUrlsOfServiceRequest {
+message GetAddressesOfServiceRequest {
   string serviceType = 1;
 }
 
-message GetUrlsOfServiceResponse {
-  repeated string urls = 1;
+message GetAddressesOfServiceResponse {
+  repeated string Addresses = 1;
 }
 
-message GetUrlsResponse {
-  map<string, UrlList> serviceUrls = 1;
+message GetAddressesResponse {
+  map<string, AddressList> serviceAddresses = 1;
 }
 
-message UrlList {
-  repeated string urls = 1;
+message AddressList {
+  repeated string Addresses = 1;
 }

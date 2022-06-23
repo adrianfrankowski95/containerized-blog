@@ -35,7 +35,7 @@ public class LifetimeEventsPublisher : BackgroundService
     {
         //We are waiting for an ApplicationStarted token trigger, because only then
         //IServer instance is available and can be resolved by a service provider
-        //in order to obtain app's URLs
+        //in order to obtain app's Addresses
         await WaitForStartupOrCancellationAsync(_lifetime, stoppingToken).ConfigureAwait(false);
 
         if (stoppingToken.IsCancellationRequested)
@@ -46,44 +46,44 @@ public class LifetimeEventsPublisher : BackgroundService
             return;
         }
 
-        var urls = await GetAppUrlsAsync().ConfigureAwait(false);
-        
-        using var registration = _lifetime.ApplicationStopping.Register(async () => await PublishStoppedEventAsync(urls).ConfigureAwait(false));
+        var addresses = await GetAddressesAsync().ConfigureAwait(false);
 
-        await PublishStartedEventAsync(urls, stoppingToken).ConfigureAwait(false);
+        using var registration = _lifetime.ApplicationStopping.Register(async () => await PublishStoppedEventAsync(addresses).ConfigureAwait(false));
+
+        await PublishStartedEventAsync(addresses, stoppingToken).ConfigureAwait(false);
 
         while (!stoppingToken.IsCancellationRequested)
         {
             await Task.Delay(_config.Value.HeartbeatInterval, stoppingToken).ConfigureAwait(false);
-            await PublishHeartbeatEvent(urls, stoppingToken).ConfigureAwait(false);
+            await PublishHeartbeatEvent(addresses, stoppingToken).ConfigureAwait(false);
         }
     }
 
-    private Task PublishStartedEventAsync(IEnumerable<string> appUrls, CancellationToken stoppingToken = default)
+    private Task PublishStartedEventAsync(IEnumerable<string> addresses, CancellationToken stoppingToken = default)
     {
         var config = _config.Value;
 
-        _logger.LogInformation("----- {Type} service instance started: {Id} - {Urls}", config.ServiceType, config.InstanceId, string.Join("; ", appUrls));
-        return _bus.Publish<ServiceInstanceStartedEvent>(new(config.InstanceId, config.ServiceType, appUrls), stoppingToken);
+        _logger.LogInformation("----- {Type} service instance started: {Id} - {Addresses}", config.ServiceType, config.InstanceId, string.Join("; ", addresses));
+        return _bus.Publish<ServiceInstanceStartedEvent>(new(config.InstanceId, config.ServiceType, addresses), stoppingToken);
     }
 
-    private Task PublishStoppedEventAsync(IEnumerable<string> appUrls, CancellationToken stoppingToken = default)
+    private Task PublishStoppedEventAsync(IEnumerable<string> addresses, CancellationToken stoppingToken = default)
     {
         var config = _config.Value;
 
-        _logger.LogInformation("----- {Type} service instance stopped: {Id} - {Urls}", config.ServiceType, config.InstanceId, string.Join("; ", appUrls));
-        return _bus.Publish<ServiceInstanceStoppedEvent>(new(config.InstanceId, config.ServiceType, appUrls), stoppingToken);
+        _logger.LogInformation("----- {Type} service instance stopped: {Id} - {Addresses}", config.ServiceType, config.InstanceId, string.Join("; ", addresses));
+        return _bus.Publish<ServiceInstanceStoppedEvent>(new(config.InstanceId, config.ServiceType, addresses), stoppingToken);
     }
 
-    private Task PublishHeartbeatEvent(IEnumerable<string> appUrls, CancellationToken stoppingToken = default)
+    private Task PublishHeartbeatEvent(IEnumerable<string> addresses, CancellationToken stoppingToken = default)
     {
         var config = _config.Value;
 
-        _logger.LogInformation("----- {Type} heartbeat: {Id} - {Urls}", config.ServiceType, config.InstanceId, string.Join("; ", appUrls));
-        return _bus.Publish<ServiceInstanceHeartbeatEvent>(new(config.InstanceId, config.ServiceType, appUrls), stoppingToken);
+        _logger.LogInformation("----- {Type} heartbeat: {Id} - {Addresses}", config.ServiceType, config.InstanceId, string.Join("; ", addresses));
+        return _bus.Publish<ServiceInstanceHeartbeatEvent>(new(config.InstanceId, config.ServiceType, addresses), stoppingToken);
     }
 
-    private async Task<IEnumerable<string>> GetAppUrlsAsync()
+    private async Task<IEnumerable<string>> GetAddressesAsync()
     {
         await using var scope = _serviceProvider.CreateAsyncScope();
 
@@ -91,7 +91,7 @@ public class LifetimeEventsPublisher : BackgroundService
         var addressFeature = server.Features.Get<IServerAddressesFeature>();
 
         if (addressFeature is null || !addressFeature.Addresses.Any())
-            throw new InvalidOperationException($"Error getting {_config.Value.ServiceType} URLs");
+            throw new InvalidOperationException($"Error getting {_config.Value.ServiceType} addresses");
 
         return addressFeature.Addresses;
     }
