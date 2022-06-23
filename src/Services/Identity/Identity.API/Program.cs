@@ -4,7 +4,6 @@ using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Infrastructure;
 using Blog.Services.Identity.API.Models;
 using Blog.Services.Identity.API.Services;
-using Blog.Services.Integration.Events;
 using MassTransit;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,10 +19,12 @@ services.AddRazorPages();
 services
     .AddInstanceConfig()
     .AddCustomIdentityInfrastructure<User, Role>(config)
+    .AddMassTransitRabbitMqBus(config)
     .AddCustomIdentityCore<User>()
     .AddCustomIdentityCoreAdapters()
     .AddCustomServices()
-    .AddMassTransitRabbitMqBus(config);
+    .AddBackgroundServices();
+    
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 services.AddEndpointsApiExplorer();
@@ -71,7 +72,7 @@ internal static class ServiceCollectionExtensions
 
         return services;
     }
-    
+
     public static IServiceCollection AddMassTransitRabbitMqBus(this IServiceCollection services, IConfiguration config)
     {
         services.AddMassTransit(x =>

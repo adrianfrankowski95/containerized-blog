@@ -12,7 +12,7 @@ public static class ApplicationInstaller
 {
     public static IServiceCollection AddBloggingApplication(this IServiceCollection services, IConfiguration config)
     {
-        string connectionString = config.GetConnectionString("BloggingPostgresDb");
+        string connectionString = config.GetConnectionString("Postgres");
         NpgsqlConnection.GlobalTypeMapper.UseNodaTime();
         Dapper.SqlMapper.AddTypeHandler(new InstantTypeHandler());
 

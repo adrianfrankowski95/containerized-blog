@@ -96,8 +96,6 @@ public class PostsController : ControllerBase
         return Ok(result);
     }
 
-
-
     [Route("view/top/liked")]
     [HttpGet]
     [ProducesResponseType((int)HttpStatusCode.OK)]

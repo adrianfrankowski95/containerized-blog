@@ -25,7 +25,7 @@ services
     .AddInstanceConfig()
     .AddMassTransitRabbitMqBus(config)
     .AddConfiguredFluentEmail(config)
-    .AddCustomServices()
+    .AddBackgroundServices()
     .AddGrpc();
 
 var app = builder.Build();

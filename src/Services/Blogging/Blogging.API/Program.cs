@@ -1,11 +1,14 @@
 using Blog.Services.Blogging.API.Application;
+using Blog.Services.Blogging.API.Configs;
 using Blog.Services.Blogging.API.Controllers;
 using Blog.Services.Blogging.API.Extensions;
 using Blog.Services.Blogging.API.Infrastructure.Services;
 using Blog.Services.Blogging.API.Models;
 using Blog.Services.Blogging.API.Options;
+using Blog.Services.Blogging.API.Services;
 using Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate;
 using Blog.Services.Blogging.Infrastructure;
+using MassTransit;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.IdentityModel.Tokens;
@@ -21,12 +24,17 @@ var services = builder.Services;
 
 // Add services to the container.
 services.AddLogging();
+
 services
+    .AddInstanceConfig()
     .AddBloggingControllers(env.IsDevelopment())
     .AddNodaTime()
+    .AddMassTransitRabbitMqBus(config)
     .AddBloggingInfrastructure(config)
     .AddBloggingApplication(config)
-    .AddCustomJwtAuthentication(config);
+    .AddCustomJwtAuthentication(config)
+    .AddCustomServices()
+    .AddBackgroundServices();
 
 //services.AddEndpointsApiExplorer();
 
@@ -51,7 +59,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 //await BloggingContextSeed.SeedAsync(connectionString);
-app.RegisterLifetimeEvents();
 
 app.Run();
 
@@ -65,6 +72,20 @@ static IConfiguration GetConfiguration(IWebHostEnvironment env)
 
 static class ServiceCollectionExtensions
 {
+    public static IServiceCollection AddInstanceConfig(this IServiceCollection services)
+    {
+        services.AddOptions<ServiceInstanceConfig>().Configure(opts =>
+        {
+            opts.InstanceId = Guid.NewGuid();
+            opts.ServiceType = "blogging-api";
+            opts.HeartbeatInterval = TimeSpan.FromSeconds(15);
+        })
+        .ValidateDataAnnotations()
+        .ValidateOnStart();
+
+        return services;
+    }
+
     public static IServiceCollection AddCustomJwtAuthentication(this IServiceCollection services, IConfiguration config)
     {
         services.AddOptions<JwtOptions>()
@@ -97,6 +118,40 @@ static class ServiceCollectionExtensions
         return services;
     }
 
+    public static IServiceCollection AddMassTransitRabbitMqBus(this IServiceCollection services, IConfiguration config)
+    {
+        services.AddMassTransit(x =>
+        {
+            x.UsingRabbitMq((context, cfg) =>
+            {
+                var rabbitMqConfig = config.GetValue<RabbitMqConfig>(RabbitMqConfig.Section);
+
+                cfg.Host(rabbitMqConfig.Host, rabbitMqConfig.VirtualHost, opts =>
+                {
+                    opts.Username(rabbitMqConfig.Username);
+                    opts.Password(rabbitMqConfig.Password);
+                });
+
+                cfg.ReceiveEndpoint(RabbitMqConfig.QueueName, opts =>
+                {
+                    opts.UseMessageRetry(r => r.Intervals(100, 200, 500, 800, 1000));
+                });
+
+                cfg.Durable = true;
+            });
+        });
+
+        services.AddOptions<MassTransitHostOptions>()
+            .Configure(opts =>
+            {
+                opts.WaitUntilStarted = true;
+                opts.StartTimeout = TimeSpan.FromSeconds(10);
+                opts.StopTimeout = TimeSpan.FromSeconds(30);
+            });
+
+        return services;
+    }
+
     public static IServiceCollection AddCustomServices(this IServiceCollection services)
     {
         services
@@ -112,32 +167,5 @@ static class ServiceCollectionExtensions
         services.TryAddTransient<ISysTime, SysTime>();
 
         return services;
-    }
-}
-
-internal static class WebApplicationExtensions
-{
-    public static void RegisterLifetimeEvents(this WebApplication app)
-    {
-        IBus bus = app.Services.GetRequiredService<IBus>();
-        var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger<Program>();
-
-        Guid instanceId = Guid.NewGuid();
-        string serviceType = "blogging-api";
-        string urlsString = string.Join("; ", app.Urls);
-
-        app.Lifetime.ApplicationStarted.Register(async () =>
-        {
-            logger.LogInformation("----- {Type} service instance started: {Id} - {Urls}", serviceType, instanceId, urlsString);
-            await bus.Publish<ServiceInstanceStartedEvent>(new(instanceId, serviceType, app.Urls))
-                .ConfigureAwait(false);
-        });
-
-        app.Lifetime.ApplicationStopped.Register(async () =>
-        {
-            logger.LogInformation("----- {Type} service instance stopped: {Id} - {Urls}", serviceType, instanceId, urlsString);
-            await bus.Publish<ServiceInstanceStoppedEvent>(new(instanceId, serviceType, app.Urls))
-                .ConfigureAwait(false);
-        });
     }
 }
