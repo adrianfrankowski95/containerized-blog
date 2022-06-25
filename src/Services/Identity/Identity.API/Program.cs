@@ -24,7 +24,7 @@ services
     .AddCustomIdentityCoreAdapters()
     .AddCustomServices()
     .AddBackgroundServices();
-    
+
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 services.AddEndpointsApiExplorer();
@@ -61,7 +61,7 @@ internal static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddInstanceConfig(this IServiceCollection services)
     {
-        services.AddOptions<ServiceInstanceConfig>().Configure(opts =>
+        services.AddOptions<InstanceConfig>().Configure(opts =>
         {
             opts.InstanceId = Guid.NewGuid();
             opts.ServiceType = "identity-api";
