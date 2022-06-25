@@ -1,8 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Blog.Services.Identity.API.Configs;
+namespace Blog.Services.Emailing.API.Configs;
 
-public class ServiceInstanceConfig
+public class InstanceConfig
 {
     [Required]
     public Guid InstanceId { get; set; }

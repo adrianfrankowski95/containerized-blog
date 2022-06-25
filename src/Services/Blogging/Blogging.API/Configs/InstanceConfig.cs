@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Blog.Services.Blogging.API.Configs;
 
-public class ServiceInstanceConfig
+public class InstanceConfig
 {
     [Required]
     public Guid InstanceId { get; set; }

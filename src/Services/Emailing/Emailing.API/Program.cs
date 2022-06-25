@@ -52,7 +52,7 @@ internal static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddInstanceConfig(this IServiceCollection services)
     {
-        services.AddOptions<ServiceInstanceConfig>().Configure(opts =>
+        services.AddOptions<InstanceConfig>().Configure(opts =>
         {
             opts.InstanceId = Guid.NewGuid();
             opts.ServiceType = "emailing-api";

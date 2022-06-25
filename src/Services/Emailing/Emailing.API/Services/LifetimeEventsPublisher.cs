@@ -11,14 +11,14 @@ public class LifetimeEventsPublisher : BackgroundService
 {
     private readonly IBus _bus;
     private readonly IServiceProvider _serviceProvider;
-    private readonly IOptions<ServiceInstanceConfig> _config;
+    private readonly IOptions<InstanceConfig> _config;
     private readonly ILogger<LifetimeEventsPublisher> _logger;
     private readonly IHostApplicationLifetime _lifetime;
 
     public LifetimeEventsPublisher(
         IBus bus,
         IServiceProvider serviceProvider,
-        IOptions<ServiceInstanceConfig> config,
+        IOptions<InstanceConfig> config,
         IHostApplicationLifetime lifetime,
         ILogger<LifetimeEventsPublisher> logger)
     {
