@@ -17,6 +17,7 @@ public class RequestManager : IRequestManager
     }
     public async Task<bool> ExistsAsync<TRequest>(Guid requestId)
     {
+        await _ctx.Set<TRequest>().AnyAsync(x => x.Type.Equals(typeof(TRequest).Name) && x.Id.Equals(requestId))
         var request = await _ctx.Set<IdentifiedRequest>()
             .Where(x => x.Type.Equals(typeof(TRequest).Name) && x.Id.Equals(requestId))
             .AsNoTracking()

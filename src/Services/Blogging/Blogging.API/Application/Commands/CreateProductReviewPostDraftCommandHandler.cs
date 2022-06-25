@@ -29,7 +29,7 @@ public class CreateProductReviewPostDraftCommandHandler : IRequestHandler<Create
         if (!_identityService.TryGetAuthenticatedUser(out User user))
             return CommandResult.IdentityError();
 
-        var tagIds = request.Translations.SelectMany(x => x.TagIds).Select(x => new TagId(x));
+        var tagIds = request.Translations.SelectMany(x => x.TagIds).Select(x => new TagId(x)).ToList();
         IEnumerable<Tag> tags = tagIds is null ?
             Enumerable.Empty<Tag>() :
             await _tagRepository.FindTagsByIdsAsync(tagIds).ConfigureAwait(false);

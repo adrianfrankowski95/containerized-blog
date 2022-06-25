@@ -26,25 +26,18 @@ public class EfTagRepository : ITagRepository
         return _tags.Remove(tag).Entity;
     }
 
-    public async Task<List<Tag>> GetTagsAsync()
+    public Task<List<Tag>> GetTagsAsync()
     {
-        return await _tags
-            .ToListAsync()
-            .ConfigureAwait(false);
+        return _tags.ToListAsync();
     }
 
-    public async Task<List<Tag>> GetTagsWithLanguageAsync(Language language)
+    public Task<List<Tag>> GetTagsWithLanguageAsync(Language language)
     {
-        return await _tags
-            .Where(x => x.Language.Equals(language))
-            .ToListAsync()
-            .ConfigureAwait(false);
+        return _tags.Where(x => x.Language.Equals(language)).ToListAsync();
     }
 
-    public async Task<List<Tag>?> FindTagsByIdsAsync(IEnumerable<TagId> tagIds)
+    public Task<List<Tag>> FindTagsByIdsAsync(IList<TagId> tagIds)
     {
-        var tagIdsList = tagIds.ToList();
-
-        return await _tags.Where(x => tagIdsList.Contains(x.Id)).ToListAsync().ConfigureAwait(false);
+        return _tags.Where(x => tagIds.Contains(x.Id)).ToListAsync();
     }
 }

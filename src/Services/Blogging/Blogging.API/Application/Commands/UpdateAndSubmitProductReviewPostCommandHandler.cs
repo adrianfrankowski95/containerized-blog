@@ -37,7 +37,7 @@ public class UpdateAndSubmitProductReviewPostCommandHandler : IRequestHandler<Up
         if (post is not ProductReviewPost productReviewPost)
             return CommandResult.IncorrectPostTypeError(post.Type, PostType.ProductReview);
 
-        var tagIds = request.Translations.SelectMany(x => x.TagIds).Select(x => new TagId(x));
+        var tagIds = request.Translations.SelectMany(x => x.TagIds).Select(x => new TagId(x)).ToList();
         IEnumerable<Tag> tags = tagIds is null ?
             Enumerable.Empty<Tag>() :
             await _tagRepository.FindTagsByIdsAsync(tagIds).ConfigureAwait(false);
