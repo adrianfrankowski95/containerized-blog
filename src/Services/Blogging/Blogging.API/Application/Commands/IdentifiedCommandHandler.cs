@@ -24,7 +24,7 @@ public class IdentifiedCommandHandler<TRequest> : IRequestHandler<IdentifiedComm
         if (exists)
             return CommandResult.IdempotencyError();
 
-        await _requestManager.AddRequestAsync<TRequest>(request.Id);
+        await _requestManager.AddRequestAsync<TRequest>(request.Id).ConfigureAwait(false);
 
         _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
             request.Command.GetType(), DateTime.UtcNow, request.Command);

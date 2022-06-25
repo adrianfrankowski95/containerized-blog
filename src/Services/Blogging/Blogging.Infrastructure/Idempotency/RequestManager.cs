@@ -1,6 +1,5 @@
 using Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate;
 using Blog.Services.Blogging.Domain.Exceptions;
-using Blog.Services.Blogging.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace Blog.Services.Blogging.Infrastructure.Idempotency;
@@ -17,17 +16,18 @@ public class RequestManager : IRequestManager
     }
     public async Task<bool> ExistsAsync<TRequest>(Guid requestId)
     {
-        await _ctx.Set<TRequest>().AnyAsync(x => x.Type.Equals(typeof(TRequest).Name) && x.Id.Equals(requestId))
         var request = await _ctx.Set<IdentifiedRequest>()
             .Where(x => x.Type.Equals(typeof(TRequest).Name) && x.Id.Equals(requestId))
             .AsNoTracking()
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync()
+            .ConfigureAwait(false);
 
-        return request != null;
+        return request is not null;
     }
+
     public async Task AddRequestAsync<TRequest>(Guid requestId)
     {
-        bool exists = await ExistsAsync<TRequest>(requestId);
+        bool exists = await ExistsAsync<TRequest>(requestId).ConfigureAwait(false);
 
         var request = exists ?
             throw new BloggingDomainException($"Request of type {typeof(TRequest).Name} with ID {requestId} already exists") :
@@ -35,6 +35,6 @@ public class RequestManager : IRequestManager
 
         _ctx.Add(request);
 
-        await _ctx.SaveChangesAsync();
+        await _ctx.SaveChangesAsync().ConfigureAwait(false);
     }
 }
