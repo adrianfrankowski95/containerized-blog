@@ -1,4 +1,3 @@
-using System.Security.Cryptography;
 using Blog.Gateways.WebGateway.API.Configs;
 using Blog.Gateways.WebGateway.API.Controllers;
 using Blog.Gateways.WebGateway.API.Extensions;
@@ -18,7 +17,6 @@ var services = builder.Services;
 // Add services to the container.
 services.AddSwaggerGen();
 
-services.AddOptions<UrlsConfig>().Bind(config.GetRequiredSection(UrlsConfig.Section));
 services
     .AddGatewayControllers(env.IsDevelopment())
     .AddCustomJwtAuthentication(config);
@@ -58,7 +56,7 @@ static class ServiceCollectionExtensions
         services.AddOptions<JwtConfig>().Bind(config.GetRequiredSection(JwtConfig.Section));
         services
             .AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
-            .Configure<IOptions<JwtConfig>, IOptions<UrlsConfig>>((opts, jwtOptions, urlsOptions) =>
+            .Configure<IOptions<JwtConfig>, IOptions<ServicesConfig>>((opts, jwtOptions, urlsOptions) =>
             {
                 var accessTokenOptions = jwtOptions.Value.AccessToken;
 
@@ -66,7 +64,7 @@ static class ServiceCollectionExtensions
                 opts.RequireHttpsMetadata = true;
                 opts.Authority = accessTokenOptions.Authority;
                 opts.ClaimsIssuer = accessTokenOptions.Issuer;
-                opts.MetadataAddress = UrlsConfig.AuthActions.GetDiscovery();
+                opts.MetadataAddress = ServicesConfig.AuthActions.GetDiscovery();
 
                 opts.TokenValidationParameters = new TokenValidationParameters
                 {
