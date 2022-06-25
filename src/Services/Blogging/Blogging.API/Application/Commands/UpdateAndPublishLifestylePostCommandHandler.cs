@@ -37,7 +37,7 @@ public class UpdateAndPublishLifestylePostCommandHandler : IRequestHandler<Updat
         if (post is not LifestylePost lifestylePost)
             return CommandResult.IncorrectPostTypeError(post.Type.Name, PostType.Lifestyle.Name);
 
-        var tagIds = request.Translations.SelectMany(x => x.TagIds).Select(x => new TagId(x));
+        var tagIds = request.Translations.SelectMany(x => x.TagIds).Select(x => new TagId(x)).ToList();
         IEnumerable<Tag> tags = tagIds is null ?
             Enumerable.Empty<Tag>() :
             await _tagRepository.FindTagsByIdsAsync(tagIds).ConfigureAwait(false);

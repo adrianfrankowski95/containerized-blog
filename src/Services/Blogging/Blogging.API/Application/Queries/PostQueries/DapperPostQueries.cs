@@ -20,27 +20,27 @@ public class DapperPostQueries : IPostQueries
     public async Task<PaginatedPostPreviewsModel> GetPublishedPaginatedPreviewsWithLanguageAsync(Language language, int pageSize, Instant createdAtCursor)
     {
         string totalPostsCountQuery =
-        @"SELECT COUNT(*)
+        @$"SELECT COUNT(*)
         FROM blogging.posts p
-        WHERE p.status = 'published' AND EXISTS(
-		    SELECT *
+        WHERE p.status = '{PostStatus.Published.Name}' AND EXISTS(
+		    SELECT 1
 		    FROM blogging.post_translations AS t
 		    WHERE (p.id = t.post_id) AND (t.language = @Language));";
 
         string olderThanPostsCountQuery =
-        @"SELECT COUNT(*)
+        @$"SELECT COUNT(*)
         FROM blogging.posts p
-        WHERE p.status = 'published' AND p.created_at < @Cursor AND EXISTS(
+        WHERE p.status = '{PostStatus.Published.Name}' AND p.created_at < @Cursor AND EXISTS(
 		    SELECT 1
 		    FROM blogging.post_translations AS t
 		    WHERE (p.id = t.post_id) AND (t.language = @Language));";
 
         string returnedPostsCountQuery =
-        @"SELECT COUNT(*)
+        @$"SELECT COUNT(*)
         FROM (
-	        SELECT *
+	        SELECT 1
 	        FROM blogging.posts p
-	        WHERE p.status = 'published' AND p.created_at < @Cursor AND EXISTS(
+	        WHERE p.status = '{PostStatus.Published.Name}' AND p.created_at < @Cursor AND EXISTS(
 		        SELECT 1
 		        FROM blogging.post_translations AS t
 		        WHERE (p.id = t.post_id) AND (t.language = @Language))
@@ -64,7 +64,7 @@ public class DapperPostQueries : IPostQueries
         FROM (
 	        SELECT p0.id, p0.category, p0.author_name, p0.created_at, p0.views_count, p0.likes_count, p0.comments_count, p0.header_img_url
 	        FROM blogging.posts AS p0
-	        WHERE p0.status = 'published' AND p0.created_at < @Cursor
+	        WHERE p0.status = '{PostStatus.Published.Name}' AND p0.created_at < @Cursor
         ) AS p
         INNER JOIN blogging.post_translations AS t ON (t.post_id = p.id) AND (t.language = @Language)
         LEFT JOIN (                                                                   
@@ -101,27 +101,27 @@ public class DapperPostQueries : IPostQueries
     public async Task<PaginatedPostPreviewsModel> GetPublishedPaginatedPreviewsWithCategoryAsync(PostCategory category, Language language, int pageSize, Instant createdAtCursor)
     {
         string totalPostsCountQuery =
-        @"SELECT COUNT(*)
+        @$"SELECT COUNT(*)
         FROM blogging.posts p
-        WHERE p.status = 'published' AND p.category = @Category AND EXISTS(
-		    SELECT *
+        WHERE p.status = '{PostStatus.Published.Name}' AND p.category = @Category AND EXISTS(
+		    SELECT 1
 		    FROM blogging.post_translations AS t
 		    WHERE (p.id = t.post_id) AND (t.language = @Language));";
 
         string olderThanPostsCountQuery =
         @"SELECT COUNT(*)
         FROM blogging.posts p
-        WHERE p.status = 'published' AND created_at < @Cursor AND p.category = @Category AND EXISTS(
+        WHERE p.status = '{PostStatus.Published.Name}' AND created_at < @Cursor AND p.category = @Category AND EXISTS(
 		    SELECT 1
 		    FROM blogging.post_translations AS t
 		    WHERE (p.id = t.post_id) AND (t.language = @Language));";
 
         string returnedPostsCountQuery =
-        @"SELECT COUNT(*)
+        @$"SELECT COUNT(*)
         FROM (
-	        SELECT *
+	        SELECT 1
 	        FROM blogging.posts p
-	        WHERE p.status = 'published' AND created_at < @Cursor AND p.category = @Category AND EXISTS(
+	        WHERE p.status = '{PostStatus.Published.Name}' AND created_at < @Cursor AND p.category = @Category AND EXISTS(
 		        SELECT 1
 		        FROM blogging.post_translations AS t
 		        WHERE (p.id = t.post_id) AND (t.language = @Language))
@@ -145,7 +145,7 @@ public class DapperPostQueries : IPostQueries
         FROM (
 	        SELECT p0.id, p0.category, p0.author_name, p0.created_at, p0.views_count, p0.likes_count, p0.comments_count, p0.header_img_url
 	        FROM blogging.posts AS p0
-	        WHERE p0.status = 'published' AND p0.created_at < @Cursor AND p0.category = @Category
+	        WHERE p0.status = '{PostStatus.Published.Name}' AND p0.created_at < @Cursor AND p0.category = @Category
         ) AS p
         INNER JOIN blogging.post_translations AS t ON (t.post_id = p.id) AND (t.language = @Language)
         LEFT JOIN (                                                                   
@@ -198,7 +198,7 @@ public class DapperPostQueries : IPostQueries
         FROM (
 	        SELECT p0.id, p0.category, p0.author_name, p0.created_at, p0.views_count, p0.likes_count, p0.comments_count, p0.header_img_url
 	        FROM blogging.posts AS p0
-	        WHERE (p0.status = 'published') AND (EXTRACT (DAY FROM NOW() - p0.created_at) <= @DaysFromToday)
+	        WHERE (p0.status = '{PostStatus.Published.Name}') AND (EXTRACT (DAY FROM NOW() - p0.created_at) <= @DaysFromToday)
         ) AS p
         INNER JOIN blogging.post_translations AS t ON (t.post_id = p.id) AND (t.language = @Language)
         LEFT JOIN (                                                                   
@@ -237,7 +237,7 @@ public class DapperPostQueries : IPostQueries
         FROM (
 	        SELECT p0.id, p0.category, p0.author_name, p0.created_at, p0.views_count, p0.likes_count, p0.comments_count, p0.header_img_url
 	        FROM blogging.posts AS p0
-	        WHERE (p0.status = 'published') AND (EXTRACT (DAY FROM NOW() - p0.created_at) <= @DaysFromToday)
+	        WHERE (p0.status = '{PostStatus.Published.Name}') AND (EXTRACT (DAY FROM NOW() - p0.created_at) <= @DaysFromToday)
         ) AS p
         INNER JOIN blogging.post_translations AS t ON (t.post_id = p.id) AND (t.language = @Language)
         INNER JOIN (                                                                   

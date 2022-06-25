@@ -21,12 +21,11 @@ public class EfPostRepository : IPostRepository
         return _posts.Add(post).Entity;
     }
 
-    public async Task<PostBase?> FindPostAsync(PostId postId)
+    public Task<PostBase?> FindPostAsync(PostId postId)
     {
-        return await _posts
+        return _posts
             .Where(x => x.Id == postId)
             .Include(x => x.Translations)
-            .SingleOrDefaultAsync()
-            .ConfigureAwait(false);
+            .SingleOrDefaultAsync();
     }
 }

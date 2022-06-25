@@ -38,7 +38,7 @@ public class UpdateAndPublishRecipePostCommandHandler : IRequestHandler<UpdateAn
         if (post is not RecipePost recipePost)
             return CommandResult.IncorrectPostTypeError(post.Type, PostType.Recipe);
 
-        var tagIds = request.Translations.SelectMany(x => x.TagIds).Select(x => new TagId(x));
+        var tagIds = request.Translations.SelectMany(x => x.TagIds).Select(x => new TagId(x)).ToList();
         IEnumerable<Tag> tags = tagIds is null ?
             Enumerable.Empty<Tag>() :
             await _tagRepository.FindTagsByIdsAsync(tagIds).ConfigureAwait(false);
