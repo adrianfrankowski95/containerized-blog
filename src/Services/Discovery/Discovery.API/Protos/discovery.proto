@@ -7,22 +7,24 @@ import "google/protobuf/empty.proto";
 package Blog.Services.Discovery.API.Grpc;
 
 service GrpcDiscoveryService {
-  rpc GetAddressesOfService (GetAddressesOfServiceRequest) returns  (GetAddressesOfServiceResponse);
-  rpc GetAddresses (google.protobuf.Empty) returns (GetAddressesResponse);
+  rpc GetServiceInstancesDataOfType (GetServiceInstancesDataOfTypeRequest) returns  (GetServiceInstancesDataOfTypeResponse);
+  rpc GetAllServiceInstancesData (google.protobuf.Empty) returns (GetAllServiceInstancesDataResponse);
 }
 
-message GetAddressesOfServiceRequest {
+message GetServiceInstancesDataOfTypeRequest {
   string serviceType = 1;
 }
 
-message GetAddressesOfServiceResponse {
-  repeated string Addresses = 1;
+message GetServiceInstancesDataOfTypeResponse {
+  repeated ServiceInstanceData data = 1;
 }
 
-message GetAddressesResponse {
-  map<string, AddressList> serviceAddresses = 1;
+message GetAllServiceInstancesDataResponse {
+  repeated ServiceInstanceData data = 1;
 }
 
-message AddressList {
-  repeated string Addresses = 1;
+message ServiceInstanceData {
+  string instanceId = 1;
+  string serviceType = 2;
+  repeated string addresses = 3;
 }

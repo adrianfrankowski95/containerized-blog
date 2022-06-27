@@ -1,8 +1,8 @@
 namespace Blog.Gateways.WebGateway.API.Configs;
 
-public static class RoutesConfig
+public static class PathsConfig
 {
-    private static readonly IDictionary<string, IEnumerable<string>> _routes = new Dictionary<string, IEnumerable<string>>()
+    private static readonly IDictionary<string, IEnumerable<string>> _paths = new Dictionary<string, IEnumerable<string>>()
     {
         { GatewayConstants.ServiceTypes.BloggingApi, new[] { "/api/posts/", "/api/tags/" } },
         { GatewayConstants.ServiceTypes.CommentsApi, new[] { "/api/comments/" } },
@@ -10,5 +10,5 @@ public static class RoutesConfig
         { GatewayConstants.ServiceTypes.IdentityApi, new[] { "/account/", "/connect/", "/.well-known/" } },
     };
 
-    public static IEnumerable<string> GetServiceRoutes(string serviceType) => _routes[serviceType];
+    public static IEnumerable<string> GetServiceMatchingPaths(string serviceType) => _paths[serviceType];
 }

@@ -1,11 +1,12 @@
+using Blog.Gateways.WebGateway.API.ConfigProviders;
 using Blog.Gateways.WebGateway.API.Configs;
 using Blog.Gateways.WebGateway.API.Controllers;
-using Blog.Gateways.WebGateway.API.Extensions;
-using Blog.Gateways.WebGateway.API.Infrastructure;
-using Blog.Gateways.WebGateway.API.Models;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
+using Blog.Gateways.WebGateway.API.Services;
+using Blog.Services.Discovery.API.Grpc;
+using Blog.Services.Integration.Consumers;
+using MassTransit;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Yarp.ReverseProxy.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,7 +20,8 @@ services.AddSwaggerGen();
 
 services
     .AddGatewayControllers(env.IsDevelopment())
-    .AddCustomJwtAuthentication(config);
+    .AddGrpcDiscoveryClient(config)
+    .AddYarp();
 
 //await AuthContextSeed.SeedAsync(config);
 
@@ -38,6 +40,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapReverseProxy(); //Yarp
 
 app.Run();
 
@@ -51,53 +54,177 @@ static IConfiguration GetConfiguration(IWebHostEnvironment env)
 
 static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddCustomJwtAuthentication(this IServiceCollection services, IConfiguration config)
+    public static IServiceCollection AddGrpcDiscoveryClient(this IServiceCollection services, IConfiguration config)
     {
-        services.AddOptions<JwtConfig>().Bind(config.GetRequiredSection(JwtConfig.Section));
-        services
-            .AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
-            .Configure<IOptions<JwtConfig>, IOptions<ServicesConfig>>((opts, jwtOptions, urlsOptions) =>
-            {
-                var accessTokenOptions = jwtOptions.Value.AccessToken;
+        var address = config.GetValue<UrlsConfig>(UrlsConfig.Section).DiscoveryService;
 
-                opts.MapInboundClaims = false;
-                opts.RequireHttpsMetadata = true;
-                opts.Authority = accessTokenOptions.Authority;
-                opts.ClaimsIssuer = accessTokenOptions.Issuer;
-                opts.MetadataAddress = ServicesConfig.AuthActions.GetDiscovery();
+        if (string.IsNullOrWhiteSpace(address))
+            throw new InvalidOperationException($"{nameof(UrlsConfig.DiscoveryService)} URL must not be null");
 
-                opts.TokenValidationParameters = new TokenValidationParameters
-                {
-                    RequireSignedTokens = true,
-                    RequireExpirationTime = true,
-                    ValidateLifetime = true,
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateIssuerSigningKey = true,
-                    ValidIssuer = accessTokenOptions.Issuer,
-                    ValidAudience = accessTokenOptions.Audience,
-                    ValidAlgorithms = new[] { SecurityAlgorithms.RsaSha256 },
-                    ClockSkew = TimeSpan.Zero,
-                    NameClaimType = UserClaimTypes.Name,
-                    RoleClaimType = UserClaimTypes.Role,
-                    AuthenticationType = JwtBearerDefaults.AuthenticationScheme
-                };
-                opts.Events = new JwtBearerEvents()
-                {
-                    OnMessageReceived = context =>
-                    {
-                        context.Token = context.HttpContext.Request.GetTokenFromCookie(accessTokenOptions);
-
-                        return Task.CompletedTask;
-                    }
-                };
-
-            });
-
-        services
-            .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, opts => { });
+        services.AddGrpcClient<GrpcDiscoveryService.GrpcDiscoveryServiceClient>(opts =>
+        {
+            opts.Address = new Uri(address);
+        });
 
         return services;
     }
+
+    public static IServiceCollection AddCustomServices(this IServiceCollection services)
+    {
+        services.TryAddTransient<IDiscoveryService, DiscoveryService>();
+
+        return services;
+    }
+
+    public static IServiceCollection AddYarp(this IServiceCollection services)
+    {
+        services.TryAddSingleton<IProxyConfigProvider>(sp =>
+        {
+            var discoveryService = sp.GetRequiredService<IDiscoveryService>();
+            var servicesAddresses = discoveryService.GetAllAddressesAsync().ConfigureAwait(false)
+                .GetAwaiter()
+                .GetResult();
+
+            if (servicesAddresses is null || servicesAddresses.Any(x => x.Value is null || !x.Value.Any()))
+                throw new InvalidOperationException("Error requesting addresses from discovery service");
+
+            var routes = new List<RouteConfig>();
+            var clusters = new List<ClusterConfig>();
+
+            foreach (var serviceType in servicesAddresses.Keys)
+            {
+                var paths = PathsConfig.GetServiceMatchingPaths(serviceType);
+
+                if (paths is null || !paths.Any())
+                    throw new InvalidOperationException($"No matching paths have been configured for service {serviceType}");
+
+                int routeIndex = 1;
+                foreach (var path in paths)
+                {
+                    routes.Add(new RouteConfig
+                    {
+                        RouteId = serviceType + "-route-" + routeIndex,
+                        ClusterId = serviceType,
+                        Match = new RouteMatch { Path = path }
+                    });
+                    ++routeIndex;
+                }
+
+                int destinationIndex = 1;
+                Dictionary<string, DestinationConfig> destinations = new(servicesAddresses.Values.Count);
+                foreach (var address in servicesAddresses[serviceType].SelectMany(x => x.Addresses))
+                {
+                    destinations.Add(serviceType + "-destination-" + destinationIndex,
+                        new DestinationConfig { Address = address });
+
+                    ++destinationIndex;
+                };
+
+                clusters.Add(new ClusterConfig
+                {
+                    ClusterId = serviceType,
+                    Destinations = destinations
+                });
+            }
+
+            return new InMemoryProxyConfigProvider(routes, clusters);
+        });
+
+        services.AddReverseProxy();
+
+        return services;
+    }
+
+    public static IServiceCollection AddMassTransitRabbitMqBus(this IServiceCollection services, IConfiguration config)
+    {
+        services.AddMassTransit(x =>
+        {
+            x.AddConsumersFromNamespaceContaining<ServiceInstanceRegisteredEventConsumer>();
+
+            x.UsingRabbitMq((context, cfg) =>
+            {
+                services
+                    .AddOptions<RabbitMqConfig>()
+                    .Bind(config.GetRequiredSection(RabbitMqConfig.Section))
+                    .ValidateDataAnnotations()
+                    .ValidateOnStart();
+
+                var rabbitMqConfig = config.GetValue<RabbitMqConfig>(RabbitMqConfig.Section);
+
+                cfg.Host(rabbitMqConfig.Host, rabbitMqConfig.VirtualHost, opts =>
+                {
+                    opts.Username(rabbitMqConfig.Username);
+                    opts.Password(rabbitMqConfig.Password);
+                });
+
+                cfg.ReceiveEndpoint(RabbitMqConfig.QueueName, opts =>
+                {
+                    opts.UseMessageRetry(r => r.Intervals(100, 200, 500, 800, 1000));
+                    opts.ConfigureConsumers(context);
+                });
+
+                cfg.Durable = true;
+            });
+        });
+
+        services.AddOptions<MassTransitHostOptions>()
+            .Configure(opts =>
+            {
+                opts.WaitUntilStarted = true;
+                opts.StartTimeout = TimeSpan.FromSeconds(10);
+                opts.StopTimeout = TimeSpan.FromSeconds(30);
+            });
+
+        return services;
+    }
+
+    // public static IServiceCollection AddCustomJwtAuthentication(this IServiceCollection services, IConfiguration config)
+    // {
+    //     services.AddOptions<JwtConfig>().Bind(config.GetRequiredSection(JwtConfig.Section));
+    //     services
+    //         .AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
+    //         .Configure<IOptions<JwtConfig>, IOptions<ServicesConfig>>((opts, jwtOptions, urlsOptions) =>
+    //         {
+    //             var accessTokenOptions = jwtOptions.Value.AccessToken;
+
+    //             opts.MapInboundClaims = false;
+    //             opts.RequireHttpsMetadata = true;
+    //             opts.Authority = accessTokenOptions.Authority;
+    //             opts.ClaimsIssuer = accessTokenOptions.Issuer;
+    //             opts.MetadataAddress = ServicesConfig.AuthActions.GetDiscovery();
+
+    //             opts.TokenValidationParameters = new TokenValidationParameters
+    //             {
+    //                 RequireSignedTokens = true,
+    //                 RequireExpirationTime = true,
+    //                 ValidateLifetime = true,
+    //                 ValidateIssuer = true,
+    //                 ValidateAudience = true,
+    //                 ValidateIssuerSigningKey = true,
+    //                 ValidIssuer = accessTokenOptions.Issuer,
+    //                 ValidAudience = accessTokenOptions.Audience,
+    //                 ValidAlgorithms = new[] { SecurityAlgorithms.RsaSha256 },
+    //                 ClockSkew = TimeSpan.Zero,
+    //                 NameClaimType = UserClaimTypes.Name,
+    //                 RoleClaimType = UserClaimTypes.Role,
+    //                 AuthenticationType = JwtBearerDefaults.AuthenticationScheme
+    //             };
+    //             opts.Events = new JwtBearerEvents()
+    //             {
+    //                 OnMessageReceived = context =>
+    //                 {
+    //                     context.Token = context.HttpContext.Request.GetTokenFromCookie(accessTokenOptions);
+
+    //                     return Task.CompletedTask;
+    //                 }
+    //             };
+
+    //         });
+
+    //     services
+    //         .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    //         .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, opts => { });
+
+    //     return services;
+    // }
 }

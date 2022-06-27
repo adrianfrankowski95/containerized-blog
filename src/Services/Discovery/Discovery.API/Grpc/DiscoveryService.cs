@@ -1,6 +1,6 @@
+using Blog.Services.Discovery.API.Infrastructure;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
-using Blog.Services.Discovery.API.Infrastructure;
 
 namespace Blog.Services.Discovery.API.Grpc;
 
@@ -14,32 +14,46 @@ public class DiscoveryService : GrpcDiscoveryService.GrpcDiscoveryServiceBase
         _serviceRegistry = serviceRegistry ?? throw new ArgumentNullException(nameof(serviceRegistry));
     }
 
-    public override async Task<GetAddressesOfServiceResponse> GetAddressesOfService(GetAddressesOfServiceRequest request, ServerCallContext context)
+    public override async Task<GetServiceInstancesDataOfTypeResponse> GetServiceInstancesDataOfType(GetServiceInstancesDataOfTypeRequest request, ServerCallContext context)
     {
         if (string.IsNullOrWhiteSpace(request.ServiceType))
-            throw new ArgumentNullException(nameof(request.ServiceType));
+            throw new InvalidOperationException($"{request.ServiceType} must not be null");
 
-        _logger.LogInformation("----- Handling Grpc get addresses of service request for {ServiceType}", request.ServiceType);
+        _logger.LogInformation("----- Handling Grpc Get Service Instances Data Of Type request for {ServiceType}", request.ServiceType);
 
-        var Addresses = await _serviceRegistry.GetAddressesOfServiceAsync(request.ServiceType).ConfigureAwait(false);
+        var instancesData = await _serviceRegistry.GetServiceInstancesDataOfType(request.ServiceType).ConfigureAwait(false);
 
-        _logger.LogInformation("----- Successfully fetched following {ServiceType} addresses: {Addresses}", request.ServiceType, string.Join("; ", Addresses));
+        _logger.LogInformation("----- Successfully fetched following {ServiceType} data: {Data}",
+            request.ServiceType, string.Join("; ", instancesData.Select(x => $"instance ID: {x.InstanceId}, addresses: {string.Join("; ", x.Addresses)}")));
 
-        return new GetAddressesOfServiceResponse { Addresses = { Addresses } };
+        return new GetServiceInstancesDataOfTypeResponse
+        {
+            Data = { Array.ConvertAll(instancesData.ToArray(), x => new ServiceInstanceData
+            {
+                InstanceId = x.InstanceId.ToString(),
+                ServiceType = x.ServiceType,
+                Addresses = { x.Addresses }
+            })}
+        };
     }
 
-    public override async Task<GetAddressesResponse> GetAddresses(Empty request, ServerCallContext context)
+    public override async Task<GetAllServiceInstancesDataResponse> GetAllServiceInstancesData(Empty request, ServerCallContext context)
     {
-        _logger.LogInformation("----- Handling Grpc get addresses request");
+        _logger.LogInformation("----- Handling Grpc Get All Service Instances Data request");
 
-        var servicesAddresses = await _serviceRegistry.GetAddressesAsync().ConfigureAwait(false);
+        var instancesData = await _serviceRegistry.GetAllServiceInstancesData().ConfigureAwait(false);
 
-        _logger.LogInformation("----- Successfully fetched following addresses: {ServiceAddresses}",
-            servicesAddresses.Select((serviceAddresses) => $"{serviceAddresses.Key}: {string.Join("; ", serviceAddresses.Value)}"));
+        _logger.LogInformation("----- Successfully fetched following service instances data: {Data}",
+            string.Join("; ", instancesData.Select(x => $"service type: {x.ServiceType}, instance ID: {x.InstanceId}, addresses: {string.Join("; ", x.Addresses)}")));
 
-        return new GetAddressesResponse
+        return new GetAllServiceInstancesDataResponse
         {
-            ServiceAddresses = { servicesAddresses.ToDictionary(k => k.Key, k => new AddressList { Addresses = { k.Value } }) }
+            Data = { Array.ConvertAll(instancesData.ToArray(), x => new ServiceInstanceData
+            {
+                InstanceId = x.InstanceId.ToString(),
+                ServiceType = x.ServiceType,
+                Addresses = { x.Addresses }
+            })}
         };
     }
 }

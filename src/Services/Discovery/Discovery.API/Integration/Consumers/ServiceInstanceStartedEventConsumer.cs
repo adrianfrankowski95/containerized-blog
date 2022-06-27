@@ -37,7 +37,7 @@ public class ServiceInstanceStartedEventConsumer : IConsumer<ServiceInstanceStar
 
         _logger.LogInformation("----- Handling {ServiceType} instance started event: {InstanceId} - {Addresses}", serviceType, instanceId, AddressesString);
 
-        bool success = await _serviceRegistry.RegisterServiceInstance(new ServiceInfo(instanceId, serviceType, addresses)).ConfigureAwait(false);
+        bool success = await _serviceRegistry.RegisterServiceInstance(new ServiceInstanceData(instanceId, serviceType, addresses)).ConfigureAwait(false);
 
         if (success)
         {
