@@ -1,7 +1,7 @@
+using Blog.Services.Discovery.API.Configs;
 using Blog.Services.Discovery.API.Grpc;
 using Blog.Services.Discovery.API.Infrastructure;
 using Blog.Services.Discovery.API.Integration.Consumers;
-using Blog.Services.Emailing.API.Configs;
 using MassTransit;
 
 var builder = WebApplication.CreateBuilder(args);

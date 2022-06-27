@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Blog.Services.Discovery.API.Configs;
+namespace Blog.Gateways.WebGateway.API.Configs;
 
 public class RabbitMqConfig
 {
@@ -18,5 +18,5 @@ public class RabbitMqConfig
     [Required]
     public string Password { get; set; }
 
-    public const string QueueName = "discovery-api";
+    public const string QueueName = "webgateway-api";
 }
