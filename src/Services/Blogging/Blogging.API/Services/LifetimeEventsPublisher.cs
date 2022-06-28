@@ -59,7 +59,7 @@ public class LifetimeEventsPublisher : BackgroundService
         }
     }
 
-    private Task PublishStartedEventAsync(IEnumerable<string> addresses, CancellationToken stoppingToken = default)
+    private Task PublishStartedEventAsync(HashSet<string> addresses, CancellationToken stoppingToken = default)
     {
         var config = _config.Value;
 
@@ -67,7 +67,7 @@ public class LifetimeEventsPublisher : BackgroundService
         return _bus.Publish<ServiceInstanceStartedEvent>(new(config.InstanceId, config.ServiceType, addresses), stoppingToken);
     }
 
-    private Task PublishStoppedEventAsync(IEnumerable<string> addresses, CancellationToken stoppingToken = default)
+    private Task PublishStoppedEventAsync(HashSet<string> addresses, CancellationToken stoppingToken = default)
     {
         var config = _config.Value;
 
@@ -75,7 +75,7 @@ public class LifetimeEventsPublisher : BackgroundService
         return _bus.Publish<ServiceInstanceStoppedEvent>(new(config.InstanceId, config.ServiceType, addresses), stoppingToken);
     }
 
-    private Task PublishHeartbeatEvent(IEnumerable<string> addresses, CancellationToken stoppingToken = default)
+    private Task PublishHeartbeatEvent(HashSet<string> addresses, CancellationToken stoppingToken = default)
     {
         var config = _config.Value;
 
@@ -83,7 +83,7 @@ public class LifetimeEventsPublisher : BackgroundService
         return _bus.Publish<ServiceInstanceHeartbeatEvent>(new(config.InstanceId, config.ServiceType, addresses), stoppingToken);
     }
 
-    private async Task<IEnumerable<string>> GetAddressesAsync()
+    private async Task<HashSet<string>> GetAddressesAsync()
     {
         await using var scope = _serviceProvider.CreateAsyncScope();
 
@@ -93,7 +93,7 @@ public class LifetimeEventsPublisher : BackgroundService
         if (addressFeature is null || !addressFeature.Addresses.Any())
             throw new InvalidOperationException($"Error getting {_config.Value.ServiceType} Addresses");
 
-        return addressFeature.Addresses;
+        return addressFeature.Addresses.ToHashSet();
     }
 
     private static Task WaitForStartupOrCancellationAsync(IHostApplicationLifetime lifetime, CancellationToken stoppingToken)

@@ -21,7 +21,7 @@ public class ServiceInstanceHeartbeatEventConsumer : IConsumer<ServiceInstanceHe
     {
         Guid instanceId = context.Message.InstanceId;
         string serviceType = context.Message.ServiceType;
-        IEnumerable<string> addresses = context.Message.ServiceAddresses;
+        HashSet<string> addresses = context.Message.ServiceAddresses;
 
         string addressesString = string.Join("; ", addresses);
 

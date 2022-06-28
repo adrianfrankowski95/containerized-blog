@@ -2,4 +2,4 @@
 //in order to make it work through the MassTransit
 namespace Blog.Services.Integration.Consumers;
 
-public record ServiceInstanceRegisteredEventConsumer(Guid InstanceId, string ServiceType, IEnumerable<string> ServiceAddresses);
+public record ServiceInstanceRegisteredEventConsumer(Guid InstanceId, string ServiceType, HashSet<string> ServiceAddresses);

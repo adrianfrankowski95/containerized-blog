@@ -22,7 +22,7 @@ public class ServiceInstanceUnregisteredEventConsumer : IConsumer<ServiceInstanc
     {
         Guid instanceId = context.Message.InstanceId;
         string serviceType = context.Message.ServiceType;
-        IEnumerable<string> addresses = context.Message.ServiceAddresses;
+        HashSet<string> addresses = context.Message.ServiceAddresses;
 
         string addressesString = string.Join("; ", addresses);
 
