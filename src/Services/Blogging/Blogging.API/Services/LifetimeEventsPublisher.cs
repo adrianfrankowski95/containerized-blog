@@ -27,8 +27,6 @@ public class LifetimeEventsPublisher : BackgroundService
         _config = config ?? throw new ArgumentNullException(nameof(config));
         _lifetime = lifetime ?? throw new ArgumentNullException(nameof(lifetime));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
-
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -91,7 +89,7 @@ public class LifetimeEventsPublisher : BackgroundService
         var addressFeature = server.Features.Get<IServerAddressesFeature>();
 
         if (addressFeature is null || !addressFeature.Addresses.Any())
-            throw new InvalidOperationException($"Error getting {_config.Value.ServiceType} Addresses");
+            throw new InvalidOperationException($"Error getting {_config.Value.ServiceType} addresses");
 
         return addressFeature.Addresses.ToHashSet();
     }
