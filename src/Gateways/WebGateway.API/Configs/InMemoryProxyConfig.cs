@@ -5,10 +5,7 @@ namespace Blog.Gateways.WebGateway.API.Configs;
 
 public class InMemoryProxyConfig : IProxyConfig
 {
-    public InMemoryProxyConfig(
-        IReadOnlyList<RouteConfig> routes,
-        IReadOnlyList<ClusterConfig> clusters,
-        CancellationToken cancellationToken)
+    public InMemoryProxyConfig(IReadOnlyList<RouteConfig> routes, IReadOnlyList<ClusterConfig> clusters, CancellationToken cancellationToken)
     {
         Routes = routes;
         Clusters = clusters;

@@ -12,7 +12,7 @@ public class DiscoveryService : IDiscoveryService
         _client = client ?? throw new ArgumentNullException(nameof(client));
     }
 
-    public async Task<HashSet<ServiceInstanceInfo>> GetAddressesOfServiceTypeAsync(string serviceType)
+    public async Task<HashSet<ServiceInstanceInfo>> GetServiceTypeInstanceInfoAsync(string serviceType)
     {
         var response = await _client.GetServiceInstancesDataOfTypeAsync(
             new GetServiceInstancesDataOfTypeRequest { ServiceType = serviceType })
@@ -22,7 +22,7 @@ public class DiscoveryService : IDiscoveryService
             new ServiceInstanceInfo(Guid.Parse(x.InstanceId), x.Addresses.ToHashSet())).ToHashSet();
     }
 
-    public async Task<IDictionary<string, HashSet<ServiceInstanceInfo>>> GetAllAddressesAsync()
+    public async Task<IDictionary<string, HashSet<ServiceInstanceInfo>>> GetAllInstanceInfoAsync()
     {
         var response = await _client.GetAllServiceInstancesDataAsync(new Google.Protobuf.WellKnownTypes.Empty())
             .ConfigureAwait(false);
@@ -31,10 +31,10 @@ public class DiscoveryService : IDiscoveryService
 
         foreach (var instanceData in response.Data)
         {
-            var input = new ServiceInstanceInfo(Guid.Parse(instanceData.InstanceId), instanceData.Addresses.ToHashSet());
+            var instanceInfo = new ServiceInstanceInfo(Guid.Parse(instanceData.InstanceId), instanceData.Addresses.ToHashSet());
 
-            if (!result.TryAdd(instanceData.ServiceType, new HashSet<ServiceInstanceInfo>(new[] { input })))
-                result[instanceData.ServiceType].Add(input);
+            if (!result.TryAdd(instanceData.ServiceType, new HashSet<ServiceInstanceInfo>(new[] { instanceInfo })))
+                result[instanceData.ServiceType].Add(instanceInfo);
         }
 
         return result;

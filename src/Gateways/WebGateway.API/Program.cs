@@ -1,9 +1,8 @@
-using Blog.Gateways.WebGateway.API.ConfigProviders;
 using Blog.Gateways.WebGateway.API.Configs;
 using Blog.Gateways.WebGateway.API.Controllers;
+using Blog.Gateways.WebGateway.API.Integration.Consumers;
 using Blog.Gateways.WebGateway.API.Services;
 using Blog.Services.Discovery.API.Grpc;
-using Blog.Services.Integration.Consumers;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Yarp.ReverseProxy.Configuration;
@@ -81,54 +80,15 @@ static class ServiceCollectionExtensions
         services.TryAddSingleton<IProxyConfigProvider>(sp =>
         {
             var discoveryService = sp.GetRequiredService<IDiscoveryService>();
-            var servicesAddresses = discoveryService.GetAllAddressesAsync().ConfigureAwait(false)
+
+            var configProvider = InMemoryProxyConfigProvider.InitializeFromDiscoveryServiceAsync(discoveryService)
                 .GetAwaiter()
                 .GetResult();
 
-            if (servicesAddresses is null || servicesAddresses.Any(x => x.Value is null || !x.Value.Any()))
-                throw new InvalidOperationException("Error requesting addresses from discovery service");
-
-            var routes = new List<RouteConfig>();
-            var clusters = new List<ClusterConfig>();
-
-            foreach (var serviceType in servicesAddresses.Keys)
-            {
-                var paths = PathsConfig.GetServiceMatchingPaths(serviceType);
-
-                if (paths is null || !paths.Any())
-                    throw new InvalidOperationException($"No matching paths have been configured for service {serviceType}");
-
-                int routeIndex = 1;
-                foreach (var path in paths)
-                {
-                    routes.Add(new RouteConfig
-                    {
-                        RouteId = serviceType + "-route-" + routeIndex,
-                        ClusterId = serviceType,
-                        Match = new RouteMatch { Path = path }
-                    });
-                    ++routeIndex;
-                }
-
-                int destinationIndex = 1;
-                Dictionary<string, DestinationConfig> destinations = new(servicesAddresses.Values.Count);
-                foreach (var address in servicesAddresses[serviceType].SelectMany(x => x.Addresses))
-                {
-                    destinations.Add(serviceType + "-destination-" + destinationIndex,
-                        new DestinationConfig { Address = address });
-
-                    ++destinationIndex;
-                };
-
-                clusters.Add(new ClusterConfig
-                {
-                    ClusterId = serviceType,
-                    Destinations = destinations
-                });
-            }
-
-            return new InMemoryProxyConfigProvider(routes, clusters);
+            return configProvider;
         });
+
+        services.TryAddSingleton<IInMemoryProxyConfigProvider>(sp => sp.GetRequiredService<InMemoryProxyConfigProvider>());
 
         services.AddReverseProxy();
 
