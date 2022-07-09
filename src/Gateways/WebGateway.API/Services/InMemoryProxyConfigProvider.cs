@@ -21,7 +21,7 @@ public class InMemoryProxyConfigProvider : IInMemoryProxyConfigProvider
 
     public static async Task<IInMemoryProxyConfigProvider> InitializeFromDiscoveryServiceAsync(IDiscoveryService discoveryService)
     {
-        var instancesInfo = await discoveryService.GetAllInstanceInfoAsync().ConfigureAwait(false);
+        var instancesInfo = await discoveryService.GetAllInstancesInfoAsync().ConfigureAwait(false);
 
         if (instancesInfo is null)
             throw new InvalidOperationException("Error discovering services during reverse proxy initialization");
