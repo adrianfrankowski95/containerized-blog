@@ -32,18 +32,18 @@ public class ServiceInstanceStoppedEventConsumer : IConsumer<ServiceInstanceStop
         if (addresses is null || !addresses.Any())
             throw new ArgumentNullException(nameof(context.Message.ServiceAddresses));
 
-        string AddressesString = string.Join("; ", addresses);
+        string addressesString = string.Join("; ", addresses);
 
-        _logger.LogInformation("----- Handling {ServiceType} instance stopped event: {InstanceId} - {Addresses}", serviceType, instanceId, AddressesString);
+        _logger.LogInformation("----- Handling {ServiceType} instance stopped event: {InstanceId} - {Addresses}", serviceType, instanceId, addressesString);
 
         bool success = await _serviceRegistry.UnregisterServiceInstance(new ServiceInstanceData(instanceId, serviceType, addresses)).ConfigureAwait(false);
 
         if (success)
         {
-            _logger.LogInformation("----- Successfully unregistered {ServiceType} instance: {InstanceId} - {Addresses}", serviceType, instanceId, AddressesString);
-            await context.Publish(new ServiceInstanceUnregisteredEvent(instanceId, serviceType, addresses)).ConfigureAwait(false);
+            _logger.LogInformation("----- Successfully unregistered {ServiceType} instance: {InstanceId} - {Addresses}", serviceType, instanceId, addressesString);
+            await context.Publish(new ServiceInstanceUnregisteredEvent(instanceId, serviceType)).ConfigureAwait(false);
         }
 
-        _logger.LogError("----- Error unregistering {ServiceType} instance: {InstanceId} - {Addresses}", serviceType, instanceId, AddressesString);
+        _logger.LogError("----- Error unregistering {ServiceType} instance: {InstanceId} - {Addresses}", serviceType, instanceId, addressesString);
     }
 }

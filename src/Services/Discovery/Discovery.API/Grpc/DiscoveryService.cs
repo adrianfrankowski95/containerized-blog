@@ -23,7 +23,7 @@ public class DiscoveryService : GrpcDiscoveryService.GrpcDiscoveryServiceBase
 
         var instancesData = await _serviceRegistry.GetServiceInstancesDataOfType(request.ServiceType).ConfigureAwait(false);
 
-        _logger.LogInformation("----- Successfully fetched following {ServiceType} data: {Data}",
+        _logger.LogInformation("----- Successfully fetched following {ServiceType} data from registry: {Data}",
             request.ServiceType, string.Join("; ", instancesData.Select(x => $"instance ID: {x.InstanceId}, addresses: {string.Join("; ", x.Addresses)}")));
 
         return new GetServiceInstancesDataOfTypeResponse

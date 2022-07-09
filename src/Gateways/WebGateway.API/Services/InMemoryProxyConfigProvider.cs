@@ -39,7 +39,7 @@ public class InMemoryProxyConfigProvider : IInMemoryProxyConfigProvider
             var paths = PathsConfig.GetServiceMatchingPaths(serviceType);
             provider.GenerateRoutes(serviceType, paths, ref routes);
 
-            var destinations = provider.GenerateDestinations(instancesInfo[serviceType]);
+            var destinations = provider.GenerateDestinations(serviceType, instancesInfo[serviceType]);
             provider.GenerateCluster(serviceType, destinations, ref clusters);
         }
 
@@ -64,7 +64,7 @@ public class InMemoryProxyConfigProvider : IInMemoryProxyConfigProvider
         }
     }
 
-    public Dictionary<string, DestinationConfig> GenerateDestinations(HashSet<ServiceInstanceInfo> instancesInfo)
+    public Dictionary<string, DestinationConfig> GenerateDestinations(string serviceType, HashSet<ServiceInstanceInfo> instancesInfo)
     {
         Dictionary<string, DestinationConfig> destinations = new();
 
@@ -73,7 +73,7 @@ public class InMemoryProxyConfigProvider : IInMemoryProxyConfigProvider
             int destinationIndex = 1;
             foreach (string address in instanceInfo.Addresses)
             {
-                destinations.Add(instanceInfo + "-" + instanceInfo.InstanceId + "-" + destinationIndex,
+                destinations.Add(serviceType + "-" + instanceInfo.InstanceId + "-" + destinationIndex,
                     new DestinationConfig { Address = address });
 
                 ++destinationIndex;
