@@ -19,7 +19,7 @@ services.AddSwaggerGen();
 
 services
     .AddGatewayControllers(env.IsDevelopment())
-    .AddGrpcDiscoveryClient(config)
+    .AddGrpcDiscoveryService(config)
     .AddYarp();
 
 //await AuthContextSeed.SeedAsync(config);
@@ -53,7 +53,7 @@ static IConfiguration GetConfiguration(IWebHostEnvironment env)
 
 static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddGrpcDiscoveryClient(this IServiceCollection services, IConfiguration config)
+    public static IServiceCollection AddGrpcDiscoveryService(this IServiceCollection services, IConfiguration config)
     {
         var address = config.GetValue<UrlsConfig>(UrlsConfig.Section).DiscoveryService;
 
@@ -65,11 +65,6 @@ static class ServiceCollectionExtensions
             opts.Address = new Uri(address);
         });
 
-        return services;
-    }
-
-    public static IServiceCollection AddCustomServices(this IServiceCollection services)
-    {
         services.TryAddTransient<IDiscoveryService, DiscoveryService>();
 
         return services;
