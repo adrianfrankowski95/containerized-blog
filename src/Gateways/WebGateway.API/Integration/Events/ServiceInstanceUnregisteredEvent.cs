@@ -2,4 +2,4 @@
 //in order to make it work through the MassTransit
 namespace Blog.Services.Integration.Events;
 
-public record ServiceInstanceUnregisteredEvent(Guid InstanceId, string ServiceType, HashSet<string> ServiceAddresses);
+public record ServiceInstanceUnregisteredEvent(Guid InstanceId, string ServiceType);

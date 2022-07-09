@@ -24,11 +24,8 @@ public class ServiceInstanceUnregisteredEventConsumer : IConsumer<ServiceInstanc
     {
         Guid instanceId = context.Message.InstanceId;
         string serviceType = context.Message.ServiceType;
-        HashSet<string> addresses = context.Message.ServiceAddresses;
 
-        string addressesString = string.Join("; ", addresses);
-
-        _logger.LogInformation("----- Handling {ServiceType} instance unregistered event: {InstanceId} - {Addresses}", serviceType, instanceId, addressesString);
+        _logger.LogInformation("----- Handling {ServiceType} instance unregistered event: {InstanceId}", serviceType, instanceId);
 
         var config = _configProvider.GetConfig();
 
@@ -44,7 +41,7 @@ public class ServiceInstanceUnregisteredEventConsumer : IConsumer<ServiceInstanc
             if (oldCluster.Destinations is not null && oldCluster.Destinations.Count > 0)
             {
                 var destinationsToRemove =
-                    oldCluster.Destinations.Where(k => k.Key.Contains(instanceId.ToString()))
+                    oldCluster.Destinations.Where(k => k.Key.Contains(serviceType + "-" + instanceId.ToString()))
                     ?? Enumerable.Empty<KeyValuePair<string, DestinationConfig>>();
 
                 var newDestinations = oldCluster.Destinations.Except(destinationsToRemove);

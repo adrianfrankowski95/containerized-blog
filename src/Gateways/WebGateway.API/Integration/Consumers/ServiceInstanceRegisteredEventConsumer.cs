@@ -39,7 +39,9 @@ public class ServiceInstanceRegisteredEventConsumer : IConsumer<ServiceInstanceR
         var newRoutes = config.Routes.ToList();
         var newClusters = config.Clusters.ToList();
 
-        var newDestinations = _configProvider.GenerateDestinations(new HashSet<ServiceInstanceInfo>() { new ServiceInstanceInfo(instanceId, addresses) });
+        var newDestinations = _configProvider.GenerateDestinations(
+            serviceType,
+            new HashSet<ServiceInstanceInfo>() { new ServiceInstanceInfo(instanceId, addresses) });
 
         if (oldCluster is not null)
         {

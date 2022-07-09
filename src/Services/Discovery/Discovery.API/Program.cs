@@ -2,7 +2,11 @@ using Blog.Services.Discovery.API.Configs;
 using Blog.Services.Discovery.API.Grpc;
 using Blog.Services.Discovery.API.Infrastructure;
 using Blog.Services.Discovery.API.Integration.Consumers;
+using Blog.Services.Discovery.API.Models;
+using Discovery.API.Services;
 using MassTransit;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 var env = builder.Environment;
@@ -15,7 +19,7 @@ services.AddLogging();
 
 services
     .AddMassTransitRabbitMqBus(config)
-    .AddServiceRegistry(config)
+    .AddRedisServiceRegistry(config)
     .AddGrpc();
 
 var app = builder.Build();
@@ -74,6 +78,27 @@ internal static class ServiceCollectionExtensions
                 opts.StartTimeout = TimeSpan.FromSeconds(10);
                 opts.StopTimeout = TimeSpan.FromSeconds(30);
             });
+
+        return services;
+    }
+
+    public static IServiceCollection AddRedisServiceRegistry(this IServiceCollection services, IConfiguration config)
+    {
+        services.TryAddSingleton<IConnectionMultiplexer>(sp =>
+        {
+            var redis = ConnectionMultiplexer.Connect(config.GetConnectionString("Redis"));
+            redis.GetServer(redis.GetEndPoints().Single()).ConfigSet("notify-keyspace-events", "Ex");
+
+            return redis;
+        });
+
+        services.AddOptions<ServiceRegistryOptions>().Bind(config.GetSection(ServiceRegistryOptions.Section))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.TryAddScoped<IServiceRegistry, RedisServiceRegistry>();
+
+        services.AddHostedService<ServiceRegistryKeyExpirationNotifier>();
 
         return services;
     }
