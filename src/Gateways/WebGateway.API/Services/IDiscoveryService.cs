@@ -4,6 +4,6 @@ namespace Blog.Gateways.WebGateway.API.Services;
 
 public interface IDiscoveryService
 {
-    public Task<HashSet<ServiceInstanceInfo>> GetServiceTypeInstanceInfoAsync(string serviceType);
-    public Task<IDictionary<string, HashSet<ServiceInstanceInfo>>> GetAllInstanceInfoAsync();
+    public Task<HashSet<ServiceInstanceInfo>> GetServiceTypeInstancesInfoAsync(string serviceType);
+    public Task<IDictionary<string, HashSet<ServiceInstanceInfo>>> GetAllInstancesInfoAsync();
 }
