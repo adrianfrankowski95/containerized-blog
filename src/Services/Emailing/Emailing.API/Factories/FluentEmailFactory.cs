@@ -32,6 +32,7 @@ public class FluentEmailFactory : IEmailFactory<IFluentEmail>
                 new PasswordResetModel(recipient.Name, callbackUrl, urlExpirationAt));
     }
 
+    //TODO: implement sending new post email and custom email, create controllers to expose the HTTP API
     public IFluentEmail CreateNewPostEmail(
         IEnumerable<Recipient> recipients,
         string postId,

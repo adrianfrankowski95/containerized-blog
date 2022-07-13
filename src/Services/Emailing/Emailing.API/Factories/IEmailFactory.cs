@@ -3,7 +3,7 @@ using NodaTime;
 
 namespace Blog.Services.Emailing.API.Factories;
 
-public interface IEmailFactory<TEmail>
+public interface IEmailFactory<TEmail> where TEmail : class
 {
     public TEmail CreateEmailConfirmationEmail(Recipient recipient, string callbackUrl, Instant urlExpirationAt);
     public TEmail CreatePasswordResetEmail(Recipient recipient, string callbackUrl, Instant urlExpirationAt);
