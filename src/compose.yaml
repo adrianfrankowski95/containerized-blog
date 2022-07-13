@@ -1,24 +1,21 @@
 services:
-
   rabbitmq:
     image: masstransit/rabbitmq:latest
 
-  serviceregistry:
+  postgresdb:
+    image: postgres:alpine
+    restart: always
+    ports:
+      - "5432:5432"
+    #specify separate db schemas for Identity service, Blogging service, Comments service and EventStore
+    #volumes:
+    #- /initdb:/docker-entrypoint-initdb.d
+
+  redis:
     image: redis:alpine
+    restart: always
     ports:
       - "6379:6379"
-
-  identitydb:
-    image: postgres:alpine
-
-  bloggingdb:
-    image: postgres:alpine
-
-  commentsdb:
-    image: postgres:alpine
-
-  eventstoredb:
-    image: postgres:alpine
 
   identity-api:
     image: blog/identity-api
@@ -27,7 +24,7 @@ services:
       dockerfile: Services/Identity/Identity.API
     depends_on:
       - rabbitmq
-      - identitydb
+      - postgresdb
 
   blogging-api:
     image: blog/blogging-api
@@ -36,7 +33,7 @@ services:
       dockerfile: Services/Blogging/Blogging.API
     depends_on:
       - rabbitmq
-      - bloggingdb
+      - postgresdb
 
   comments-api:
     image: blog/comments-api
@@ -45,7 +42,7 @@ services:
       dockerfile: Services/Comments/Comments.API
     depends_on:
       - rabbitmq
-      - commentsdb
+      - postgresdb
 
   emailing-api:
     image: blog/emailing-api
@@ -55,14 +52,6 @@ services:
     depends_on:
       - rabbitmq
 
-  discovery-api:
-    image: blog/discovery-api
-    build:
-      context: .
-      dockerfile: Services/Discovery/Discovery.API
-    depends_on:
-      - serviceregistry
-
   eventstore-api:
     image: blog/eventstore-api
     build:
@@ -70,4 +59,27 @@ services:
       dockerfile: Services/EventStore/EventStore.API
     depends_on:
       - rabbitmq
-      - eventstoredb
+      - postgresdb
+
+  discovery-api:
+    image: blog/discovery-api
+    build:
+      context: .
+      dockerfile: Services/Discovery/Discovery.API
+    depends_on:
+      - rabbitmq
+      - redis
+      - identity-api
+      - blogging-api
+      - comments-api
+      - emailing-api
+      - eventstore-api
+
+  webgateway-api:
+    image: blog/webgateway-api
+    build:
+      context: .
+      dockerfile: Gateways/WebGateway.API
+    depends_on:
+      - rabbitmq
+      - discovery-api

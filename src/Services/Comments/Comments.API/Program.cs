@@ -4,7 +4,10 @@ using MassTransit;
 
 var builder = WebApplication.CreateBuilder(args);
 var env = builder.Environment;
+
 var config = GetConfiguration(env);
+builder.Configuration.AddConfiguration(config);
+
 var services = builder.Services;
 
 // Add services to the container.

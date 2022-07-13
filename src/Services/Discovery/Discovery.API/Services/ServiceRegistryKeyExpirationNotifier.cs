@@ -4,7 +4,7 @@ using StackExchange.Redis;
 
 namespace Discovery.API.Services;
 
-public class ServiceRegistryKeyExpirationNotifier : BackgroundService
+public class ServiceRegistryKeyExpirationNotifier : IHostedService
 {
     private readonly IBus _bus;
     private readonly IConnectionMultiplexer _redis;
@@ -17,22 +17,22 @@ public class ServiceRegistryKeyExpirationNotifier : BackgroundService
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    public Task StartAsync(CancellationToken cancellationToken)
     {
-        stoppingToken.ThrowIfCancellationRequested();
+        cancellationToken.ThrowIfCancellationRequested();
 
-        return _redis.GetSubscriber().SubscribeAsync("__keyevent@0__:expired", async (channel, message) =>
+        return _redis.GetSubscriber(_redis.GetServer(_redis.GetEndPoints().Single())).SubscribeAsync("__keyevent@0__:expired", async (channel, message) =>
         {
             _logger.LogInformation("----- Received key expired event from Redis, channel: {Channel}, message: {Message}", channel, message);
 
-            var key = GetKey(channel);
+            var key = message.ToString();
 
-            _logger.LogInformation("----- Extracted following key from channel: {Key}", key);
+            _logger.LogInformation("----- Extracted following key: {Key}", key);
 
             //key pattern: services:servicetype:instanceid     
             var keySplit = key.Split(':');
-            var instanceId = Guid.Parse(keySplit[2]);
             var serviceType = keySplit[1];
+            var instanceId = Guid.Parse(keySplit[2]);
 
             _logger.LogInformation("----- Publishing service instance unregistered event, instance ID: {InstanceId}, service type: {ServiceType}",
                 instanceId, serviceType);
@@ -41,14 +41,10 @@ public class ServiceRegistryKeyExpirationNotifier : BackgroundService
         });
     }
 
-    private static string GetKey(RedisChannel channel)
+    public Task StopAsync(CancellationToken cancellationToken)
     {
-        var channelString = channel.ToString();
+        cancellationToken.ThrowIfCancellationRequested();
 
-        var index = channelString.IndexOf(':');
-        if (index >= 0 && index < channelString.Length - 1)
-            return channelString[(index + 1)..];
-
-        throw new InvalidOperationException($"Could not read a key from channel: {channelString}");
+        return _redis.GetSubscriber(_redis.GetServer(_redis.GetEndPoints().Single())).UnsubscribeAsync("__keyevent@0__:expired");
     }
 }
