@@ -8,15 +8,17 @@ namespace Blog.Services.Authorization.API.Services
     public class OpenIddictSigningCredentialsRotator : IJob
     {
         private readonly IServiceScopeFactory _scopeFactory;
+        private readonly IOptionsMonitor<OpenIddictServerOptions> _optionsAccessor;
 
         public static JobKey Id { get; } = new JobKey(
                 name: nameof(OpenIddictSigningCredentialsRotator),
                 group: typeof(OpenIddictSigningCredentialsRotator).Assembly.GetName().Name!);
 
 
-        public OpenIddictSigningCredentialsRotator(IServiceScopeFactory services, IConfiguration config)
+        public OpenIddictSigningCredentialsRotator(IOptionsMonitor<OpenIddictServerOptions> optionsAccessor, IServiceScopeFactory scopeFactory)
         {
-            _scopeFactory = services ?? throw new ArgumentNullException(nameof(services));
+            _scopeFactory = scopeFactory ?? throw new ArgumentNullException(nameof(scopeFactory));
+            _optionsAccessor = optionsAccessor ?? throw new ArgumentNullException(nameof(optionsAccessor));
         }
 
         public async Task Execute(IJobExecutionContext context)
@@ -26,8 +28,7 @@ namespace Blog.Services.Authorization.API.Services
             var certificateManager = scope.ServiceProvider.GetRequiredService<ISigningCertificateManager>();
             var certificates = certificateManager.GenerateAndRegisterCertificates();
 
-            var optionsAccessor = scope.ServiceProvider.GetRequiredService<IOptionsMonitor<OpenIddictServerOptions>>();
-            var options = optionsAccessor.CurrentValue;
+            var options = _optionsAccessor.CurrentValue;
 
             foreach (var cert in certificates)
             {
