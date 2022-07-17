@@ -38,33 +38,33 @@ public class RedisServiceRegistry : IServiceRegistry
         //key pattern: services:servicetype:instanceid
         var keys = _redis.GetServer(_redis.GetEndPoints().Single()).Keys(pattern: "services:*");
 
-        if (keys is not null && keys.Any())
+        if (keys is null || !keys.Any())
+            return Array.Empty<ServiceInstanceData>();
+
+        var entries = await _redisDb.StringGetAsync(keys.ToArray()).ConfigureAwait(false);
+
+        if (entries is null || entries.Length == 0)
+            return Array.Empty<ServiceInstanceData>();
+
+        var services = new List<ServiceInstanceData>();
+
+        for (int i = 0; i < keys.Count(); ++i)
         {
-            var entries = await _redisDb.StringGetAsync(keys.ToArray()).ConfigureAwait(false);
-
-            if (entries is not null && entries.Length > 0)
+            if (entries.ElementAt(i).HasValue)
             {
-                var services = new List<ServiceInstanceData>();
+                //key pattern: services:servicetype:instanceid
+                var keySplit = keys.ElementAt(i).ToString().Split(':');
 
-                for (int i = 0; i < keys.Count(); ++i)
-                {
-                    if (entries.ElementAt(i).HasValue)
-                    {
-                        //key pattern: services:servicetype:instanceid
-                        var keySplit = keys.ElementAt(i).ToString().Split(':');
+                string serviceType = keySplit[1];
+                Guid instanceId = Guid.Parse(keySplit[2]);
 
-                        string serviceType = keySplit[1];
-                        Guid instanceId = Guid.Parse(keySplit[2]);
+                var addresses = entries.ElementAt(i).ToString().Split(';').ToHashSet();
 
-                        var addresses = entries.ElementAt(i).ToString().Split(';').ToHashSet();
-
-                        services.Add(new ServiceInstanceData(instanceId, serviceType, addresses));
-                    }
-                }
-                return services;
+                services.Add(new ServiceInstanceData(instanceId, serviceType, addresses));
             }
         }
-        return Array.Empty<ServiceInstanceData>();
+        return services;
+
     }
 
     public async Task<IList<ServiceInstanceData>> GetServiceInstancesDataOfType(string serviceType)
@@ -75,28 +75,27 @@ public class RedisServiceRegistry : IServiceRegistry
         //key pattern: services:servicetype:instanceid
         var keys = _redis.GetServer(_redis.GetEndPoints().Single()).Keys(pattern: "services:" + serviceType + ":*");
 
-        if (keys is not null && keys.Any())
+        if (keys is null || !keys.Any())
+            return Array.Empty<ServiceInstanceData>();
+
+        var entries = await _redisDb.StringGetAsync(keys.ToArray()).ConfigureAwait(false);
+
+        if (entries is null || entries.Length == 0)
+            return Array.Empty<ServiceInstanceData>();
+
+        var services = new List<ServiceInstanceData>();
+
+        for (int i = 0; i < keys.Count(); ++i)
         {
-            var entries = await _redisDb.StringGetAsync(keys.ToArray()).ConfigureAwait(false);
-
-            if (entries is not null && entries.Length > 0)
+            if (entries.ElementAt(i).HasValue)
             {
-                var services = new List<ServiceInstanceData>();
-
-                for (int i = 0; i < keys.Count(); ++i)
-                {
-                    if (entries.ElementAt(i).HasValue)
-                    {
-                        //key pattern: services:servicetype:instanceid
-                        Guid instanceId = Guid.Parse(keys.ElementAt(i).ToString().Split(':')[2]);
-                        var addresses = entries.ElementAt(i).ToString().Split(';').ToHashSet();
-                        services.Add(new ServiceInstanceData(instanceId, serviceType, addresses));
-                    }
-                }
-                return services;
+                //key pattern: services:servicetype:instanceid
+                Guid instanceId = Guid.Parse(keys.ElementAt(i).ToString().Split(':')[2]);
+                var addresses = entries.ElementAt(i).ToString().Split(';').ToHashSet();
+                services.Add(new ServiceInstanceData(instanceId, serviceType, addresses));
             }
         }
-        return Array.Empty<ServiceInstanceData>();
+        return services;
     }
 
     public Task<bool> TryRefreshServiceInstanceExpiry(ServiceInstanceData serviceInfo)
