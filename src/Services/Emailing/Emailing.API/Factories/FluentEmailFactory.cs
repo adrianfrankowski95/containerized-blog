@@ -55,6 +55,24 @@ public class FluentEmailFactory : IEmailFactory<IFluentEmail>
         Priority priority,
         IEnumerable<Attachment>? attachments)
     {
-        throw new NotImplementedException();
+        var email = _email
+            .To(recipients.Select(x => new FluentEmail.Core.Models.Address(x.EmailAddress, x.Name)))
+            .CC(ccRecipients.Select(x => new FluentEmail.Core.Models.Address(x.EmailAddress, x.Name)))
+            .BCC(bccRecipients.Select(x => new FluentEmail.Core.Models.Address(x.EmailAddress, x.Name)))
+            .Subject(title)
+            .Body(body)
+            .Attach(attachments?.Select(x => new FluentEmail.Core.Models.Attachment()
+            {
+                ContentId = x.ContentId,
+                ContentType = x.ContentType,
+                Data = x.Data,
+                Filename = x.Filename
+            }))
+            .UsingTemplateFromFile("/Blogging/CustomEmail", new CustomEmailModel());
+
+        if (priority is not Priority.Default)
+            email = priority == Priority.Low ? email.LowPriority() : email.HighPriority();
+
+        return email;
     }
 }
