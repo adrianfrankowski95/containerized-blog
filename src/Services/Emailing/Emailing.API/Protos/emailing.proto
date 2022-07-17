@@ -57,9 +57,9 @@ message Recipient {
 
 message Attachment {
     string filename = 1;
-    bytes Data = 2;
-    string ContentType = 3;
-    string ContentId = 4;
+    bytes data = 2;
+    string contentType = 3;
+    string contentId = 4;
 }
 
 enum Priority {
