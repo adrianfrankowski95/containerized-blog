@@ -48,8 +48,8 @@ public class FluentEmailFactory : IEmailFactory<IFluentEmail>
 
     public IFluentEmail CreateCustomEmail(
         IEnumerable<Recipient> recipients,
-        IEnumerable<Recipient> ccRecipients,
-        IEnumerable<Recipient> bccRecipients,
+        IEnumerable<Recipient>? ccRecipients,
+        IEnumerable<Recipient>? bccRecipients,
         string title,
         string body,
         Priority priority,
@@ -57,8 +57,8 @@ public class FluentEmailFactory : IEmailFactory<IFluentEmail>
     {
         var email = _email
             .To(recipients.Select(x => new FluentEmail.Core.Models.Address(x.EmailAddress, x.Name)))
-            .CC(ccRecipients.Select(x => new FluentEmail.Core.Models.Address(x.EmailAddress, x.Name)))
-            .BCC(bccRecipients.Select(x => new FluentEmail.Core.Models.Address(x.EmailAddress, x.Name)))
+            .CC(ccRecipients?.Select(x => new FluentEmail.Core.Models.Address(x.EmailAddress, x.Name)))
+            .BCC(bccRecipients?.Select(x => new FluentEmail.Core.Models.Address(x.EmailAddress, x.Name)))
             .Subject(title)
             .Body(body)
             .Attach(attachments?.Select(x => new FluentEmail.Core.Models.Attachment()
