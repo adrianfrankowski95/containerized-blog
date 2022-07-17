@@ -1,3 +1,3 @@
 namespace Blog.Services.Emailing.API.Models;
 
-public enum Priority { Low = 0, High = 1 };
+public enum Priority { Default = 0, Low = 1, High = 2 };
