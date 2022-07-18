@@ -1,12 +1,11 @@
-using System;
 using System.ComponentModel.DataAnnotations;
 using System.Net;
-using System.Threading.Tasks;
 using Blog.Services.Emailing.API.Factories;
+using Blog.Services.Emailing.API.Models;
+using Blog.Services.Emailing.API.Models.DTOs;
 using FluentEmail.Core;
 using FluentEmail.Core.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace Blog.Services.Emailing.API.Controllers.V1;
 
@@ -33,11 +32,39 @@ public class EmailingController : ControllerBase
     [ProducesResponseType((int)HttpStatusCode.OK)]
     [ProducesResponseType((int)HttpStatusCode.BadRequest)]
     [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-    public async Task<IActionResult> SendEmailAsync([Required] Models.DTOs.SendEmailRequest)
+    public async Task<IActionResult> SendEmailAsync([Required, FromBody] SendEmailRequestDto requestDto)
     {
-        _emailFactory.CreateCustomEmail()
-        lPostsCount, result.ReturnedPostsCount, result.RemainingPostsCount);
+        try
+        {
+            var request = MapFromSendEmailRequestDto(requestDto);
+            var email = _emailFactory.CreateCustomEmail(
+                request.Recipients,
+                request.CcRecipients,
+                request.BccRecipients,
+                request.Title,
+                request.Body,
+                request.IsBodyHtml,
+                request.Priority,
+                request.Attachments);
 
-        return Ok(result.PostPreviews);
+            var result = await _sender.SendAsync(email).ConfigureAwait(false);
+
+            return result.Successful ? Ok() : Problem(string.Join(". ", result.ErrorMessages));
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
+
+    private static SendEmailRequest MapFromSendEmailRequestDto(SendEmailRequestDto requestDto)
+     => new(
+            requestDto.Recipients.Select(x => new Recipient(x.EmailAddress, x.Name)),
+            requestDto.CcRecipients?.Select(x => new Recipient(x.EmailAddress, x.Name)),
+            requestDto.BccRecipients?.Select(x => new Recipient(x.EmailAddress, x.Name)),
+            requestDto.Title,
+            requestDto.Body,
+            requestDto.IsBodyHtml,
+            Enum.Parse<Priority>(requestDto.Priority),
+            requestDto.Attachments?.Select(x => new Attachment(x.Filename, x.Data, x.ContentType, x.ContentId)));
 }

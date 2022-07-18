@@ -19,10 +19,11 @@ public interface IEmailFactory<TEmail> where TEmail : class
 
     public TEmail CreateCustomEmail(
         IEnumerable<Recipient> recipients,
-        IEnumerable<Recipient> ccRecipients,
-        IEnumerable<Recipient> bccRecipients,
+        IEnumerable<Recipient>? ccRecipients,
+        IEnumerable<Recipient>? bccRecipients,
         string title,
         string body,
+        bool isBodyHtml,
         Priority priority,
         IEnumerable<Attachment>? attachments);
 }

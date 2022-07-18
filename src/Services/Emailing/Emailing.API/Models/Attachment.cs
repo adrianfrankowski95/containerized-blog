@@ -1,6 +1,3 @@
-using System;
-using System.IO;
-
 namespace Blog.Services.Emailing.API.Models;
 
 public record Attachment

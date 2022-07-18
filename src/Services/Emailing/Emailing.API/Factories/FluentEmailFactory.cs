@@ -52,6 +52,7 @@ public class FluentEmailFactory : IEmailFactory<IFluentEmail>
         IEnumerable<Recipient>? bccRecipients,
         string title,
         string body,
+        bool isBodyHtml,
         Priority priority,
         IEnumerable<Attachment>? attachments)
     {
@@ -60,7 +61,7 @@ public class FluentEmailFactory : IEmailFactory<IFluentEmail>
             .CC(ccRecipients?.Select(x => new FluentEmail.Core.Models.Address(x.EmailAddress, x.Name)))
             .BCC(bccRecipients?.Select(x => new FluentEmail.Core.Models.Address(x.EmailAddress, x.Name)))
             .Subject(title)
-            .Body(body)
+            .Body(body, isBodyHtml)
             .Attach(attachments?.Select(x => new FluentEmail.Core.Models.Attachment()
             {
                 ContentId = x.ContentId,
