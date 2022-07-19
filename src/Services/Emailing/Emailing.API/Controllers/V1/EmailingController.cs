@@ -34,6 +34,8 @@ public class EmailingController : ControllerBase
     [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
     public async Task<IActionResult> SendEmailAsync([Required, FromBody] SendEmailRequestDto requestDto)
     {
+        _logger.LogInformation("----- Sending email from HTTP request, parameters: {Parameters}", requestDto);
+
         try
         {
             var request = MapFromSendEmailRequestDto(requestDto);
@@ -49,10 +51,18 @@ public class EmailingController : ControllerBase
 
             var result = await _sender.SendAsync(email).ConfigureAwait(false);
 
-            return result.Successful ? Ok() : Problem(string.Join(". ", result.ErrorMessages));
+            if (!result.Successful)
+            {
+                _logger.LogError("----- Error sending email from HTTP request, parameters: {Parameters}, errors: {Errors}",
+                    requestDto, string.Join("; ", result.ErrorMessages));
+                return Problem(string.Join(". ", result.ErrorMessages));
+            }
+
+            return Ok();
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "----- Exception throw while sending email from HTTP request, parameters: {Parameters}", requestDto);
             return BadRequest(ex.Message);
         }
     }
