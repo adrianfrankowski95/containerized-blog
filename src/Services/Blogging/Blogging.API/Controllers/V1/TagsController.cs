@@ -34,7 +34,7 @@ public class TagsController : ControllerBase
         else
         {
             var language = Language.FromName(lang);
-            _logger.LogInformation("----- Querying for tags from language, parameters: {Language}", language.Name);
+            _logger.LogInformation("----- Querying for tags with language, parameters: {Language}", language.Name);
             result = _tagQueries.GetTagsWithLanguageAsync(language);
         }
 
