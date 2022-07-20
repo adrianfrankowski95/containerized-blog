@@ -36,7 +36,7 @@ public class InMemoryProxyConfigProvider : IInMemoryProxyConfigProvider
 
         foreach (var serviceType in instancesInfo.Keys)
         {
-            var paths = PathsConfig.GetServiceMatchingPaths(serviceType);
+            var paths = PathsConfig.GetMatchingPaths(serviceType);
             provider.GenerateRoutes(serviceType, paths, ref routes);
 
             var destinations = provider.GenerateDestinations(serviceType, instancesInfo[serviceType]);
@@ -46,7 +46,7 @@ public class InMemoryProxyConfigProvider : IInMemoryProxyConfigProvider
         return new InMemoryProxyConfigProvider(routes, clusters);
     }
 
-    public void GenerateRoutes(string serviceType, IEnumerable<string> matchingPaths, ref List<RouteConfig> routes)
+    public void GenerateRoutes(string serviceType, IEnumerable<(string incomingPath, string outgoingPath)> matchingPaths, ref List<RouteConfig> routes)
     {
         if (matchingPaths is null || !matchingPaths.Any())
             throw new ArgumentNullException(nameof(matchingPaths));
@@ -58,7 +58,11 @@ public class InMemoryProxyConfigProvider : IInMemoryProxyConfigProvider
             {
                 RouteId = serviceType + "-route-" + routeIndex,
                 ClusterId = serviceType,
-                Match = new RouteMatch { Path = path }
+                Match = new RouteMatch { Path = path.incomingPath },
+                Transforms = new List<IReadOnlyDictionary<string, string>>
+                {
+                    new Dictionary<string, string>{ {"PathPattern", path.outgoingPath }}
+                }
             });
             ++routeIndex;
         }
@@ -88,7 +92,7 @@ public class InMemoryProxyConfigProvider : IInMemoryProxyConfigProvider
         clusters.Add(new ClusterConfig
         {
             ClusterId = clusterId,
-            Destinations = destinations
+            Destinations = destinations,
         });
     }
 

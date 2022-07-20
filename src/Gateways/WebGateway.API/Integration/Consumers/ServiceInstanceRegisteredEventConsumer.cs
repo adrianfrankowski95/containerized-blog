@@ -55,7 +55,7 @@ public class ServiceInstanceRegisteredEventConsumer : IConsumer<ServiceInstanceR
 
         if (!config.Routes.Any(route => string.Equals(route.ClusterId, serviceType, StringComparison.OrdinalIgnoreCase)))
         {
-            var paths = PathsConfig.GetServiceMatchingPaths(serviceType);
+            var paths = PathsConfig.GetMatchingPaths(serviceType);
             _configProvider.GenerateRoutes(serviceType, paths, ref newRoutes);
         }
 
