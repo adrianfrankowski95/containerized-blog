@@ -9,13 +9,10 @@ public class InMemoryProxyConfig : IProxyConfig
     {
         Routes = routes;
         Clusters = clusters;
-
         ChangeToken = new CancellationChangeToken(cancellationToken);
     }
 
     public IReadOnlyList<RouteConfig> Routes { get; }
-
     public IReadOnlyList<ClusterConfig> Clusters { get; }
-
     public IChangeToken ChangeToken { get; }
 }

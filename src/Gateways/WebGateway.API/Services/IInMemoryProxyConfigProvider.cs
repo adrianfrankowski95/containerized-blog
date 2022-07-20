@@ -5,7 +5,7 @@ namespace Blog.Gateways.WebGateway.API.Services;
 
 public interface IInMemoryProxyConfigProvider : IProxyConfigProvider
 {
-    public void GenerateRoutes(string serviceType, IEnumerable<string> matchingPaths, ref List<RouteConfig> routes);
+    public void GenerateRoutes(string serviceType, IEnumerable<(string incomingPath, string outgoingPath)> matchingPaths, ref List<RouteConfig> routes);
 
     public Dictionary<string, DestinationConfig> GenerateDestinations(string serviceType, HashSet<ServiceInstanceInfo> instancesInfo);
 

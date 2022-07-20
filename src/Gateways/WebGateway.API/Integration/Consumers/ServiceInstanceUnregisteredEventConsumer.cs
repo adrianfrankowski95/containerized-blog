@@ -51,7 +51,7 @@ public class ServiceInstanceUnregisteredEventConsumer : IConsumer<ServiceInstanc
                     _configProvider.GenerateCluster(oldCluster.ClusterId, newDestinations.ToDictionary(k => k.Key, v => v.Value), ref newClusters);
                     if (!config.Routes.Any(route => string.Equals(route.ClusterId, oldCluster.ClusterId.ToString(), StringComparison.OrdinalIgnoreCase)))
                     {
-                        var paths = PathsConfig.GetServiceMatchingPaths(serviceType);
+                        var paths = PathsConfig.GetMatchingPaths(serviceType);
                         _configProvider.GenerateRoutes(serviceType, paths, ref newRoutes);
                     }
                 }
