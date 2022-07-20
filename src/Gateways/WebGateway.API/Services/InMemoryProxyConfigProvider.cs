@@ -68,7 +68,7 @@ public class InMemoryProxyConfigProvider : IInMemoryProxyConfigProvider
         }
     }
 
-    public Dictionary<string, DestinationConfig> GenerateDestinations(string serviceType, HashSet<ServiceInstanceInfo> instancesInfo)
+    public Dictionary<string, DestinationConfig> GenerateDestinations(string serviceType, IReadOnlySet<ServiceInstanceInfo> instancesInfo)
     {
         Dictionary<string, DestinationConfig> destinations = new();
 
@@ -87,7 +87,7 @@ public class InMemoryProxyConfigProvider : IInMemoryProxyConfigProvider
         return destinations;
     }
 
-    public void GenerateCluster(string clusterId, Dictionary<string, DestinationConfig> destinations, ref List<ClusterConfig> clusters)
+    public void GenerateCluster(string clusterId, IReadOnlyDictionary<string, DestinationConfig> destinations, ref List<ClusterConfig> clusters)
     {
         clusters.Add(new ClusterConfig
         {
