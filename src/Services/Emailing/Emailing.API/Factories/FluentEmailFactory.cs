@@ -32,7 +32,7 @@ public class FluentEmailFactory : IEmailFactory<IFluentEmail>
                 new PasswordResetModel(recipient.Name, callbackUrl, urlExpirationAt));
     }
 
-    //TODO: implement sending new post email and custom email, create controllers to expose the HTTP API
+    // TODO: implement sending new post email and custom email
     public IFluentEmail CreateNewPostEmail(
         IEnumerable<Recipient> recipients,
         string postId,
@@ -42,6 +42,22 @@ public class FluentEmailFactory : IEmailFactory<IFluentEmail>
         string authorId,
         string authorName,
         string headerImgUrl)
+    {
+        throw new NotImplementedException();
+    }
+
+    // TODO: implement sending new comment email
+    public IFluentEmail CreateNewCommentEmail(
+        Recipient recipients,
+        string postId,
+        string postTitle,
+        string postCategory,
+        string postDescription,
+        string headerImgUrl,
+        string commentAuthorId,
+        string commentAuthorName,
+        string commentContent,
+        Instant commentCreatedAt)
     {
         throw new NotImplementedException();
     }
@@ -72,7 +88,9 @@ public class FluentEmailFactory : IEmailFactory<IFluentEmail>
             .UsingTemplateFromFile("/Blogging/CustomEmail", new CustomEmailModel());
 
         if (priority is not Priority.Default)
-            email = priority == Priority.Low ? email.LowPriority() : email.HighPriority();
+            email = priority == Priority.Low
+                ? email.LowPriority()
+                : email.HighPriority();
 
         return email;
     }
