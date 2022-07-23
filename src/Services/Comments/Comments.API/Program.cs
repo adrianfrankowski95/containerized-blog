@@ -79,7 +79,7 @@ internal static class ServiceCollectionExtensions
 
                 var rabbitMqConfig = config.GetValue<RabbitMqConfig>(RabbitMqConfig.Section);
 
-                cfg.Host(rabbitMqConfig.Host, rabbitMqConfig.VirtualHost, opts =>
+                cfg.Host(rabbitMqConfig.Host, rabbitMqConfig.Port, rabbitMqConfig.VirtualHost, opts =>
                 {
                     opts.Username(rabbitMqConfig.Username);
                     opts.Password(rabbitMqConfig.Password);

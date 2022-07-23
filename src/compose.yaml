@@ -1,13 +1,18 @@
 services:
   rabbitmq:
     image: masstransit/rabbitmq:latest
-
-  postgresdb:
+    ports:
+      - "5672:80"
+  postgres:
     image: postgres:alpine
     restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+      PGPASSWORD: $uper$strongPa$$word
     ports:
-      - "5432:5432"
-    #specify separate db schemas for Identity service, Blogging service, Comments service and EventStore
+      - "5432:80"
+    # specify separate db schemas for Identity service, Blogging service, Comments service and EventStore
     #volumes:
     #- /initdb:/docker-entrypoint-initdb.d
 
@@ -15,7 +20,7 @@ services:
     image: redis:alpine
     restart: always
     ports:
-      - "6379:6379"
+      - "6379:80"
 
   identity-api:
     image: blog/identity-api
@@ -24,7 +29,7 @@ services:
       dockerfile: Services/Identity/Identity.API
     depends_on:
       - rabbitmq
-      - postgresdb
+      - postgres
 
   blogging-api:
     image: blog/blogging-api
@@ -33,7 +38,7 @@ services:
       dockerfile: Services/Blogging/Blogging.API
     depends_on:
       - rabbitmq
-      - postgresdb
+      - postgres
 
   comments-api:
     image: blog/comments-api
@@ -42,7 +47,7 @@ services:
       dockerfile: Services/Comments/Comments.API
     depends_on:
       - rabbitmq
-      - postgresdb
+      - postgres
 
   emailing-api:
     image: blog/emailing-api
@@ -59,7 +64,7 @@ services:
       dockerfile: Services/EventStore/EventStore.API
     depends_on:
       - rabbitmq
-      - postgresdb
+      - postgres
 
   discovery-api:
     image: blog/discovery-api
