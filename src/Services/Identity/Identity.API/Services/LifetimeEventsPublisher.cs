@@ -33,9 +33,9 @@ public class LifetimeEventsPublisher : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        //We are waiting for an ApplicationStarted token trigger, because only then
-        //IServer instance is available and can be resolved by a service provider
-        //in order to obtain app's Addresses
+        // We are waiting for an ApplicationStarted token trigger, because only then
+        // IServer instance is available and can be resolved by a service provider
+        // in order to obtain app's Addresses
         await WaitForStartupOrCancellationAsync(_lifetime, stoppingToken).ConfigureAwait(false);
 
         if (stoppingToken.IsCancellationRequested)
