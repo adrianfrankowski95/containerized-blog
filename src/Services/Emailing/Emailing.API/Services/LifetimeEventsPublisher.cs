@@ -10,25 +10,23 @@ namespace Blog.Services.Emailing.API.Services;
 public class LifetimeEventsPublisher : BackgroundService
 {
     private readonly IBus _bus;
-    private readonly IServiceProvider _serviceProvider;
+    private readonly IServer _server;
     private readonly IOptions<InstanceConfig> _config;
     private readonly ILogger<LifetimeEventsPublisher> _logger;
     private readonly IHostApplicationLifetime _lifetime;
 
     public LifetimeEventsPublisher(
         IBus bus,
-        IServiceProvider serviceProvider,
+        IServer server,
         IOptions<InstanceConfig> config,
         IHostApplicationLifetime lifetime,
         ILogger<LifetimeEventsPublisher> logger)
     {
         _bus = bus ?? throw new ArgumentNullException(nameof(bus));
-        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+        _server = server ?? throw new ArgumentNullException(nameof(server));
         _config = config ?? throw new ArgumentNullException(nameof(config));
         _lifetime = lifetime ?? throw new ArgumentNullException(nameof(lifetime));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
-
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -38,15 +36,20 @@ public class LifetimeEventsPublisher : BackgroundService
         //in order to obtain app's Addresses
         await WaitForStartupOrCancellationAsync(_lifetime, stoppingToken).ConfigureAwait(false);
 
+        var config = _config.Value;
         if (stoppingToken.IsCancellationRequested)
         {
-            var config = _config.Value;
             _logger.LogWarning("----- Cancellation requested for {Type} service instance before events initialization, ID: {Id}",
                 config.ServiceType, config.InstanceId);
             return;
         }
 
-        var addresses = await GetAddressesAsync().ConfigureAwait(false);
+        // TODO: If received hostname:port does not work, check following solution:
+        // var name = Dns.GetHostName(); // get container id
+        // var ip = Dns.GetHostEntry(name).AddressList
+        //     .FirstOrDefault(x => x.AddressFamily == AddressFamily.InterNetwork);
+
+        var addresses = GetAddresses();
 
         using var registration = _lifetime.ApplicationStopping.Register(async () => await PublishStoppedEventAsync(addresses).ConfigureAwait(false));
 
@@ -54,7 +57,7 @@ public class LifetimeEventsPublisher : BackgroundService
 
         while (!stoppingToken.IsCancellationRequested)
         {
-            await Task.Delay(_config.Value.HeartbeatInterval, stoppingToken).ConfigureAwait(false);
+            await Task.Delay(config.HeartbeatInterval, stoppingToken).ConfigureAwait(false);
             await PublishHeartbeatEvent(addresses, stoppingToken).ConfigureAwait(false);
         }
     }
@@ -83,17 +86,14 @@ public class LifetimeEventsPublisher : BackgroundService
         return _bus.Publish<ServiceInstanceHeartbeatEvent>(new(config.InstanceId, config.ServiceType, addresses), stoppingToken);
     }
 
-    private async Task<HashSet<string>> GetAddressesAsync()
+    private HashSet<string> GetAddresses()
     {
-        await using var scope = _serviceProvider.CreateAsyncScope();
-
-        var server = scope.ServiceProvider.GetRequiredService<IServer>();
-        var addressFeature = server.Features.Get<IServerAddressesFeature>();
+        var addressFeature = _server.Features.Get<IServerAddressesFeature>();
 
         if (addressFeature is null || !addressFeature.Addresses.Any())
             throw new InvalidOperationException($"Error getting {_config.Value.ServiceType} Addresses");
 
-        return addressFeature.Addresses.ToHashSet(); ;
+        return addressFeature.Addresses.ToHashSet();
     }
 
     private static Task WaitForStartupOrCancellationAsync(IHostApplicationLifetime lifetime, CancellationToken stoppingToken)
