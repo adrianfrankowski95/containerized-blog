@@ -4,13 +4,13 @@ using StackExchange.Redis;
 
 namespace Discovery.API.Services;
 
-public class ServiceRegistryKeyExpirationNotifier : IHostedService
+public class RedisKeyExpiredEventNotifier : IHostedService
 {
     private readonly IBus _bus;
     private readonly IConnectionMultiplexer _redis;
-    private readonly ILogger<ServiceRegistryKeyExpirationNotifier> _logger;
+    private readonly ILogger<RedisKeyExpiredEventNotifier> _logger;
 
-    public ServiceRegistryKeyExpirationNotifier(IBus bus, IConnectionMultiplexer redis, ILogger<ServiceRegistryKeyExpirationNotifier> logger)
+    public RedisKeyExpiredEventNotifier(IBus bus, IConnectionMultiplexer redis, ILogger<RedisKeyExpiredEventNotifier> logger)
     {
         _bus = bus ?? throw new ArgumentNullException(nameof(redis));
         _redis = redis ?? throw new ArgumentNullException(nameof(redis));
