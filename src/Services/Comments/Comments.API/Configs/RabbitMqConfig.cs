@@ -10,6 +10,10 @@ public class RabbitMqConfig
     public string Host { get; set; }
 
     [Required]
+    [Range(0, int.MaxValue)]
+    public ushort Port { get; set; }
+
+    [Required]
     public string VirtualHost { get; set; }
 
     [Required]
