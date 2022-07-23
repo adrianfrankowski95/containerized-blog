@@ -6,6 +6,7 @@ services:
       mode: global
     ports:
       - "5672:5672"
+
   postgres:
     image: postgres:alpine
     restart: always
@@ -29,6 +30,32 @@ services:
     ports:
       - "6379:6379"
 
+  discovery-api:
+    image: blog/discovery-api
+    build:
+      context: .
+      dockerfile: ./Services/Discovery/Discovery.API/Dockerfile
+    deploy:
+      mode: global
+    depends_on:
+      - rabbitmq
+      - redis
+      # - eventstore-api
+    ports:
+      - "7001:7001"
+
+  emailing-api:
+    image: blog/emailing-api
+    build:
+      context: .
+      dockerfile: ./Services/Emailing/Emailing.API/Dockerfile
+    scale: 5
+    depends_on:
+      - rabbitmq
+      - discovery-api
+    ports:
+      - "7017-7021:80"
+
   identity-api:
     image: blog/identity-api
     build:
@@ -38,6 +65,8 @@ services:
     depends_on:
       - rabbitmq
       - postgres
+      - discovery-api
+      - emailing-api
     ports:
       - "7002-7006:80"
 
@@ -50,6 +79,8 @@ services:
     depends_on:
       - rabbitmq
       - postgres
+      - discovery-api
+      - emailing-api
     ports:
       - "7007-7011:80"
 
@@ -62,46 +93,10 @@ services:
     depends_on:
       - rabbitmq
       - postgres
+      - discovery-api
+      - emailing-api
     ports:
       - "7012-7016:80"
-
-  emailing-api:
-    image: blog/emailing-api
-    build:
-      context: .
-      dockerfile: ./Services/Emailing/Emailing.API/Dockerfile
-    scale: 5
-    depends_on:
-      - rabbitmq
-    ports:
-      - "7017-7021:80"
-
-  # eventstore-api:
-  #   image: blog/eventstore-api
-  #   build:
-  #     context: .
-  #     dockerfile: ./Services/EventStore/EventStore.API/Dockerfile
-  #   depends_on:
-  #     - rabbitmq
-  #     - postgres
-
-  discovery-api:
-    image: blog/discovery-api
-    build:
-      context: .
-      dockerfile: ./Services/Discovery/Discovery.API/Dockerfile
-    deploy:
-      mode: global
-    depends_on:
-      - rabbitmq
-      - redis
-      - identity-api
-      - blogging-api
-      - comments-api
-      - emailing-api
-      # - eventstore-api
-    ports:
-      - "7001:7001"
 
   webgateway-api:
     image: blog/webgateway-api
@@ -113,5 +108,17 @@ services:
     depends_on:
       - rabbitmq
       - discovery-api
+      - identity-api
+      - blogging-api
+      - comments-api
+      - emailing-api
     ports:
       - "7000:7000"
+  # eventstore-api:
+  #   image: blog/eventstore-api
+  #   build:
+  #     context: .
+  #     dockerfile: ./Services/EventStore/EventStore.API/Dockerfile
+  #   depends_on:
+  #     - rabbitmq
+  #     - postgres
