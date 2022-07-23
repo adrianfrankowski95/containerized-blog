@@ -100,7 +100,7 @@ internal static class ServiceCollectionExtensions
 
         services.TryAddScoped<IServiceRegistry, RedisServiceRegistry>();
 
-        services.AddHostedService<ServiceRegistryKeyExpirationNotifier>();
+        services.AddHostedService<RedisKeyExpiredEventNotifier>();
 
         return services;
     }
