@@ -1,17 +1,22 @@
 services:
   rabbitmq:
     image: masstransit/rabbitmq:latest
+    restart: always
+    deploy:
+      mode: global
     ports:
-      - "5672:80"
+      - "5672:5672"
   postgres:
     image: postgres:alpine
     restart: always
+    deploy:
+      mode: global
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: admin
       PGPASSWORD: $uper$strongPa$$word
     ports:
-      - "5432:80"
+      - "5432:5432"
     # specify separate db schemas for Identity service, Blogging service, Comments service and EventStore
     #volumes:
     #- /initdb:/docker-entrypoint-initdb.d
@@ -19,58 +24,74 @@ services:
   redis:
     image: redis:alpine
     restart: always
+    deploy:
+      mode: global
     ports:
-      - "6379:80"
+      - "6379:6379"
 
   identity-api:
     image: blog/identity-api
     build:
       context: .
-      dockerfile: Services/Identity/Identity.API
+      dockerfile: ./Services/Identity/Identity.API/Dockerfile
+    scale: 5
     depends_on:
       - rabbitmq
       - postgres
+    ports:
+      - "7002-7006:80"
 
   blogging-api:
     image: blog/blogging-api
     build:
       context: .
-      dockerfile: Services/Blogging/Blogging.API
+      dockerfile: ./Services/Blogging/Blogging.API/Dockerfile
+    scale: 5
     depends_on:
       - rabbitmq
       - postgres
+    ports:
+      - "7007-7011:80"
 
   comments-api:
     image: blog/comments-api
     build:
       context: .
-      dockerfile: Services/Comments/Comments.API
+      dockerfile: ./Services/Comments/Comments.API/Dockerfile
+    scale: 5
     depends_on:
       - rabbitmq
       - postgres
+    ports:
+      - "7012-7016:80"
 
   emailing-api:
     image: blog/emailing-api
     build:
       context: .
-      dockerfile: Services/Emailing/Emailing.API
+      dockerfile: ./Services/Emailing/Emailing.API/Dockerfile
+    scale: 5
     depends_on:
       - rabbitmq
+    ports:
+      - "7017-7021:80"
 
-  eventstore-api:
-    image: blog/eventstore-api
-    build:
-      context: .
-      dockerfile: Services/EventStore/EventStore.API
-    depends_on:
-      - rabbitmq
-      - postgres
+  # eventstore-api:
+  #   image: blog/eventstore-api
+  #   build:
+  #     context: .
+  #     dockerfile: ./Services/EventStore/EventStore.API/Dockerfile
+  #   depends_on:
+  #     - rabbitmq
+  #     - postgres
 
   discovery-api:
     image: blog/discovery-api
     build:
       context: .
-      dockerfile: Services/Discovery/Discovery.API
+      dockerfile: ./Services/Discovery/Discovery.API/Dockerfile
+    deploy:
+      mode: global
     depends_on:
       - rabbitmq
       - redis
@@ -78,13 +99,19 @@ services:
       - blogging-api
       - comments-api
       - emailing-api
-      - eventstore-api
+      # - eventstore-api
+    ports:
+      - "7001:7001"
 
   webgateway-api:
     image: blog/webgateway-api
     build:
       context: .
-      dockerfile: Gateways/WebGateway.API
+      dockerfile: ./Gateways/WebGateway.API/Dockerfile
+    deploy:
+      mode: global
     depends_on:
       - rabbitmq
       - discovery-api
+    ports:
+      - "7000:7000"
