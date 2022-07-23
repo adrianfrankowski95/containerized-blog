@@ -49,7 +49,9 @@ services:
     build:
       context: .
       dockerfile: ./Services/Emailing/Emailing.API/Dockerfile
-    scale: 5
+    deploy:
+      mode: replicated
+      replicas: 5
     depends_on:
       - rabbitmq
       - discovery-api
@@ -61,7 +63,9 @@ services:
     build:
       context: .
       dockerfile: ./Services/Identity/Identity.API/Dockerfile
-    scale: 5
+    deploy:
+      mode: replicated
+      replicas: 5
     depends_on:
       - rabbitmq
       - postgres
@@ -75,7 +79,9 @@ services:
     build:
       context: .
       dockerfile: ./Services/Blogging/Blogging.API/Dockerfile
-    scale: 5
+    deploy:
+      mode: replicated
+      replicas: 5
     depends_on:
       - rabbitmq
       - postgres
@@ -89,7 +95,9 @@ services:
     build:
       context: .
       dockerfile: ./Services/Comments/Comments.API/Dockerfile
-    scale: 5
+    deploy:
+      mode: replicated
+      replicas: 5
     depends_on:
       - rabbitmq
       - postgres
