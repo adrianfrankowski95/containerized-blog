@@ -52,16 +52,16 @@ public class InMemoryProxyConfigProvider : IInMemoryProxyConfigProvider
             throw new ArgumentNullException(nameof(matchingPaths));
 
         int routeIndex = 1;
-        foreach (var path in matchingPaths)
+        foreach (var (incomingPath, outgoingPath) in matchingPaths)
         {
             routes.Add(new RouteConfig
             {
                 RouteId = serviceType + "-route-" + routeIndex,
                 ClusterId = serviceType,
-                Match = new RouteMatch { Path = path.incomingPath },
+                Match = new RouteMatch { Path = incomingPath },
                 Transforms = new List<IReadOnlyDictionary<string, string>>
                 {
-                    new Dictionary<string, string>{ {"PathPattern", path.outgoingPath }}
+                    new Dictionary<string, string>{ {"PathPattern", outgoingPath }}
                 }
             });
             ++routeIndex;
@@ -87,11 +87,11 @@ public class InMemoryProxyConfigProvider : IInMemoryProxyConfigProvider
         return destinations;
     }
 
-    public void GenerateCluster(string clusterId, IReadOnlyDictionary<string, DestinationConfig> destinations, ref List<ClusterConfig> clusters)
+    public void GenerateCluster(string serviceType, IReadOnlyDictionary<string, DestinationConfig> destinations, ref List<ClusterConfig> clusters)
     {
         clusters.Add(new ClusterConfig
         {
-            ClusterId = clusterId,
+            ClusterId = serviceType,
             Destinations = destinations,
         });
     }
