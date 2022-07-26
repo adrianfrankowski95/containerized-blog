@@ -1,13 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using System.Net;
 using Blog.Services.Blogging.API.Application.Commands;
-using Blog.Services.Blogging.API.Application.Commands.Models;
-using Blog.Services.Blogging.API.Application.Models;
 using Blog.Services.Blogging.API.Application.Queries.PostQueries;
 using Blog.Services.Blogging.API.Application.Queries.PostQueries.Models;
 using Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate;
 using Blog.Services.Blogging.Domain.AggregatesModel.Shared;
-using Blog.Services.Blogging.Domain.Exceptions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -170,11 +167,7 @@ public class PostsController : ControllerBase
 
     [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Blogger))]
     [HttpPost($"{nameof(PostType.Lifestyle)}/draft")]
-    [ProducesResponseType((int)HttpStatusCode.OK)]
-    [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-    [ProducesResponseType((int)HttpStatusCode.Unauthorized)]
-    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-    [ProducesResponseType((int)HttpStatusCode.Conflict)]
+    [ProducesResponseType((int)HttpStatusCode.Created)]
     public async Task<IActionResult> CreateLifestylePostDraftAsync(
         [FromBody, Required] CreateLifestylePostDraftCommand command,
         [FromHeader(Name = "x-request-id"), Required] string requestId)
@@ -187,21 +180,13 @@ public class PostsController : ControllerBase
         _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
             request.GetType().Name, DateTime.UtcNow, request);
 
-        var result = await _mediator.Send(request);
-
-        _logger.LogInformation("----- Command result of {CommandType}: {CommandResult} - ({@Command})",
-            request.GetType().Name, result, request);
-
-        return MapCommandResult(result);
+        await _mediator.Send(command);
+        return StatusCode((int)HttpStatusCode.Created);
     }
 
     [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Blogger))]
     [HttpPost($"{nameof(PostType.Recipe)}/draft")]
-    [ProducesResponseType((int)HttpStatusCode.OK)]
-    [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-    [ProducesResponseType((int)HttpStatusCode.Unauthorized)]
-    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-    [ProducesResponseType((int)HttpStatusCode.Conflict)]
+    [ProducesResponseType((int)HttpStatusCode.Created)]
     public async Task<IActionResult> CreateRecipePostDraftAsync(
         [FromBody, Required] CreateRecipePostDraftCommand command,
         [FromHeader(Name = "x-request-id"), Required] string requestId)
@@ -214,21 +199,13 @@ public class PostsController : ControllerBase
         _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
             request.GetType().Name, DateTime.UtcNow, request);
 
-        var result = await _mediator.Send(request);
-
-        _logger.LogInformation("----- Command result of {CommandType}: {CommandResult} - ({@Command})",
-            request.GetType().Name, result, request);
-
-        return MapCommandResult(result);
+        await _mediator.Send(command);
+        return StatusCode((int)HttpStatusCode.Created);
     }
 
     [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Blogger))]
     [HttpPost($"{nameof(PostType.RestaurantReview)}/draft")]
-    [ProducesResponseType((int)HttpStatusCode.OK)]
-    [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-    [ProducesResponseType((int)HttpStatusCode.Unauthorized)]
-    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-    [ProducesResponseType((int)HttpStatusCode.Conflict)]
+    [ProducesResponseType((int)HttpStatusCode.Created)]
     public async Task<IActionResult> CreateRestaurantReviewPostDraftAsync(
         [FromBody, Required] CreateRestaurantReviewPostDraftCommand command,
         [FromHeader(Name = "x-request-id"), Required] string requestId)
@@ -241,21 +218,13 @@ public class PostsController : ControllerBase
         _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
             request.GetType().Name, DateTime.UtcNow, request);
 
-        var result = await _mediator.Send(request);
-
-        _logger.LogInformation("----- Command result of {CommandType}: {CommandResult} - ({@Command})",
-            request.GetType().Name, result, request);
-
-        return MapCommandResult(result);
+        await _mediator.Send(command);
+        return StatusCode((int)HttpStatusCode.Created);
     }
 
     [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Blogger))]
     [HttpPost($"{nameof(PostType.ProductReview)}/draft")]
-    [ProducesResponseType((int)HttpStatusCode.OK)]
-    [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-    [ProducesResponseType((int)HttpStatusCode.Unauthorized)]
-    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-    [ProducesResponseType((int)HttpStatusCode.Conflict)]
+    [ProducesResponseType((int)HttpStatusCode.Created)]
     public async Task<IActionResult> CreateProductReviewPostDraftAsync(
         [FromBody, Required] CreateProductReviewPostDraftCommand command,
         [FromHeader(Name = "x-request-id"), Required] string requestId)
@@ -268,102 +237,66 @@ public class PostsController : ControllerBase
         _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
             request.GetType().Name, DateTime.UtcNow, request);
 
-        var result = await _mediator.Send(request);
-
-        _logger.LogInformation("----- Command result of {CommandType}: {CommandResult} - ({@Command})",
-            request.GetType().Name, result, request);
-
-        return MapCommandResult(result);
+        await _mediator.Send(command);
+        return StatusCode((int)HttpStatusCode.Created);
     }
 
     [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Blogger))]
     [HttpPut($"{nameof(PostType.Lifestyle)}/draft")]
     [ProducesResponseType((int)HttpStatusCode.OK)]
-    [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-    [ProducesResponseType((int)HttpStatusCode.Unauthorized)]
-    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-    [ProducesResponseType((int)HttpStatusCode.NotFound)]
     public async Task<IActionResult> UpdateLifestylePostDraftAsync(
         [FromBody, Required] UpdateLifestylePostDraftCommand command)
     {
         _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
             command.GetType(), DateTime.UtcNow, command);
 
-        var result = await _mediator.Send(command);
-
-        _logger.LogInformation("----- Command result of {CommandType}: {CommandResult} - ({@Command})",
-            command.GetType(), result, command);
-
-        return MapCommandResult(result);
+        await _mediator.Send(command);
+        return Ok();
     }
 
     [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Blogger))]
     [HttpPut($"{nameof(PostType.Recipe)}/draft")]
     [ProducesResponseType((int)HttpStatusCode.OK)]
-    [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-    [ProducesResponseType((int)HttpStatusCode.Unauthorized)]
-    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-    [ProducesResponseType((int)HttpStatusCode.NotFound)]
     public async Task<IActionResult> UpdateRecipePostDraftAsync(
         [FromBody, Required] UpdateRecipePostDraftCommand command)
     {
         _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
             command.GetType(), DateTime.UtcNow, command);
 
-        var result = await _mediator.Send(command);
-
-        _logger.LogInformation("----- Command result of {CommandType}: {CommandResult} - ({@Command})",
-            command.GetType(), result, command);
-
-        return MapCommandResult(result);
+        await _mediator.Send(command);
+        return Ok();
     }
 
     [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Blogger))]
     [HttpPut($"{nameof(PostType.RestaurantReview)}/draft")]
     [ProducesResponseType((int)HttpStatusCode.OK)]
-    [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-    [ProducesResponseType((int)HttpStatusCode.Unauthorized)]
-    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-    [ProducesResponseType((int)HttpStatusCode.NotFound)]
     public async Task<IActionResult> UpdateRestaurantReviewPostDraftAsync(
         [FromBody, Required] UpdateRestaurantReviewPostDraftCommand command)
     {
         _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
             command.GetType(), DateTime.UtcNow, command);
 
-        var result = await _mediator.Send(command);
-
-        _logger.LogInformation("----- Command result of {CommandType}: {CommandResult} - ({@Command})",
-            command.GetType(), result, command);
-
-        return MapCommandResult(result);
+        await _mediator.Send(command);
+        return Ok();
     }
 
     [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Blogger))]
     [HttpPut($"{nameof(PostType.ProductReview)}/draft")]
     [ProducesResponseType((int)HttpStatusCode.OK)]
-    [ProducesResponseType((int)HttpStatusCode.BadRequest)]
     public async Task<IActionResult> UpdateProductReviewPostDraftAsync(
         [FromBody, Required] UpdateProductReviewPostDraftCommand command)
     {
         _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
             command.GetType(), DateTime.UtcNow, command);
 
-        var result = await _mediator.Send(command);
-
-        _logger.LogInformation("----- Command result of {CommandType}: {CommandResult} - ({@Command})",
-            command.GetType(), result, command);
-
-        return MapCommandResult(result);
+        await _mediator.Send(command);
+        return Ok();
     }
 
     [Authorize(Roles = nameof(UserRole.Administrator))]
     [HttpPost($"{nameof(PostType.Lifestyle)}/publish")]
-    [ProducesResponseType((int)HttpStatusCode.OK)]
+    [ProducesResponseType((int)HttpStatusCode.Created)]
     [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-    [ProducesResponseType((int)HttpStatusCode.Unauthorized)]
-    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-    [ProducesResponseType((int)HttpStatusCode.Conflict)]
     public async Task<IActionResult> CreateAndPublishLifestylePostAsync(
         [FromBody, Required] CreateAndPublishLifestylePostCommand command,
         [FromHeader(Name = "x-request-id"), Required] string requestId)
@@ -376,21 +309,14 @@ public class PostsController : ControllerBase
         _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
             request.GetType().Name, DateTime.UtcNow, request);
 
-        var result = await _mediator.Send(request);
-
-        _logger.LogInformation("----- Command result of {CommandType}: {CommandResult} - ({@Command})",
-            request.GetType().Name, result, request);
-
-        return MapCommandResult(result);
+        await _mediator.Send(command);
+        return StatusCode((int)HttpStatusCode.Created);
     }
 
     [Authorize(Roles = nameof(UserRole.Administrator))]
     [HttpPost($"{nameof(PostType.Recipe)}/publish")]
-    [ProducesResponseType((int)HttpStatusCode.OK)]
+    [ProducesResponseType((int)HttpStatusCode.Created)]
     [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-    [ProducesResponseType((int)HttpStatusCode.Unauthorized)]
-    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-    [ProducesResponseType((int)HttpStatusCode.Conflict)]
     public async Task<IActionResult> CreateAndPublishRecipePostAsync(
         [FromBody, Required] CreateAndPublishRecipePostCommand command,
         [FromHeader(Name = "x-request-id"), Required] string requestId)
@@ -403,21 +329,14 @@ public class PostsController : ControllerBase
         _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
             request.GetType().Name, DateTime.UtcNow, request);
 
-        var result = await _mediator.Send(request);
-
-        _logger.LogInformation("----- Command result of {CommandType}: {CommandResult} - ({@Command})",
-            request.GetType().Name, result, request);
-
-        return MapCommandResult(result);
+        await _mediator.Send(command);
+        return StatusCode((int)HttpStatusCode.Created);
     }
 
     [Authorize(Roles = nameof(UserRole.Administrator))]
     [HttpPost($"{nameof(PostType.RestaurantReview)}/publish")]
-    [ProducesResponseType((int)HttpStatusCode.OK)]
+    [ProducesResponseType((int)HttpStatusCode.Created)]
     [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-    [ProducesResponseType((int)HttpStatusCode.Unauthorized)]
-    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-    [ProducesResponseType((int)HttpStatusCode.Conflict)]
     public async Task<IActionResult> CreateAndPublishRestaurantReviewPostAsync(
         [FromBody, Required] CreateAndPublishRestaurantReviewPostCommand command,
         [FromHeader(Name = "x-request-id"), Required] string requestId)
@@ -430,21 +349,14 @@ public class PostsController : ControllerBase
         _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
             request.GetType().Name, DateTime.UtcNow, request);
 
-        var result = await _mediator.Send(request);
-
-        _logger.LogInformation("----- Command result of {CommandType}: {CommandResult} - ({@Command})",
-            request.GetType().Name, result, request);
-
-        return MapCommandResult(result);
+        await _mediator.Send(command);
+        return StatusCode((int)HttpStatusCode.Created);
     }
 
     [Authorize(Roles = nameof(UserRole.Administrator))]
     [HttpPost($"{nameof(PostType.ProductReview)}/publish")]
-    [ProducesResponseType((int)HttpStatusCode.OK)]
+    [ProducesResponseType((int)HttpStatusCode.Created)]
     [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-    [ProducesResponseType((int)HttpStatusCode.Unauthorized)]
-    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-    [ProducesResponseType((int)HttpStatusCode.Conflict)]
     public async Task<IActionResult> CreateAndPublishProductReviewPostAsync(
         [FromBody, Required] CreateAndPublishProductReviewPostCommand command,
         [FromHeader(Name = "x-request-id"), Required] string requestId)
@@ -457,105 +369,66 @@ public class PostsController : ControllerBase
         _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
             request.GetType().Name, DateTime.UtcNow, request);
 
-        var result = await _mediator.Send(request);
-
-        _logger.LogInformation("----- Command result of {CommandType}: {CommandResult} - ({@Command})",
-            request.GetType().Name, result, request);
-
-        return MapCommandResult(result);
+        await _mediator.Send(command);
+        return StatusCode((int)HttpStatusCode.Created);
     }
 
     [Authorize(Roles = nameof(UserRole.Administrator))]
     [HttpPut($"{nameof(PostType.Lifestyle)}/publish")]
     [ProducesResponseType((int)HttpStatusCode.OK)]
-    [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-    [ProducesResponseType((int)HttpStatusCode.Unauthorized)]
-    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-    [ProducesResponseType((int)HttpStatusCode.NotFound)]
     public async Task<IActionResult> UpdateAndPublishLifestylePostAsync(
         [FromBody, Required] UpdateAndPublishLifestylePostCommand command)
     {
         _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
             command.GetType(), DateTime.UtcNow, command);
 
-        var result = await _mediator.Send(command);
-
-        _logger.LogInformation("----- Command result of {CommandType}: {CommandResult} - ({@Command})",
-            command.GetType(), result, command);
-
-        return MapCommandResult(result);
+        await _mediator.Send(command);
+        return Ok();
     }
 
     [Authorize(Roles = nameof(UserRole.Administrator))]
     [HttpPut($"{nameof(PostType.Recipe)}/publish")]
     [ProducesResponseType((int)HttpStatusCode.OK)]
-    [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-    [ProducesResponseType((int)HttpStatusCode.Unauthorized)]
-    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-    [ProducesResponseType((int)HttpStatusCode.NotFound)]
     public async Task<IActionResult> UpdateAndPublishRecipePostAsync(
         [FromBody, Required] UpdateAndPublishRecipePostCommand command)
     {
         _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
             command.GetType(), DateTime.UtcNow, command);
 
-        var result = await _mediator.Send(command);
-
-        _logger.LogInformation("----- Command result of {CommandType}: {CommandResult} - ({@Command})",
-            command.GetType(), result, command);
-
-        return MapCommandResult(result);
+        await _mediator.Send(command);
+        return Ok();
     }
 
     [Authorize(Roles = nameof(UserRole.Administrator))]
     [HttpPut($"{nameof(PostType.RestaurantReview)}/publish")]
     [ProducesResponseType((int)HttpStatusCode.OK)]
-    [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-    [ProducesResponseType((int)HttpStatusCode.Unauthorized)]
-    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-    [ProducesResponseType((int)HttpStatusCode.NotFound)]
     public async Task<IActionResult> UpdateAndPublishRestaurantReviewPostAsync(
         [FromBody, Required] UpdateAndPublishRestaurantReviewPostCommand command)
     {
         _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
             command.GetType(), DateTime.UtcNow, command);
 
-        var result = await _mediator.Send(command);
-
-        _logger.LogInformation("----- Command result of {CommandType}: {CommandResult} - ({@Command})",
-            command.GetType(), result, command);
-
-        return MapCommandResult(result);
+        await _mediator.Send(command);
+        return Ok();
     }
 
     [Authorize(Roles = nameof(UserRole.Administrator))]
     [HttpPut($"{nameof(PostType.ProductReview)}/publish")]
     [ProducesResponseType((int)HttpStatusCode.OK)]
-    [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-    [ProducesResponseType((int)HttpStatusCode.Unauthorized)]
-    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-    [ProducesResponseType((int)HttpStatusCode.NotFound)]
     public async Task<IActionResult> UpdateAndPublishProductReviewPostAsync(
         [FromBody, Required] UpdateAndPublishProductReviewPostCommand command)
     {
         _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
             command.GetType(), DateTime.UtcNow, command);
 
-        var result = await _mediator.Send(command);
-
-        _logger.LogInformation("----- Command result of {CommandType}: {CommandResult} - ({@Command})",
-            command.GetType(), result, command);
-
-        return MapCommandResult(result);
+        await _mediator.Send(command);
+        return Ok();
     }
 
     [Authorize(Roles = nameof(UserRole.Blogger))]
     [HttpPost($"{nameof(PostType.Lifestyle)}/submit")]
-    [ProducesResponseType((int)HttpStatusCode.OK)]
+    [ProducesResponseType((int)HttpStatusCode.Created)]
     [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-    [ProducesResponseType((int)HttpStatusCode.Unauthorized)]
-    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-    [ProducesResponseType((int)HttpStatusCode.Conflict)]
     public async Task<IActionResult> CreateAndSubmitLifestylePostAsync(
         [FromBody, Required] CreateAndSubmitLifestylePostCommand command,
         [FromHeader(Name = "x-request-id"), Required] string requestId)
@@ -568,21 +441,14 @@ public class PostsController : ControllerBase
         _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
             request.GetType().Name, DateTime.UtcNow, request);
 
-        var result = await _mediator.Send(request);
-
-        _logger.LogInformation("----- Command result of {CommandType}: {CommandResult} - ({@Command})",
-            request.GetType().Name, result, request);
-
-        return MapCommandResult(result);
+        await _mediator.Send(command);
+        return StatusCode((int)HttpStatusCode.Created);
     }
 
     [Authorize(Roles = nameof(UserRole.Blogger))]
     [HttpPost($"{nameof(PostType.Recipe)}/submit")]
-    [ProducesResponseType((int)HttpStatusCode.OK)]
+    [ProducesResponseType((int)HttpStatusCode.Created)]
     [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-    [ProducesResponseType((int)HttpStatusCode.Unauthorized)]
-    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-    [ProducesResponseType((int)HttpStatusCode.Conflict)]
     public async Task<IActionResult> CreateAndSubmitRecipePostAsync(
         [FromBody, Required] CreateAndSubmitRecipePostCommand command,
         [FromHeader(Name = "x-request-id"), Required] string requestId)
@@ -595,21 +461,14 @@ public class PostsController : ControllerBase
         _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
                 request.GetType().Name, DateTime.UtcNow, request);
 
-        var result = await _mediator.Send(request);
-
-        _logger.LogInformation("----- Command result of {CommandType}: {CommandResult} - ({@Command})",
-                request.GetType().Name, result, request);
-
-        return MapCommandResult(result);
+        await _mediator.Send(command);
+        return StatusCode((int)HttpStatusCode.Created);
     }
 
     [Authorize(Roles = nameof(UserRole.Blogger))]
     [HttpPost($"{nameof(PostType.RestaurantReview)}/submit")]
-    [ProducesResponseType((int)HttpStatusCode.OK)]
+    [ProducesResponseType((int)HttpStatusCode.Created)]
     [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-    [ProducesResponseType((int)HttpStatusCode.Unauthorized)]
-    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-    [ProducesResponseType((int)HttpStatusCode.Conflict)]
     public async Task<IActionResult> CreateAndSubmitRestaurantReviewPostAsync(
         [FromBody, Required] CreateAndSubmitRestaurantReviewPostCommand command,
         [FromHeader(Name = "x-request-id"), Required] string requestId)
@@ -622,21 +481,14 @@ public class PostsController : ControllerBase
         _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
                 request.GetType().Name, DateTime.UtcNow, request);
 
-        var result = await _mediator.Send(request);
-
-        _logger.LogInformation("----- Command result of {CommandType}: {CommandResult} - ({@Command})",
-                request.GetType().Name, result, request);
-
-        return MapCommandResult(result);
+        await _mediator.Send(command);
+        return StatusCode((int)HttpStatusCode.Created);
     }
 
     [Authorize(Roles = nameof(UserRole.Blogger))]
     [HttpPost($"{nameof(PostType.ProductReview)}/submit")]
-    [ProducesResponseType((int)HttpStatusCode.OK)]
+    [ProducesResponseType((int)HttpStatusCode.Created)]
     [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-    [ProducesResponseType((int)HttpStatusCode.Unauthorized)]
-    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-    [ProducesResponseType((int)HttpStatusCode.Conflict)]
     public async Task<IActionResult> CreateAndSubmitProductReviewPostAsync(
         [FromBody, Required] CreateAndSubmitProductReviewPostCommand command,
         [FromHeader(Name = "x-request-id"), Required] string requestId)
@@ -649,142 +501,90 @@ public class PostsController : ControllerBase
         _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
                     request.GetType().Name, DateTime.UtcNow, request);
 
-        var result = await _mediator.Send(request);
-
-        _logger.LogInformation("----- Command result of {CommandType}: {CommandResult} - ({@Command})",
-                    request.GetType().Name, result, request);
-
-        return MapCommandResult(result);
+        await _mediator.Send(command);
+        return StatusCode((int)HttpStatusCode.Created);
     }
 
     [Authorize(Roles = nameof(UserRole.Blogger))]
     [HttpPut($"{nameof(PostType.Lifestyle)}/submit")]
     [ProducesResponseType((int)HttpStatusCode.OK)]
-    [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-    [ProducesResponseType((int)HttpStatusCode.Unauthorized)]
-    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-    [ProducesResponseType((int)HttpStatusCode.NotFound)]
     public async Task<IActionResult> UpdateAndSubmitLifestylePostAsync(
         [FromBody, Required] UpdateAndSubmitLifestylePostCommand command)
     {
         _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
             command.GetType(), DateTime.UtcNow, command);
 
-        var result = await _mediator.Send(command);
-
-        _logger.LogInformation("----- Command result of {CommandType}: {CommandResult} - ({@Command})",
-            command.GetType(), result, command);
-
-        return MapCommandResult(result);
+        await _mediator.Send(command);
+        return Ok();
     }
 
     [Authorize(Roles = nameof(UserRole.Blogger))]
     [HttpPut($"{nameof(PostType.Recipe)}/submit")]
     [ProducesResponseType((int)HttpStatusCode.OK)]
-    [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-    [ProducesResponseType((int)HttpStatusCode.Unauthorized)]
-    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-    [ProducesResponseType((int)HttpStatusCode.NotFound)]
     public async Task<IActionResult> UpdateAndSubmitRecipePostAsync(
         [FromBody, Required] UpdateAndSubmitRecipePostCommand command)
     {
         _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
             command.GetType(), DateTime.UtcNow, command);
 
-        var result = await _mediator.Send(command);
-
-        _logger.LogInformation("----- Command result of {CommandType}: {CommandResult} - ({@Command})",
-            command.GetType(), result, command);
-
-        return MapCommandResult(result);
+        await _mediator.Send(command);
+        return Ok();
     }
 
     [Authorize(Roles = nameof(UserRole.Blogger))]
     [HttpPut($"{nameof(PostType.RestaurantReview)}/submit")]
     [ProducesResponseType((int)HttpStatusCode.OK)]
-    [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-    [ProducesResponseType((int)HttpStatusCode.Unauthorized)]
-    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-    [ProducesResponseType((int)HttpStatusCode.NotFound)]
     public async Task<IActionResult> UpdateAndSubmitRestaurantReviewPostAsync(
         [FromBody, Required] UpdateAndSubmitRestaurantReviewPostCommand command)
     {
         _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
             command.GetType(), DateTime.UtcNow, command);
 
-        var result = await _mediator.Send(command);
-
-        _logger.LogInformation("----- Command result of {CommandType}: {CommandResult} - ({@Command})",
-            command.GetType(), result, command);
-
-        return MapCommandResult(result);
+        await _mediator.Send(command);
+        return Ok();
     }
 
     [Authorize(Roles = nameof(UserRole.Blogger))]
     [HttpPut($"{nameof(PostType.ProductReview)}/submit")]
     [ProducesResponseType((int)HttpStatusCode.OK)]
-    [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-    [ProducesResponseType((int)HttpStatusCode.Unauthorized)]
-    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-    [ProducesResponseType((int)HttpStatusCode.NotFound)]
     public async Task<IActionResult> UpdateAndSubmitProductReviewPostAsync(
         [FromBody, Required] UpdateAndSubmitProductReviewPostCommand command)
     {
         _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
             command.GetType(), DateTime.UtcNow, command);
 
-        var result = await _mediator.Send(command);
-
-        _logger.LogInformation("----- Command result of {CommandType}: {CommandResult} - ({@Command})",
-            command.GetType(), result, command);
-
-        return MapCommandResult(result);
+        await _mediator.Send(command);
+        return Ok();
     }
 
     [Authorize(Roles = nameof(UserRole.Administrator))]
     [HttpDelete]
     [ProducesResponseType((int)HttpStatusCode.OK)]
-    [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-    [ProducesResponseType((int)HttpStatusCode.Unauthorized)]
-    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-    [ProducesResponseType((int)HttpStatusCode.NotFound)]
     public async Task<IActionResult> DeletePostAsync(
         [FromBody, Required] DeletePostCommand command)
     {
         _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
             command.GetType(), DateTime.UtcNow, command);
 
-        var result = await _mediator.Send(command);
-
-        _logger.LogInformation("----- Command result of {CommandType}: {CommandResult} - ({@Command})",
-            command.GetType(), result, command);
-
-        return MapCommandResult(result);
+        await _mediator.Send(command);
+        return Ok();
     }
 
     [Authorize(Roles = nameof(UserRole.Administrator))]
-    [HttpPut($"publish")]
+    [HttpPut("publish")]
     [ProducesResponseType((int)HttpStatusCode.OK)]
-    [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-    [ProducesResponseType((int)HttpStatusCode.Unauthorized)]
-    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-    [ProducesResponseType((int)HttpStatusCode.NotFound)]
     public async Task<IActionResult> PublishPostAsync(
         [FromBody, Required] PublishPostCommand command)
     {
         _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
             command.GetType(), DateTime.UtcNow, command);
 
-        var result = await _mediator.Send(command);
-
-        _logger.LogInformation("----- Command result of {CommandType}: {CommandResult} - ({@Command})",
-            command.GetType(), result, command);
-
-        return MapCommandResult(result);
+        await _mediator.Send(command);
+        return Ok();
     }
 
     [Authorize(Roles = nameof(UserRole.Blogger))]
-    [HttpPut($"submit")]
+    [HttpPut("submit")]
     [ProducesResponseType((int)HttpStatusCode.OK)]
     [ProducesResponseType((int)HttpStatusCode.BadRequest)]
     [ProducesResponseType((int)HttpStatusCode.Unauthorized)]
@@ -796,75 +596,47 @@ public class PostsController : ControllerBase
         _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
             command.GetType(), DateTime.UtcNow, command);
 
-        var result = await _mediator.Send(command);
-
-        _logger.LogInformation("----- Command result of {CommandType}: {CommandResult} - ({@Command})",
-            command.GetType(), result, command);
-
-        return MapCommandResult(result);
+        await _mediator.Send(command);
+        return Ok();
     }
 
     [Authorize(Roles = nameof(UserRole.Administrator))]
-    [HttpPut($"approve")]
+    [HttpPut("approve")]
     [ProducesResponseType((int)HttpStatusCode.OK)]
-    [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-    [ProducesResponseType((int)HttpStatusCode.Unauthorized)]
-    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-    [ProducesResponseType((int)HttpStatusCode.NotFound)]
     public async Task<IActionResult> ApprovePostAsync(
         [FromBody, Required] ApprovePostCommand command)
     {
         _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
             command.GetType(), DateTime.UtcNow, command);
 
-        var result = await _mediator.Send(command);
-
-        _logger.LogInformation("----- Command result of {CommandType}: {CommandResult} - ({@Command})",
-            command.GetType(), result, command);
-
-        return MapCommandResult(result);
+        await _mediator.Send(command);
+        return Ok();
     }
 
     [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Blogger))]
-    [HttpPut($"setdraft")]
+    [HttpPut("setdraft")]
     [ProducesResponseType((int)HttpStatusCode.OK)]
-    [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-    [ProducesResponseType((int)HttpStatusCode.Unauthorized)]
-    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-    [ProducesResponseType((int)HttpStatusCode.NotFound)]
     public async Task<IActionResult> SetPostToDraftAsync(
         [FromBody, Required] SetPostToDraftCommand command)
     {
         _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
             command.GetType(), DateTime.UtcNow, command);
 
-        var result = await _mediator.Send(command);
-
-        _logger.LogInformation("----- Command result of {CommandType}: {CommandResult} - ({@Command})",
-            command.GetType(), result, command);
-
-        return MapCommandResult(result);
+        await _mediator.Send(command);
+        return Ok();
     }
 
     [Authorize(Roles = nameof(UserRole.Administrator))]
-    [HttpPut($"reject")]
+    [HttpPut("reject")]
     [ProducesResponseType((int)HttpStatusCode.OK)]
-    [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-    [ProducesResponseType((int)HttpStatusCode.Unauthorized)]
-    [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-    [ProducesResponseType((int)HttpStatusCode.NotFound)]
     public async Task<IActionResult> RejectPostAsync(
         [FromBody, Required] RejectPostCommand command)
     {
         _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
             command.GetType(), DateTime.UtcNow, command);
 
-        var result = await _mediator.Send(command);
-
-        _logger.LogInformation("----- Command result of {CommandType}: {CommandResult} - ({@Command})",
-            command.GetType(), result, command);
-
-        return MapCommandResult(result);
+        await _mediator.Send(command);
+        return Ok();
     }
 
     private void AddPostPaginationHeaders(int totalCount, int returnedCount, int remainingCount)
