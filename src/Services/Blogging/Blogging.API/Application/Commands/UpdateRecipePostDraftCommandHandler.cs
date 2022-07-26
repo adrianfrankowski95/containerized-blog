@@ -1,16 +1,16 @@
 using Blog.Services.Blogging.API.Application.Commands.Models;
-using Blog.Services.Blogging.API.Application.Models;
 using Blog.Services.Blogging.API.Infrastructure.Services;
 using Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate;
 using Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate.RecipePostAggregate;
 using Blog.Services.Blogging.Domain.AggregatesModel.Shared;
 using Blog.Services.Blogging.Domain.AggregatesModel.TagAggregate;
+using Blog.Services.Blogging.Domain.Exceptions;
 using MediatR;
 using TimeSpan = Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate.RecipePostAggregate.TimeSpan;
 
 namespace Blog.Services.Blogging.API.Application.Commands;
 
-public class UpdateRecipePostDraftCommandHandler : IRequestHandler<UpdateRecipePostDraftCommand, ICommandResult>
+public class UpdateRecipePostDraftCommandHandler : IRequestHandler<UpdateRecipePostDraftCommand, Unit>
 {
     private readonly IPostRepository _postRepository;
     private readonly IIdentityService _identityService;
@@ -25,56 +25,46 @@ public class UpdateRecipePostDraftCommandHandler : IRequestHandler<UpdateRecipeP
         _tagRepository = tagRepository ?? throw new ArgumentNullException(nameof(tagRepository));
         _identityService = identityService ?? throw new ArgumentNullException(nameof(identityService));
     }
-    public async Task<ICommandResult> Handle(UpdateRecipePostDraftCommand request, CancellationToken cancellationToken)
+    public async Task<Unit> Handle(UpdateRecipePostDraftCommand request, CancellationToken cancellationToken)
     {
-        if (!_identityService.TryGetAuthenticatedUser(out User user))
-            return CommandResult.IdentityError();
+        var user = _identityService.GetCurrentUser();
 
         var post = await _postRepository.FindPostAsync(new PostId(request.PostId)).ConfigureAwait(false);
 
         if (post is null)
-            return CommandResult.NotFoundError(request.PostId);
+            throw new KeyNotFoundException("This post does not exist anymore");
 
         if (post is not RecipePost recipePost)
-            return CommandResult.IncorrectPostTypeError(post.Type, PostType.Recipe);
+            throw new BloggingDomainException("Incorrect post type");
 
         var tagIds = request.Translations.SelectMany(x => x.TagIds).Select(x => new TagId(x)).ToList();
         IEnumerable<Tag> tags = tagIds is null ?
             Enumerable.Empty<Tag>() :
             await _tagRepository.FindTagsByIdsAsync(tagIds).ConfigureAwait(false);
 
-        bool isChanged;
-        try
-        {
-            var translations = MapTranslations(request.Translations, tags);
+        var translations = MapTranslations(request.Translations, tags);
 
-            isChanged = recipePost.UpdateBy(
-                user,
-                translations,
-                Meal.FromName(request.Meal),
-                RecipeDifficulty.FromName(request.Difficulty),
-                new RecipeTime(
-                    TimeSpan.FromMinutes(request.PreparationMinutes.Minutes()),
-                    TimeSpan.FromMinutes(request.CookingMinutes.Minutes())),
-                new Servings(request.Servings),
-                FoodComposition.FromName(request.FoodComposition),
-                request.Tastes.Select(x => Taste.FromName(x)),
-                request.PreparationMethods.Select(x => PreparationMethod.FromName(x)),
-                request.SongUrl,
-                request.HeaderImgUrl);
+        var isChanged = recipePost.UpdateBy(
+            user,
+            translations,
+            Meal.FromName(request.Meal),
+            RecipeDifficulty.FromName(request.Difficulty),
+            new RecipeTime(
+                TimeSpan.FromMinutes(request.PreparationMinutes.Minutes()),
+                TimeSpan.FromMinutes(request.CookingMinutes.Minutes())),
+            new Servings(request.Servings),
+            FoodComposition.FromName(request.FoodComposition),
+            request.Tastes.Select(x => Taste.FromName(x)),
+            request.PreparationMethods.Select(x => PreparationMethod.FromName(x)),
+            request.SongUrl,
+            request.HeaderImgUrl);
 
-            recipePost.ToDraftBy(user);
-        }
-        catch (Exception ex)
-        {
-            return CommandResult.DomainError(ex.Message);
-        }
+        recipePost.ToDraftBy(user);
 
         if (isChanged)
-            if (!await _postRepository.UnitOfWork.CommitChangesAsync(cancellationToken).ConfigureAwait(false))
-                return CommandResult.SavingError();
+            await _postRepository.UnitOfWork.CommitChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        return CommandResult.Success();
+        return Unit.Value;
     }
 
     private static IEnumerable<RecipePostTranslation> MapTranslations(

@@ -1,11 +1,10 @@
-using Blog.Services.Blogging.API.Application.Models;
 using Blog.Services.Blogging.Infrastructure.Idempotency;
 using MediatR;
 
 namespace Blog.Services.Blogging.API.Application.Commands;
 
-public class IdentifiedCommandHandler<TRequest> : IRequestHandler<IdentifiedCommand<TRequest>, ICommandResult>
-    where TRequest : IRequest<ICommandResult>
+public class IdentifiedCommandHandler<TRequest> : IRequestHandler<IdentifiedCommand<TRequest>, Unit>
+    where TRequest : IRequest<Unit>
 {
     private readonly IRequestManager _requestManager;
     private readonly IMediator _mediator;
@@ -17,12 +16,17 @@ public class IdentifiedCommandHandler<TRequest> : IRequestHandler<IdentifiedComm
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
-    public async Task<ICommandResult> Handle(IdentifiedCommand<TRequest> request, CancellationToken cancellationToken)
+    public async Task<Unit> Handle(IdentifiedCommand<TRequest> request, CancellationToken cancellationToken)
     {
         bool exists = await _requestManager.ExistsAsync<TRequest>(request.Id);
 
         if (exists)
-            return CommandResult.IdempotencyError();
+        {
+            _logger.LogInformation("----- Duplicated command {CommandType} detected at {UtcNow} - ({@Command})",
+                request.Command.GetType(), DateTime.UtcNow, request.Command);
+
+            return Unit.Value;
+        }
 
         await _requestManager.AddRequestAsync<TRequest>(request.Id).ConfigureAwait(false);
 

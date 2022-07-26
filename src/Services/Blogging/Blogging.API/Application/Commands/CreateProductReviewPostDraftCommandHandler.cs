@@ -1,5 +1,4 @@
 using Blog.Services.Blogging.API.Application.Commands.Models;
-using Blog.Services.Blogging.API.Application.Models;
 using Blog.Services.Blogging.API.Infrastructure.Services;
 using Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate;
 using Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate.ReviewPostAggregate;
@@ -9,7 +8,7 @@ using MediatR;
 
 namespace Blog.Services.Blogging.API.Application.Commands;
 
-public class CreateProductReviewPostDraftCommandHandler : IRequestHandler<CreateProductReviewPostDraftCommand, ICommandResult>
+public class CreateProductReviewPostDraftCommandHandler : IRequestHandler<CreateProductReviewPostDraftCommand, Unit>
 {
     private readonly IPostRepository _postRepository;
     private readonly IIdentityService _identityService;
@@ -24,39 +23,29 @@ public class CreateProductReviewPostDraftCommandHandler : IRequestHandler<Create
         _tagRepository = tagRepository ?? throw new ArgumentNullException(nameof(tagRepository));
         _identityService = identityService ?? throw new ArgumentNullException(nameof(identityService));
     }
-    public async Task<ICommandResult> Handle(CreateProductReviewPostDraftCommand request, CancellationToken cancellationToken)
+    public async Task<Unit> Handle(CreateProductReviewPostDraftCommand request, CancellationToken cancellationToken)
     {
-        if (!_identityService.TryGetAuthenticatedUser(out User user))
-            return CommandResult.IdentityError();
+        var user = _identityService.GetCurrentUser();
 
         var tagIds = request.Translations.SelectMany(x => x.TagIds).Select(x => new TagId(x)).ToList();
         IEnumerable<Tag> tags = tagIds is null ?
             Enumerable.Empty<Tag>() :
             await _tagRepository.FindTagsByIdsAsync(tagIds).ConfigureAwait(false);
 
-        ProductReviewPost post;
-        try
-        {
-            var translations = MapTranslations(request.Translations, tags);
+        var translations = MapTranslations(request.Translations, tags);
 
-            post = new ProductReviewPost(
-                user,
-                translations,
-                new Product(request.ProductName, request.ProductWebsiteUrl),
-                new Rating(request.Rating),
-                request.HeaderImgUrl);
-        }
-        catch (Exception ex)
-        {
-            return CommandResult.DomainError(ex.Message);
-        }
+        var post = new ProductReviewPost(
+            user,
+            translations,
+            new Product(request.ProductName, request.ProductWebsiteUrl),
+            new Rating(request.Rating),
+            request.HeaderImgUrl);
 
         _postRepository.AddPost(post);
 
-        if (!await _postRepository.UnitOfWork.CommitChangesAsync(cancellationToken).ConfigureAwait(false))
-            return CommandResult.SavingError();
+        await _postRepository.UnitOfWork.CommitChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        return CommandResult.Success();
+        return Unit.Value;
     }
 
     private static IEnumerable<ProductReviewPostTranslation> MapTranslations(

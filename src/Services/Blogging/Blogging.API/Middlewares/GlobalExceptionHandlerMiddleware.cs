@@ -27,9 +27,6 @@ public class GlobalExceptionHandlerMiddleware
         {
             var statusCode = ResolveHttpStatusCode(ex);
 
-            if (statusCode is null)
-                throw;
-
             var response = context.Response;
 
             response.ContentType = "application/json";
@@ -37,11 +34,11 @@ public class GlobalExceptionHandlerMiddleware
 
             await JsonSerializer.SerializeAsync(response.Body, ex.Message);
 
-            _logger.LogInformation(ex, "----- Error handled globally with a HTTP response code {StatusCode}", Enum.GetName(statusCode.Value));
+            _logger.LogInformation(ex, "----- Error handled globally with an HTTP response code {StatusCode}", Enum.GetName(statusCode));
         }
     }
 
-    private static HttpStatusCode? ResolveHttpStatusCode(Exception ex) => ex switch
+    private static HttpStatusCode ResolveHttpStatusCode(Exception ex) => ex switch
     {
         BloggingDomainException
             => HttpStatusCode.BadRequest,
@@ -58,6 +55,6 @@ public class GlobalExceptionHandlerMiddleware
         IdentityException
             => HttpStatusCode.Unauthorized,
 
-        _ => null
+        _ => HttpStatusCode.InternalServerError
     };
 }

@@ -1,17 +1,14 @@
 using Blog.Services.Blogging.API.Application.Commands.Models;
-using Blog.Services.Blogging.API.Application.Models;
 using Blog.Services.Blogging.API.Infrastructure.Services;
 using Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate;
 using Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate.ReviewPostAggregate;
 using Blog.Services.Blogging.Domain.AggregatesModel.Shared;
 using Blog.Services.Blogging.Domain.AggregatesModel.TagAggregate;
-using Blog.Services.Blogging.Domain.Exceptions;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 
 namespace Blog.Services.Blogging.API.Application.Commands;
 
-public class CreateAndPublishProductReviewPostCommandHandler : IRequestHandler<CreateAndPublishProductReviewPostCommand, ICommandResult>
+public class CreateAndPublishProductReviewPostCommandHandler : IRequestHandler<CreateAndPublishProductReviewPostCommand, Unit>
 {
     private readonly IPostRepository _postRepository;
     private readonly IIdentityService _identityService;
@@ -26,47 +23,30 @@ public class CreateAndPublishProductReviewPostCommandHandler : IRequestHandler<C
         _tagRepository = tagRepository ?? throw new ArgumentNullException(nameof(tagRepository));
         _identityService = identityService ?? throw new ArgumentNullException(nameof(identityService));
     }
-    public async Task<ICommandResult> Handle(CreateAndPublishProductReviewPostCommand request, CancellationToken cancellationToken)
+    public async Task<Unit> Handle(CreateAndPublishProductReviewPostCommand request, CancellationToken cancellationToken)
     {
-        if (!_identityService.TryGetAuthenticatedUser(out User user))
-            return CommandResult.IdentityError();
+        var user = _identityService.GetCurrentUser();
 
         var tagIds = request.Translations.SelectMany(x => x.TagIds).Select(x => new TagId(x)).ToList();
-        IEnumerable<Tag> tags = tagIds is null ?
-            Enumerable.Empty<Tag>() :
-            await _tagRepository.FindTagsByIdsAsync(tagIds).ConfigureAwait(false);
+        IEnumerable<Tag> tags = tagIds is null
+            ? Enumerable.Empty<Tag>()
+            : await _tagRepository.FindTagsByIdsAsync(tagIds).ConfigureAwait(false);
 
-        ProductReviewPost post;
-        try
-        {
-            var translations = MapTranslations(request.Translations, tags);
+        var translations = MapTranslations(request.Translations, tags);
 
-            post = new ProductReviewPost(
-                user,
-                translations,
-                new Product(request.ProductName, request.ProductWebsiteUrl),
-                new Rating(request.Rating),
-                request.HeaderImgUrl);
+        var post = new ProductReviewPost(
+            user,
+            translations,
+            new Product(request.ProductName, request.ProductWebsiteUrl),
+            new Rating(request.Rating),
+            request.HeaderImgUrl);
 
-            post.PublishBy(user);
-            _postRepository.AddPost(post);
+        post.PublishBy(user);
+        _postRepository.AddPost(post);
 
-            await _postRepository.UnitOfWork.CommitChangesAsync(cancellationToken).ConfigureAwait(false);
-        }
-        catch (Exception ex) when (ex is BloggingDomainException or ArgumentNullException)
-        {
-            return CommandResult.DomainError(ex.Message);
-        }
-        catch (DbUpdateConcurrencyException)
-        {
-            return CommandResult.ConcurrencyError();
-        }
-        catch (DbUpdateException)
-        {
-            return CommandResult.SavingError();
-        }
+        await _postRepository.UnitOfWork.CommitChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        return CommandResult.Success();
+        return Unit.Value;
     }
 
     private static IEnumerable<ProductReviewPostTranslation> MapTranslations(

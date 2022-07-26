@@ -1,5 +1,4 @@
 using Blog.Services.Blogging.API.Application.Commands.Models;
-using Blog.Services.Blogging.API.Application.Models;
 using Blog.Services.Blogging.API.Infrastructure.Services;
 using Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate;
 using Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate.LifestylePostAggregate;
@@ -9,7 +8,7 @@ using MediatR;
 
 namespace Blog.Services.Blogging.API.Application.Commands;
 
-public class CreateLifestylePostCommandHandler : IRequestHandler<CreateLifestylePostDraftCommand, ICommandResult>
+public class CreateLifestylePostCommandHandler : IRequestHandler<CreateLifestylePostDraftCommand, Unit>
 {
     private readonly IPostRepository _postRepository;
     private readonly IIdentityService _identityService;
@@ -24,37 +23,26 @@ public class CreateLifestylePostCommandHandler : IRequestHandler<CreateLifestyle
         _tagRepository = tagRepository ?? throw new ArgumentNullException(nameof(tagRepository));
         _identityService = identityService ?? throw new ArgumentNullException(nameof(identityService));
     }
-    public async Task<ICommandResult> Handle(CreateLifestylePostDraftCommand request, CancellationToken cancellationToken)
+    public async Task<Unit> Handle(CreateLifestylePostDraftCommand request, CancellationToken cancellationToken)
     {
-        if (!_identityService.TryGetAuthenticatedUser(out User user))
-            return CommandResult.IdentityError();
+        var user = _identityService.GetCurrentUser();
 
         var tagIds = request.Translations.SelectMany(x => x.TagIds).Select(x => new TagId(x)).ToList();
         IEnumerable<Tag> tags = tagIds is null ?
             Enumerable.Empty<Tag>() :
             await _tagRepository.FindTagsByIdsAsync(tagIds).ConfigureAwait(false);
 
-        LifestylePost post;
-        try
-        {
-            var translations = MapTranslations(request.Translations, tags);
+        var translations = MapTranslations(request.Translations, tags);
 
-            post = new LifestylePost(
-                user,
-                translations,
-                request.HeaderImgUrl);
-        }
-        catch (Exception ex)
-        {
-            return CommandResult.DomainError(ex.Message);
-        }
+        var post = new LifestylePost(
+            user,
+            translations,
+            request.HeaderImgUrl);
 
         _postRepository.AddPost(post);
+        await _postRepository.UnitOfWork.CommitChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        if (!await _postRepository.UnitOfWork.CommitChangesAsync(cancellationToken).ConfigureAwait(false))
-            return CommandResult.SavingError();
-
-        return CommandResult.Success();
+        return Unit.Value;
     }
 
     private static IEnumerable<LifestylePostTranslation> MapTranslations(
@@ -62,7 +50,6 @@ public class CreateLifestylePostCommandHandler : IRequestHandler<CreateLifestyle
         IEnumerable<Tag> tags)
     {
         List<LifestylePostTranslation> translations = new();
-
 
         foreach (var requestTranslation in requestTranslations ?? Enumerable.Empty<LifestylePostTranslationDTO>())
         {
