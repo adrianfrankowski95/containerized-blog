@@ -23,6 +23,16 @@ services.AddRazorPages(opts =>
     opts.RootDirectory = "./Templates";
 });
 
+services.AddCors(opts =>
+{
+    opts.AddDefaultPolicy(
+        x => x.SetIsOriginAllowed(origin => true)
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowAnyOrigin()
+        .AllowCredentials());
+});
+
 services
     .AddInstanceConfig()
     .AddMassTransitRabbitMqBus(config)
@@ -33,6 +43,7 @@ services
 var app = builder.Build();
 
 app.UseStaticFiles(); //html, css, images, js in wwwroot folder
+app.UseCors();
 
 app.UseEndpoints(opts =>
 {

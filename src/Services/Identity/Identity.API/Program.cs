@@ -18,6 +18,16 @@ var services = builder.Services;
 services.AddLogging();
 services.AddRazorPages();
 
+services.AddCors(opts =>
+{
+    opts.AddDefaultPolicy(
+        x => x.SetIsOriginAllowed(origin => true)
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowAnyOrigin()
+        .AllowCredentials());
+});
+
 services
     .AddInstanceConfig()
     .AddCustomIdentityInfrastructure<User, Role>(config)
@@ -26,7 +36,6 @@ services
     .AddCustomIdentityCoreAdapters()
     .AddCustomServices()
     .AddBackgroundServices();
-
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 services.AddEndpointsApiExplorer();
@@ -42,6 +51,8 @@ if (env.IsDevelopment())
 }
 app.UseHttpsRedirection();
 app.UseStaticFiles(); //html, css, images, js in wwwroot folder
+
+app.UseCors();
 
 app.UseAuthentication();
 app.UseAuthorization();

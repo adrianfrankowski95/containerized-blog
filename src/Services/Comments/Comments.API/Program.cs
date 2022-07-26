@@ -13,6 +13,15 @@ var services = builder.Services;
 // Add services to the container.
 services.AddLogging();
 services.AddControllers();
+services.AddCors(opts =>
+{
+    opts.AddDefaultPolicy(
+        x => x.SetIsOriginAllowed(origin => true)
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowAnyOrigin()
+        .AllowCredentials());
+});
 
 services
     .AddInstanceConfig()
@@ -33,6 +42,7 @@ if (env.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors();
 
 app.UseAuthorization();
 
