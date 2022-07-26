@@ -1,15 +1,15 @@
 using Blog.Services.Blogging.API.Application.Commands.Models;
-using Blog.Services.Blogging.API.Application.Models;
 using Blog.Services.Blogging.API.Infrastructure.Services;
 using Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate;
 using Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate.ReviewPostAggregate;
 using Blog.Services.Blogging.Domain.AggregatesModel.Shared;
 using Blog.Services.Blogging.Domain.AggregatesModel.TagAggregate;
+using Blog.Services.Blogging.Domain.Exceptions;
 using MediatR;
 
 namespace Blog.Services.Blogging.API.Application.Commands;
 
-public class UpdateAndPublishRestaurantReviewPostCommandHandler : IRequestHandler<UpdateAndPublishRestaurantReviewPostCommand, ICommandResult>
+public class UpdateAndPublishRestaurantReviewPostCommandHandler : IRequestHandler<UpdateAndPublishRestaurantReviewPostCommand, Unit>
 {
     private readonly IPostRepository _postRepository;
     private readonly IIdentityService _identityService;
@@ -24,48 +24,39 @@ public class UpdateAndPublishRestaurantReviewPostCommandHandler : IRequestHandle
         _tagRepository = tagRepository ?? throw new ArgumentNullException(nameof(tagRepository));
         _identityService = identityService ?? throw new ArgumentNullException(nameof(identityService));
     }
-    public async Task<ICommandResult> Handle(UpdateAndPublishRestaurantReviewPostCommand request, CancellationToken cancellationToken)
+    public async Task<Unit> Handle(UpdateAndPublishRestaurantReviewPostCommand request, CancellationToken cancellationToken)
     {
-        if (!_identityService.TryGetAuthenticatedUser(out User user))
-            return CommandResult.IdentityError();
+        var user = _identityService.GetCurrentUser();
 
         var post = await _postRepository.FindPostAsync(new PostId(request.PostId)).ConfigureAwait(false);
 
         if (post is null)
-            return CommandResult.NotFoundError(request.PostId);
+            throw new KeyNotFoundException("This post does not exist anymore");
 
         if (post is not RestaurantReviewPost restaurantReviewPost)
-            return CommandResult.IncorrectPostTypeError(post.Type, PostType.RestaurantReview);
+            throw new BloggingDomainException("Incorrect post type");
 
         var tagIds = request.Translations.SelectMany(x => x.TagIds).Select(x => new TagId(x)).ToList();
         IEnumerable<Tag> tags = tagIds is null ?
             Enumerable.Empty<Tag>() :
             await _tagRepository.FindTagsByIdsAsync(tagIds).ConfigureAwait(false);
 
-        bool isChanged;
-        try
-        {
-            var translations = MapTranslations(request.Translations, tags);
 
-            isChanged = restaurantReviewPost.UpdateBy(
-                user,
-                translations,
-                new Restaurant(request.RestaurantName, request.RestaurantWebsiteUrl),
-                new Rating(request.Rating),
-                request.HeaderImgUrl);
+        var translations = MapTranslations(request.Translations, tags);
 
-            restaurantReviewPost.PublishBy(user);
-        }
-        catch (Exception ex)
-        {
-            return CommandResult.DomainError(ex.Message);
-        }
+        var isChanged = restaurantReviewPost.UpdateBy(
+            user,
+            translations,
+            new Restaurant(request.RestaurantName, request.RestaurantWebsiteUrl),
+            new Rating(request.Rating),
+            request.HeaderImgUrl);
+
+        restaurantReviewPost.PublishBy(user);
 
         if (isChanged)
-            if (!await _postRepository.UnitOfWork.CommitChangesAsync(cancellationToken).ConfigureAwait(false))
-                return CommandResult.SavingError();
+            await _postRepository.UnitOfWork.CommitChangesAsync(cancellationToken).ConfigureAwait(false);
 
-        return CommandResult.Success();
+        return Unit.Value;
     }
 
     private static IEnumerable<RestaurantReviewPostTranslation> MapTranslations(

@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Blog.Services.Blogging.API.Models;
 using Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate;
+using Blog.Services.Blogging.Domain.Exceptions;
 
 namespace Blog.Services.Blogging.API.Infrastructure.Services;
 
@@ -12,24 +13,16 @@ public class IdentityService : IIdentityService
     {
         _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
     }
-    public bool TryGetAuthenticatedUser(out User user)
+    public User GetCurrentUser()
     {
-        user = null;
-        try
-        {
-            var claimsPrincipal = _httpContextAccessor.HttpContext.User;
+        var claimsPrincipal = _httpContextAccessor?.HttpContext?.User;
 
-            if (!claimsPrincipal.Identity.IsAuthenticated)
-                return false;
+        bool? isAuthenticated = claimsPrincipal?.Identity?.IsAuthenticated;
 
-            user = MapUser(claimsPrincipal);
-        }
-        catch
-        {
-            return false;
-        }
+        if (claimsPrincipal is null || isAuthenticated is null || !isAuthenticated.Value)
+            throw new BloggingDomainException("Error authenticating the user");
 
-        return true;
+        return MapUser(claimsPrincipal);
     }
 
     private static User MapUser(ClaimsPrincipal claimsPrincipal)

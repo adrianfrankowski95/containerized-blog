@@ -1,5 +1,4 @@
 using Blog.Services.Blogging.API.Application.Exceptions;
-using Blog.Services.Blogging.API.Application.Models;
 using Blog.Services.Blogging.API.Infrastructure.Services;
 using Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate;
 using Blog.Services.Blogging.Domain.Exceptions;
@@ -19,8 +18,7 @@ public class ApprovePostCommandHandler : IRequestHandler<ApprovePostCommand>
     }
     public async Task<Unit> Handle(ApprovePostCommand request, CancellationToken cancellationToken)
     {
-        if (!_identityService.TryGetAuthenticatedUser(out User user))
-            throw new IdentityException("Could not get a currently authenticated user");
+        var user = _identityService.GetCurrentUser();
 
         var post = await _postRepository.FindPostAsync(new PostId(request.PostId)).ConfigureAwait(false);
 
