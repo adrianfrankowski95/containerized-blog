@@ -17,8 +17,16 @@ builder.Configuration.AddConfiguration(config);
 
 var services = builder.Services;
 
-// Add services to the container.
 services.AddSwaggerGen();
+services.AddCors(opts =>
+{
+    opts.AddDefaultPolicy(
+        x => x.SetIsOriginAllowed(origin => true)
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowAnyOrigin()
+        .AllowCredentials());
+});
 
 services
     .AddGatewayControllers(env.IsDevelopment())
@@ -37,6 +45,7 @@ if (env.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors();
 
 app.UseAuthentication();
 app.UseAuthorization();

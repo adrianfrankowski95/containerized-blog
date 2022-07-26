@@ -18,6 +18,15 @@ var services = builder.Services;
 
 // Add services to the container.
 services.AddLogging();
+services.AddCors(opts =>
+{
+    opts.AddDefaultPolicy(
+        x => x.SetIsOriginAllowed(origin => true)
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowAnyOrigin()
+        .AllowCredentials());
+});
 
 services
     .AddMassTransitRabbitMqBus(config)
@@ -26,7 +35,8 @@ services
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+app.UseCors();
+
 app.MapGrpcService<DiscoveryService>();
 
 app.Run();
