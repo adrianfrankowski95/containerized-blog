@@ -32,20 +32,18 @@ services.AddCors(opts =>
         x => x.SetIsOriginAllowed(origin => true)
         .AllowAnyHeader()
         .AllowAnyMethod()
-        .AllowAnyOrigin()
-        .AllowCredentials());
+        .AllowAnyOrigin());
 });
 
 services
     .AddInstanceConfig()
-    .AddBloggingControllers(env.IsDevelopment())
+    .AddControllers(env)
     .AddNodaTime()
     .AddMassTransitRabbitMqBus(config)
     .AddBloggingInfrastructure(config)
     .AddBloggingApplication(config)
     .AddCustomJwtAuthentication(config)
-    .AddCustomServices()
-    .AddBackgroundServices();
+    .AddCustomServices();
 
 //services.AddEndpointsApiExplorer();
 
@@ -133,11 +131,17 @@ static class ServiceCollectionExtensions
 
     public static IServiceCollection AddMassTransitRabbitMqBus(this IServiceCollection services, IConfiguration config)
     {
+        services
+            .AddOptions<RabbitMqConfig>()
+            .Bind(config.GetRequiredSection(RabbitMqConfig.Section))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
         services.AddMassTransit(x =>
         {
             x.UsingRabbitMq((context, cfg) =>
             {
-                var rabbitMqConfig = config.GetValue<RabbitMqConfig>(RabbitMqConfig.Section);
+                var rabbitMqConfig = config.GetRequiredSection(RabbitMqConfig.Section).Get<RabbitMqConfig>();
 
                 cfg.Host(rabbitMqConfig.Host, rabbitMqConfig.Port, rabbitMqConfig.VirtualHost, opts =>
                 {
@@ -160,7 +164,11 @@ static class ServiceCollectionExtensions
                 opts.WaitUntilStarted = true;
                 opts.StartTimeout = TimeSpan.FromSeconds(10);
                 opts.StopTimeout = TimeSpan.FromSeconds(30);
-            });
+            })
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddHostedService<RabbitMqLifetimeEventsPublisher>();
 
         return services;
     }

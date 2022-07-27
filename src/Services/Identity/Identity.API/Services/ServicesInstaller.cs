@@ -12,11 +12,4 @@ public static class ServicesInstaller
 
         return services;
     }
-
-    public static IServiceCollection AddBackgroundServices(this IServiceCollection services)
-    {
-        services.AddHostedService<LifetimeEventsPublisher>();
-
-        return services;
-    }
 }

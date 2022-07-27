@@ -53,6 +53,12 @@ internal static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddMassTransitRabbitMqBus(this IServiceCollection services, IConfiguration config)
     {
+        services
+            .AddOptions<RabbitMqConfig>()
+            .Bind(config.GetRequiredSection(RabbitMqConfig.Section))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
         services.AddMassTransit(x =>
         {
             x.AddConsumersFromNamespaceContaining<ServiceInstanceStartedEventConsumer>();
@@ -65,7 +71,7 @@ internal static class ServiceCollectionExtensions
                     .ValidateDataAnnotations()
                     .ValidateOnStart();
 
-                var rabbitMqConfig = config.GetValue<RabbitMqConfig>(RabbitMqConfig.Section);
+                var rabbitMqConfig = config.GetRequiredSection(RabbitMqConfig.Section).Get<RabbitMqConfig>();
 
                 cfg.Host(rabbitMqConfig.Host, rabbitMqConfig.Port, rabbitMqConfig.VirtualHost, opts =>
                 {
@@ -89,7 +95,9 @@ internal static class ServiceCollectionExtensions
                 opts.WaitUntilStarted = true;
                 opts.StartTimeout = TimeSpan.FromSeconds(10);
                 opts.StopTimeout = TimeSpan.FromSeconds(30);
-            });
+            })
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
 
         return services;
     }

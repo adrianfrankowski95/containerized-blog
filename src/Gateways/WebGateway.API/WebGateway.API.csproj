@@ -7,26 +7,26 @@
 		<UserSecretsId>f905691a-5780-4ee0-b550-cb1ef611c155</UserSecretsId>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="Google.Protobuf" Version="3.21.1" />
-		<PackageReference Include="Grpc.Net.Client" Version="2.46.0" />
+		<PackageReference Include="Google.Protobuf" Version="3.21.4"/>
+		<PackageReference Include="Grpc.Net.Client" Version="2.47.0"/>
 		<PackageReference Include="Grpc.Tools" Version="2.47.0">
-		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		  <PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
-		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.3.1" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.5" />
-		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="6.0.4" />
-		<PackageReference Include="NodaTime" Version="3.1.0" />
-		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime" Version="6.0.4" />
-		<PackageReference Include="EFCore.NamingConventions" Version="6.0.0" />
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.5" />
-		<PackageReference Include="NodaTime.Serialization.SystemTextJson" Version="1.0.0" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.5" />
-		<PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning" Version="5.0.0" />
-		<Protobuf Include="..\..\Services\Discovery\Discovery.API\Protos\discovery.proto" GrpcServices="Client" />
-		<PackageReference Include="Grpc.AspNetCore" Version="2.46.0" />
-		<PackageReference Include="Yarp.ReverseProxy" Version="1.1.0" />
-		<PackageReference Include="MassTransit.RabbitMQ" Version="8.0.3"/>
-		<PackageReference Include="MassTransit" Version="8.0.3"/>
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0"/>
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.7"/>
+		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="6.0.5"/>
+		<PackageReference Include="NodaTime" Version="3.1.0"/>
+		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime" Version="6.0.5"/>
+		<PackageReference Include="EFCore.NamingConventions" Version="6.0.0"/>
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.7"/>
+		<PackageReference Include="NodaTime.Serialization.SystemTextJson" Version="1.0.0"/>
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.7"/>
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning" Version="5.0.0"/>
+		<Protobuf Include="..\..\Services\Discovery\Discovery.API\Protos\discovery.proto" GrpcServices="Client"/>
+		<PackageReference Include="Grpc.AspNetCore" Version="2.47.0"/>
+		<PackageReference Include="Yarp.ReverseProxy" Version="1.1.1"/>
+		<PackageReference Include="MassTransit.RabbitMQ" Version="8.0.5"/>
+		<PackageReference Include="MassTransit" Version="8.0.5"/>
 	</ItemGroup>
 </Project>

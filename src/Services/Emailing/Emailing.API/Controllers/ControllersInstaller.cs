@@ -1,11 +1,12 @@
+using Blog.Services.Emailing.API.Controllers;
 using Microsoft.AspNetCore.Mvc.Versioning;
 using NodaTime.Serialization.SystemTextJson;
 
-namespace Blog.Services.Blogging.API.Controllers;
+namespace Blog.Services.Emailing.API.Controllers;
 
 public static class ControllersInstaller
 {
-    public static IServiceCollection AddControllers(this IServiceCollection services, IWebHostEnvironment env)
+    public static IServiceCollection AddControllers(this IServiceCollection services, IHostEnvironment env)
     {
         services.AddApiVersioning(options =>
         {

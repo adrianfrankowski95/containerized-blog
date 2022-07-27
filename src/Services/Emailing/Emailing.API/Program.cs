@@ -2,7 +2,7 @@ using Blog.Services.Emailing.API.Configs;
 using Blog.Services.Emailing.API.Factories;
 using Blog.Services.Emailing.API.Grpc;
 using Blog.Services.Emailing.API.Services;
-using Blog.Services.Integration.Events;
+using Blog.Services.Emailing.API.Controllers;
 using FluentEmail.Core;
 using FluentEmail.MailKitSmtp;
 using MassTransit;
@@ -29,15 +29,14 @@ services.AddCors(opts =>
         x => x.SetIsOriginAllowed(origin => true)
         .AllowAnyHeader()
         .AllowAnyMethod()
-        .AllowAnyOrigin()
-        .AllowCredentials());
+        .AllowAnyOrigin());
 });
 
 services
     .AddInstanceConfig()
+    .AddControllers(env)
     .AddMassTransitRabbitMqBus(config)
     .AddConfiguredFluentEmail(config)
-    .AddBackgroundServices()
     .AddGrpc();
 
 var app = builder.Build();
@@ -79,17 +78,17 @@ internal static class ServiceCollectionExtensions
 
     public static IServiceCollection AddMassTransitRabbitMqBus(this IServiceCollection services, IConfiguration config)
     {
+        services
+            .AddOptions<RabbitMqConfig>()
+            .Bind(config.GetRequiredSection(RabbitMqConfig.Section))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
         services.AddMassTransit(x =>
         {
             x.UsingRabbitMq((context, cfg) =>
             {
-                services
-                    .AddOptions<RabbitMqConfig>()
-                    .Bind(config.GetRequiredSection(RabbitMqConfig.Section))
-                    .ValidateDataAnnotations()
-                    .ValidateOnStart();
-
-                var rabbitMqConfig = config.GetValue<RabbitMqConfig>(RabbitMqConfig.Section);
+                var rabbitMqConfig = config.GetRequiredSection(RabbitMqConfig.Section).Get<RabbitMqConfig>();
 
                 cfg.Host(rabbitMqConfig.Host, rabbitMqConfig.Port, rabbitMqConfig.VirtualHost, opts =>
                 {
@@ -113,7 +112,11 @@ internal static class ServiceCollectionExtensions
                 opts.WaitUntilStarted = true;
                 opts.StartTimeout = TimeSpan.FromSeconds(10);
                 opts.StopTimeout = TimeSpan.FromSeconds(30);
-            });
+            })
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddHostedService<RabbitMqLifetimeEventsPublisher>();
 
         return services;
     }
@@ -137,7 +140,7 @@ internal static class ServiceCollectionExtensions
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
-        var emailConfig = config.GetValue<EmailConfig>(EmailConfig.Section);
+        var emailConfig = config.GetRequiredSection(EmailConfig.Section).Get<EmailConfig>();
 
         services
             .AddFluentEmail(emailConfig.FromEmail, emailConfig.FromName)
