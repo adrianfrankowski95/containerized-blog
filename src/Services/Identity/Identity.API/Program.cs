@@ -24,8 +24,7 @@ services.AddCors(opts =>
         x => x.SetIsOriginAllowed(origin => true)
         .AllowAnyHeader()
         .AllowAnyMethod()
-        .AllowAnyOrigin()
-        .AllowCredentials());
+        .AllowAnyOrigin());
 });
 
 services
@@ -34,8 +33,7 @@ services
     .AddMassTransitRabbitMqBus(config)
     .AddCustomIdentityCore<User>()
     .AddCustomIdentityCoreAdapters()
-    .AddCustomServices()
-    .AddBackgroundServices();
+    .AddCustomServices();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 services.AddEndpointsApiExplorer();
@@ -92,7 +90,7 @@ internal static class ServiceCollectionExtensions
         {
             x.UsingRabbitMq((context, cfg) =>
             {
-                var rabbitMqConfig = config.GetValue<RabbitMqConfig>(RabbitMqConfig.Section);
+                var rabbitMqConfig = config.GetRequiredSection(RabbitMqConfig.Section).Get<RabbitMqConfig>();
 
                 cfg.Host(rabbitMqConfig.Host, rabbitMqConfig.Port, rabbitMqConfig.VirtualHost, opts =>
                 {
@@ -115,7 +113,11 @@ internal static class ServiceCollectionExtensions
                 opts.WaitUntilStarted = true;
                 opts.StartTimeout = TimeSpan.FromSeconds(10);
                 opts.StopTimeout = TimeSpan.FromSeconds(30);
-            });
+            })
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddHostedService<RabbitMqLifetimeEventsPublisher>();
 
         return services;
     }

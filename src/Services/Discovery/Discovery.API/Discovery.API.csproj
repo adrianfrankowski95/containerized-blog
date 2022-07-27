@@ -9,9 +9,9 @@
 		<Protobuf Include="Protos\discovery.proto" GrpcServices="Server"/>
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="MassTransit.RabbitMQ" Version="8.0.3"/>
-		<PackageReference Include="MassTransit" Version="8.0.3"/>
-		<PackageReference Include="Grpc.AspNetCore" Version="2.40.0"/>
-		<PackageReference Include="StackExchange.Redis" Version="2.6.45"/>
+		<PackageReference Include="MassTransit.RabbitMQ" Version="8.0.5"/>
+		<PackageReference Include="MassTransit" Version="8.0.5"/>
+		<PackageReference Include="Grpc.AspNetCore" Version="2.47.0"/>
+		<PackageReference Include="StackExchange.Redis" Version="2.6.48"/>
 	</ItemGroup>
 </Project>

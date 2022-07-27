@@ -1,4 +1,5 @@
 using Blog.Services.Comments.API.Configs;
+using Blog.Services.Comments.API.Controllers;
 using Blog.Services.Comments.API.Services;
 using MassTransit;
 
@@ -12,21 +13,19 @@ var services = builder.Services;
 
 // Add services to the container.
 services.AddLogging();
-services.AddControllers();
 services.AddCors(opts =>
 {
     opts.AddDefaultPolicy(
         x => x.SetIsOriginAllowed(origin => true)
         .AllowAnyHeader()
         .AllowAnyMethod()
-        .AllowAnyOrigin()
-        .AllowCredentials());
+        .AllowAnyOrigin());
 });
 
 services
     .AddInstanceConfig()
-    .AddMassTransitRabbitMqBus(config)
-    .AddBackgroundServices();
+    .AddControllers(env)
+    .AddMassTransitRabbitMqBus(config);
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 services.AddEndpointsApiExplorer();
@@ -77,17 +76,17 @@ internal static class ServiceCollectionExtensions
 
     public static IServiceCollection AddMassTransitRabbitMqBus(this IServiceCollection services, IConfiguration config)
     {
+        services
+            .AddOptions<RabbitMqConfig>()
+            .Bind(config.GetRequiredSection(RabbitMqConfig.Section))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
         services.AddMassTransit(x =>
         {
             x.UsingRabbitMq((context, cfg) =>
             {
-                services
-                    .AddOptions<RabbitMqConfig>()
-                    .Bind(config.GetRequiredSection(RabbitMqConfig.Section))
-                    .ValidateDataAnnotations()
-                    .ValidateOnStart();
-
-                var rabbitMqConfig = config.GetValue<RabbitMqConfig>(RabbitMqConfig.Section);
+                var rabbitMqConfig = config.GetRequiredSection(RabbitMqConfig.Section).Get<RabbitMqConfig>();
 
                 cfg.Host(rabbitMqConfig.Host, rabbitMqConfig.Port, rabbitMqConfig.VirtualHost, opts =>
                 {
@@ -111,7 +110,11 @@ internal static class ServiceCollectionExtensions
                 opts.WaitUntilStarted = true;
                 opts.StartTimeout = TimeSpan.FromSeconds(10);
                 opts.StopTimeout = TimeSpan.FromSeconds(30);
-            });
+            })
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddHostedService<RabbitMqLifetimeEventsPublisher>();
 
         return services;
     }

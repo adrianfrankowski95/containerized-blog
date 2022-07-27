@@ -67,7 +67,7 @@ static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddGrpcDiscoveryService(this IServiceCollection services, IConfiguration config)
     {
-        var address = config.GetValue<UrlsConfig>(UrlsConfig.Section).DiscoveryService;
+        var address = config.GetRequiredSection(UrlsConfig.Section).Get<UrlsConfig>().DiscoveryService;
 
         if (string.IsNullOrWhiteSpace(address))
             throw new InvalidOperationException($"{nameof(UrlsConfig.DiscoveryService)} URL must not be null");
@@ -104,19 +104,19 @@ static class ServiceCollectionExtensions
 
     public static IServiceCollection AddMassTransitRabbitMqBus(this IServiceCollection services, IConfiguration config)
     {
+        services
+            .AddOptions<RabbitMqConfig>()
+            .Bind(config.GetRequiredSection(RabbitMqConfig.Section))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
         services.AddMassTransit(x =>
         {
             x.AddConsumersFromNamespaceContaining<ServiceInstanceRegisteredEventConsumer>();
 
             x.UsingRabbitMq((context, cfg) =>
             {
-                services
-                    .AddOptions<RabbitMqConfig>()
-                    .Bind(config.GetRequiredSection(RabbitMqConfig.Section))
-                    .ValidateDataAnnotations()
-                    .ValidateOnStart();
-
-                var rabbitMqConfig = config.GetValue<RabbitMqConfig>(RabbitMqConfig.Section);
+                var rabbitMqConfig = config.GetRequiredSection(RabbitMqConfig.Section).Get<RabbitMqConfig>();
 
                 cfg.Host(rabbitMqConfig.Host, rabbitMqConfig.VirtualHost, opts =>
                 {

@@ -1,26 +1,26 @@
-using Blog.Services.Blogging.API.Configs;
+using Blog.Services.Comments.API.Configs;
 using Blog.Services.Integration.Events;
 using MassTransit;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.Options;
 
-namespace Blog.Services.Blogging.API.Services;
+namespace Blog.Services.Comments.API.Services;
 
-public class LifetimeEventsPublisher : BackgroundService
+public class RabbitMqLifetimeEventsPublisher : BackgroundService
 {
     private readonly IBus _bus;
     private readonly IServer _server;
     private readonly IOptions<InstanceConfig> _config;
-    private readonly ILogger<LifetimeEventsPublisher> _logger;
+    private readonly ILogger<RabbitMqLifetimeEventsPublisher> _logger;
     private readonly IHostApplicationLifetime _lifetime;
 
-    public LifetimeEventsPublisher(
+    public RabbitMqLifetimeEventsPublisher(
        IBus bus,
        IServer server,
        IOptions<InstanceConfig> config,
        IHostApplicationLifetime lifetime,
-       ILogger<LifetimeEventsPublisher> logger)
+       ILogger<RabbitMqLifetimeEventsPublisher> logger)
     {
         _bus = bus ?? throw new ArgumentNullException(nameof(bus));
         _server = server ?? throw new ArgumentNullException(nameof(server));
