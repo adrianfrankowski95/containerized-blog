@@ -1,8 +1,8 @@
 namespace Blog.Gateways.WebGateway.API.Models;
 
-public class ServiceInstanceInfo
+public class ServiceInstance
 {
-    public ServiceInstanceInfo(Guid instanceId, HashSet<string> serviceAddresses)
+    public ServiceInstance(Guid instanceId, HashSet<string> serviceAddresses)
     {
         if (serviceAddresses is null || !serviceAddresses.Any())
             throw new ArgumentNullException(nameof(serviceAddresses));
@@ -18,7 +18,7 @@ public class ServiceInstanceInfo
         if (obj is null)
             return false;
 
-        if (obj is not ServiceInstanceInfo serviceInstanceInfo)
+        if (obj is not ServiceInstance serviceInstanceInfo)
             return false;
 
         if (ReferenceEquals(this, serviceInstanceInfo))

@@ -14,21 +14,21 @@ public class DiscoveryService : GrpcDiscoveryService.GrpcDiscoveryServiceBase
         _serviceRegistry = serviceRegistry ?? throw new ArgumentNullException(nameof(serviceRegistry));
     }
 
-    public override async Task<GetServiceInstancesDataOfTypeResponse> GetServiceInstancesDataOfType(GetServiceInstancesDataOfTypeRequest request, ServerCallContext context)
+    public override async Task<GetServiceInstancesOfTypeResponse> GetServiceInstancesOfType(GetServiceInstancesOfTypeRequest request, ServerCallContext context)
     {
         if (string.IsNullOrWhiteSpace(request.ServiceType))
             throw new InvalidOperationException($"{request.ServiceType} must not be null");
 
         _logger.LogInformation("----- Handling Grpc Get Service Instances Data Of Type request for {ServiceType}", request.ServiceType);
 
-        var instancesData = await _serviceRegistry.GetServiceInstancesDataOfType(request.ServiceType).ConfigureAwait(false);
+        var serviceInstances = await _serviceRegistry.GetServiceInstancesOfType(request.ServiceType).ConfigureAwait(false);
 
         _logger.LogInformation("----- Successfully fetched following {ServiceType} data from registry: {Data}",
-            request.ServiceType, string.Join("; ", instancesData.Select(x => $"instance ID: {x.InstanceId}, addresses: {string.Join("; ", x.Addresses)}")));
+            request.ServiceType, string.Join("; ", serviceInstances.Select(x => $"instance ID: {x.InstanceId}, addresses: {string.Join("; ", x.Addresses)}")));
 
-        return new GetServiceInstancesDataOfTypeResponse
+        return new GetServiceInstancesOfTypeResponse
         {
-            Data = { Array.ConvertAll(instancesData.ToArray(), x => new ServiceInstanceData
+            ServiceInstances = { Array.ConvertAll(serviceInstances.ToArray(), x => new ServiceInstance
             {
                 InstanceId = x.InstanceId.ToString(),
                 ServiceType = x.ServiceType,
@@ -37,18 +37,18 @@ public class DiscoveryService : GrpcDiscoveryService.GrpcDiscoveryServiceBase
         };
     }
 
-    public override async Task<GetAllServiceInstancesDataResponse> GetAllServiceInstancesData(Empty request, ServerCallContext context)
+    public override async Task<GetAllServiceInstancesResponse> GetAllServiceInstances(Empty request, ServerCallContext context)
     {
         _logger.LogInformation("----- Handling Grpc Get All Service Instances Data request");
 
-        var instancesData = await _serviceRegistry.GetAllServiceInstancesData().ConfigureAwait(false);
+        var serviceInstances = await _serviceRegistry.GetAllServiceInstances().ConfigureAwait(false);
 
         _logger.LogInformation("----- Successfully fetched following service instances data: {Data}",
-            string.Join("; ", instancesData.Select(x => $"service type: {x.ServiceType}, instance ID: {x.InstanceId}, addresses: {string.Join("; ", x.Addresses)}")));
+            string.Join("; ", serviceInstances.Select(x => $"service type: {x.ServiceType}, instance ID: {x.InstanceId}, addresses: {string.Join("; ", x.Addresses)}")));
 
-        return new GetAllServiceInstancesDataResponse
+        return new GetAllServiceInstancesResponse
         {
-            Data = { Array.ConvertAll(instancesData.ToArray(), x => new ServiceInstanceData
+            ServiceInstances = { Array.ConvertAll(serviceInstances.ToArray(), x => new ServiceInstance
             {
                 InstanceId = x.InstanceId.ToString(),
                 ServiceType = x.ServiceType,

@@ -1,8 +1,13 @@
 namespace Blog.Services.Discovery.API.Models;
 
-public class ServiceInstanceData
+public class ServiceInstance
 {
-    public ServiceInstanceData(Guid instanceId, string serviceType, HashSet<string> serviceAddresses)
+    public string Key => "services:" + ServiceType + ":" + InstanceId;
+    public Guid InstanceId { get; }
+    public string ServiceType { get; }
+    public HashSet<string> Addresses { get; }
+
+    public ServiceInstance(Guid instanceId, string serviceType, HashSet<string> serviceAddresses)
     {
         if (string.IsNullOrWhiteSpace(serviceType))
             throw new ArgumentNullException(nameof(serviceType));
@@ -15,17 +20,12 @@ public class ServiceInstanceData
         Addresses = serviceAddresses;
     }
 
-    public string Key => "services:" + ServiceType + ":" + InstanceId;
-    public Guid InstanceId { get; }
-    public string ServiceType { get; }
-    public HashSet<string> Addresses { get; }
-
     public override bool Equals(object? obj)
     {
         if (obj is null)
             return false;
 
-        if (obj is not ServiceInstanceData serviceInstanceData)
+        if (obj is not ServiceInstance serviceInstanceData)
             return false;
 
         if (ReferenceEquals(this, serviceInstanceData))

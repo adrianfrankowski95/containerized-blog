@@ -21,12 +21,12 @@ public class InMemoryProxyConfigProvider : IInMemoryProxyConfigProvider
 
     public static async Task<IInMemoryProxyConfigProvider> InitializeFromDiscoveryServiceAsync(IDiscoveryService discoveryService)
     {
-        var instancesInfo = await discoveryService.GetAllInstancesInfoAsync().ConfigureAwait(false);
+        var serviceInstances = await discoveryService.GetAllInstancesAsync().ConfigureAwait(false);
 
-        if (instancesInfo is null)
+        if (serviceInstances is null)
             throw new InvalidOperationException("Error discovering services during reverse proxy initialization");
 
-        if (instancesInfo.Any(x => x.Value.Any(a => a.Addresses is null || a.Addresses.Count == 0)))
+        if (serviceInstances.Any(x => x.Value.Any(a => a.Addresses is null || a.Addresses.Count == 0)))
             throw new InvalidOperationException("Error requesting addresses from discovery service");
 
         List<RouteConfig> routes = new();
@@ -34,12 +34,12 @@ public class InMemoryProxyConfigProvider : IInMemoryProxyConfigProvider
 
         var provider = new InMemoryProxyConfigProvider();
 
-        foreach (var serviceType in instancesInfo.Keys)
+        foreach (var serviceType in serviceInstances.Keys)
         {
             var paths = PathsConfig.GetMatchingPaths(serviceType);
             provider.GenerateRoutes(serviceType, paths, ref routes);
 
-            var destinations = provider.GenerateDestinations(serviceType, instancesInfo[serviceType]);
+            var destinations = provider.GenerateDestinations(serviceType, serviceInstances[serviceType]);
             provider.GenerateCluster(serviceType, destinations, ref clusters);
         }
 
@@ -68,11 +68,11 @@ public class InMemoryProxyConfigProvider : IInMemoryProxyConfigProvider
         }
     }
 
-    public Dictionary<string, DestinationConfig> GenerateDestinations(string serviceType, IReadOnlySet<ServiceInstanceInfo> instancesInfo)
+    public Dictionary<string, DestinationConfig> GenerateDestinations(string serviceType, IReadOnlySet<ServiceInstance> serviceInstances)
     {
         Dictionary<string, DestinationConfig> destinations = new();
 
-        foreach (var instanceInfo in instancesInfo)
+        foreach (var instanceInfo in serviceInstances)
         {
             int destinationIndex = 1;
             foreach (string address in instanceInfo.Addresses)
@@ -83,7 +83,6 @@ public class InMemoryProxyConfigProvider : IInMemoryProxyConfigProvider
                 ++destinationIndex;
             }
         };
-
         return destinations;
     }
 

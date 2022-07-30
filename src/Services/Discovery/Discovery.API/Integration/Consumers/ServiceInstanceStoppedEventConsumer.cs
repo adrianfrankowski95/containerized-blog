@@ -36,7 +36,7 @@ public class ServiceInstanceStoppedEventConsumer : IConsumer<ServiceInstanceStop
 
         _logger.LogInformation("----- Handling {ServiceType} instance stopped event: {InstanceId} - {Addresses}", serviceType, instanceId, addressesString);
 
-        bool success = await _serviceRegistry.UnregisterServiceInstance(new ServiceInstanceData(instanceId, serviceType, addresses)).ConfigureAwait(false);
+        bool success = await _serviceRegistry.UnregisterServiceInstance(new ServiceInstance(instanceId, serviceType, addresses)).ConfigureAwait(false);
 
         if (success)
         {

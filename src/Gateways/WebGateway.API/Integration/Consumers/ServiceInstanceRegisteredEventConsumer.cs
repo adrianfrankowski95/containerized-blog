@@ -31,34 +31,33 @@ public class ServiceInstanceRegisteredEventConsumer : IConsumer<ServiceInstanceR
         _logger.LogInformation("----- Handling {ServiceType} instance registered event: {InstanceId} - {Addresses}", serviceType, instanceId, addressesString);
 
         var config = _configProvider.GetConfig();
+        var newRoutes = config.Routes.ToList();
+        var newClusters = config.Clusters.ToList();
 
         var oldCluster = config.Clusters.Where(cluster =>
             string.Equals(cluster.ClusterId, serviceType, StringComparison.OrdinalIgnoreCase))
             .FirstOrDefault();
 
-        var newRoutes = config.Routes.ToList();
-        var newClusters = config.Clusters.ToList();
-
         var newDestinations = _configProvider.GenerateDestinations(
             serviceType,
-            new HashSet<ServiceInstanceInfo>() { new ServiceInstanceInfo(instanceId, addresses) });
+            new HashSet<ServiceInstance>() { new ServiceInstance(instanceId, addresses) });
 
+        // If cluster for this service type already existed, merge existing destinations with new ones,
+        // if cluster did not exist, generate new routes from scratch based on matching paths from config file
         if (oldCluster is not null)
         {
+            newClusters.Remove(oldCluster);
+
             if (oldCluster.Destinations is not null && oldCluster.Destinations.Count > 0)
                 newDestinations = newDestinations.Union(oldCluster.Destinations).ToDictionary(k => k.Key, v => v.Value);
-
-            newClusters.Remove(oldCluster);
         }
-
-        _configProvider.GenerateCluster(serviceType, newDestinations, ref newClusters);
-
-        if (!config.Routes.Any(route => string.Equals(route.ClusterId, serviceType, StringComparison.OrdinalIgnoreCase)))
+        else
         {
             var paths = PathsConfig.GetMatchingPaths(serviceType);
             _configProvider.GenerateRoutes(serviceType, paths, ref newRoutes);
         }
 
+        _configProvider.GenerateCluster(serviceType, newDestinations, ref newClusters);
         _configProvider.Update(newRoutes, newClusters);
 
         return Task.CompletedTask;
