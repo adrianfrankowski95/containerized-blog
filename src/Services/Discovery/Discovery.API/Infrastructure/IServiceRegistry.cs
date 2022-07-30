@@ -4,10 +4,10 @@ namespace Blog.Services.Discovery.API.Infrastructure;
 
 public interface IServiceRegistry
 {
-    public Task<bool> RegisterServiceInstance(ServiceInstanceData serviceInstanceData);
-    public Task<bool> UnregisterServiceInstance(ServiceInstanceData serviceInstanceData);
-    public Task<bool> TryRefreshServiceInstanceExpiry(ServiceInstanceData serviceInstanceData);
-    public Task<IList<ServiceInstanceData>> GetAllServiceInstancesData();
-    public Task<IList<ServiceInstanceData>> GetServiceInstancesDataOfType(string serviceType);
+    public Task<bool> RegisterServiceInstance(ServiceInstance serviceInstanceData);
+    public Task<bool> UnregisterServiceInstance(ServiceInstance serviceInstanceData);
+    public Task<bool> TryRefreshServiceInstanceExpiry(ServiceInstance serviceInstanceData);
+    public Task<IList<ServiceInstance>> GetAllServiceInstances();
+    public Task<IList<ServiceInstance>> GetServiceInstancesOfType(string serviceType);
 
 }

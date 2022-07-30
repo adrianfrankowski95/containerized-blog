@@ -7,7 +7,7 @@ public interface IInMemoryProxyConfigProvider : IProxyConfigProvider
 {
     public void GenerateRoutes(string serviceType, IEnumerable<(string incomingPath, string outgoingPath)> matchingPaths, ref List<RouteConfig> routes);
 
-    public Dictionary<string, DestinationConfig> GenerateDestinations(string serviceType, IReadOnlySet<ServiceInstanceInfo> instancesInfo);
+    public Dictionary<string, DestinationConfig> GenerateDestinations(string serviceType, IReadOnlySet<ServiceInstance> instancesInfo);
 
     public void GenerateCluster(string clusterId, IReadOnlyDictionary<string, DestinationConfig> destinations, ref List<ClusterConfig> clusters);
 

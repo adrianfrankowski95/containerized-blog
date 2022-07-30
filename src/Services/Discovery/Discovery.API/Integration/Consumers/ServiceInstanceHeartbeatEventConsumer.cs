@@ -27,7 +27,7 @@ public class ServiceInstanceHeartbeatEventConsumer : IConsumer<ServiceInstanceHe
 
         _logger.LogInformation("----- Handling {ServiceType} instance heartbeat event: {InstanceId} - {Addresses}", serviceType, instanceId, addressesString);
 
-        var serviceInfo = new ServiceInstanceData(instanceId, serviceType, addresses);
+        var serviceInfo = new ServiceInstance(instanceId, serviceType, addresses);
         bool exists = await _serviceRegistry.TryRefreshServiceInstanceExpiry(serviceInfo).ConfigureAwait(false);
 
         if (!exists)

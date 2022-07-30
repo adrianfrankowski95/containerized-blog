@@ -17,36 +17,36 @@ public class RedisServiceRegistry : IServiceRegistry
         _redisDb = redis.GetDatabase();
     }
 
-    public Task<bool> RegisterServiceInstance(ServiceInstanceData serviceInfo)
+    public Task<bool> RegisterServiceInstance(ServiceInstance serviceInstance)
     {
-        if (serviceInfo is null)
-            throw new ArgumentNullException(nameof(serviceInfo));
+        if (serviceInstance is null)
+            throw new ArgumentNullException(nameof(serviceInstance));
 
-        return _redisDb.StringSetAsync(serviceInfo.Key, string.Join(';', serviceInfo.Addresses), _options.CurrentValue.Expiry);
+        return _redisDb.StringSetAsync(serviceInstance.Key, string.Join(';', serviceInstance.Addresses), _options.CurrentValue.Expiry);
     }
 
-    public Task<bool> UnregisterServiceInstance(ServiceInstanceData serviceInfo)
+    public Task<bool> UnregisterServiceInstance(ServiceInstance serviceInstance)
     {
-        if (serviceInfo is null)
-            throw new ArgumentNullException(nameof(serviceInfo));
+        if (serviceInstance is null)
+            throw new ArgumentNullException(nameof(serviceInstance));
 
-        return _redisDb.KeyDeleteAsync(serviceInfo.Key);
+        return _redisDb.KeyDeleteAsync(serviceInstance.Key);
     }
 
-    public async Task<IList<ServiceInstanceData>> GetAllServiceInstancesData()
+    public async Task<IList<ServiceInstance>> GetAllServiceInstances()
     {
         //key pattern: services:servicetype:instanceid
         var keys = _redis.GetServer(_redis.GetEndPoints().Single()).Keys(pattern: "services:*");
 
         if (keys is null || !keys.Any())
-            return Array.Empty<ServiceInstanceData>();
+            return Array.Empty<ServiceInstance>();
 
         var entries = await _redisDb.StringGetAsync(keys.ToArray()).ConfigureAwait(false);
 
         if (entries is null || entries.Length == 0)
-            return Array.Empty<ServiceInstanceData>();
+            return Array.Empty<ServiceInstance>();
 
-        var services = new List<ServiceInstanceData>();
+        var services = new List<ServiceInstance>();
 
         for (int i = 0; i < keys.Count(); ++i)
         {
@@ -60,14 +60,13 @@ public class RedisServiceRegistry : IServiceRegistry
 
                 var addresses = entries.ElementAt(i).ToString().Split(';').ToHashSet();
 
-                services.Add(new ServiceInstanceData(instanceId, serviceType, addresses));
+                services.Add(new ServiceInstance(instanceId, serviceType, addresses));
             }
         }
         return services;
-
     }
 
-    public async Task<IList<ServiceInstanceData>> GetServiceInstancesDataOfType(string serviceType)
+    public async Task<IList<ServiceInstance>> GetServiceInstancesOfType(string serviceType)
     {
         if (string.IsNullOrWhiteSpace(serviceType))
             throw new ArgumentNullException(nameof(serviceType));
@@ -76,14 +75,14 @@ public class RedisServiceRegistry : IServiceRegistry
         var keys = _redis.GetServer(_redis.GetEndPoints().Single()).Keys(pattern: "services:" + serviceType + ":*");
 
         if (keys is null || !keys.Any())
-            return Array.Empty<ServiceInstanceData>();
+            return Array.Empty<ServiceInstance>();
 
         var entries = await _redisDb.StringGetAsync(keys.ToArray()).ConfigureAwait(false);
 
         if (entries is null || entries.Length == 0)
-            return Array.Empty<ServiceInstanceData>();
+            return Array.Empty<ServiceInstance>();
 
-        var services = new List<ServiceInstanceData>();
+        var services = new List<ServiceInstance>();
 
         for (int i = 0; i < keys.Count(); ++i)
         {
@@ -92,17 +91,17 @@ public class RedisServiceRegistry : IServiceRegistry
                 //key pattern: services:servicetype:instanceid
                 Guid instanceId = Guid.Parse(keys.ElementAt(i).ToString().Split(':')[2]);
                 var addresses = entries.ElementAt(i).ToString().Split(';').ToHashSet();
-                services.Add(new ServiceInstanceData(instanceId, serviceType, addresses));
+                services.Add(new ServiceInstance(instanceId, serviceType, addresses));
             }
         }
         return services;
     }
 
-    public Task<bool> TryRefreshServiceInstanceExpiry(ServiceInstanceData serviceInfo)
+    public Task<bool> TryRefreshServiceInstanceExpiry(ServiceInstance serviceInstance)
     {
-        if (serviceInfo is null)
-            throw new ArgumentNullException(nameof(serviceInfo));
+        if (serviceInstance is null)
+            throw new ArgumentNullException(nameof(serviceInstance));
 
-        return _redisDb.KeyExpireAsync(serviceInfo.Key, _options.CurrentValue.Expiry);
+        return _redisDb.KeyExpireAsync(serviceInstance.Key, _options.CurrentValue.Expiry);
     }
 }
