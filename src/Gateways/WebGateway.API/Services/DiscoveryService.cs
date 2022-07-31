@@ -25,6 +25,9 @@ public class DiscoveryService : IDiscoveryService
             new GetServiceInstancesOfTypeRequest { ServiceType = serviceType })
             .ConfigureAwait(false);
 
+        if (response is null || response.ServiceInstances is null || !response.ServiceInstances.Any())
+            throw new InvalidDataException($"Error retrieving service instances of type {serviceType} from Discovery Grpc service");
+
         _logger.LogInformation("----- Received grpc request get service type instances info response: {Response}",
             string.Join("; ", response.ServiceInstances.Select(x => $"{x.ServiceType} - {x.InstanceId}: {string.Join(", ", x.Addresses)}")));
 
@@ -38,6 +41,9 @@ public class DiscoveryService : IDiscoveryService
 
         var response = await _client.GetAllServiceInstancesAsync(new Google.Protobuf.WellKnownTypes.Empty())
             .ConfigureAwait(false);
+
+        if (response is null || response.ServiceInstances is null || !response.ServiceInstances.Any())
+            throw new InvalidDataException($"Error retrieving all service instances from Discovery Grpc service");
 
         _logger.LogInformation("----- Received grpc request get all service instances info response: {Response}",
             string.Join("; ", response.ServiceInstances.Select(x => $"{x.ServiceType} - {x.InstanceId}: {string.Join(", ", x.Addresses)}")));
