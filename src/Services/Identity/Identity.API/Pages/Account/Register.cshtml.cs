@@ -83,7 +83,6 @@ public class RegisterModel : PageModel
         public bool ReceiveAdditionalEmails { get; set; }
     }
 
-
     public IActionResult OnGet(string returnUrl = null)
     {
         ReturnUrl = returnUrl;
