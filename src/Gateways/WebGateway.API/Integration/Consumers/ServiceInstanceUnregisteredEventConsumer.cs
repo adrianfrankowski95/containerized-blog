@@ -1,8 +1,6 @@
 //namespace of the event must be the same in Producers and in Consumers
 //in order to make it work through the MassTransit
 
-using System.Collections.Immutable;
-using Blog.Gateways.WebGateway.API.Configs;
 using Blog.Gateways.WebGateway.API.Services;
 using Blog.Services.Integration.Events;
 using MassTransit;
@@ -12,10 +10,10 @@ namespace Blog.Gateways.WebGateway.API.Integration.Consumers;
 
 public class ServiceInstanceUnregisteredEventConsumer : IConsumer<ServiceInstanceUnregisteredEvent>
 {
-    private readonly IInMemoryProxyConfigProvider _configProvider;
+    private readonly IProxyConfigProvider _configProvider;
     private readonly ILogger<ServiceInstanceUnregisteredEventConsumer> _logger;
 
-    public ServiceInstanceUnregisteredEventConsumer(IInMemoryProxyConfigProvider configProvider, ILogger<ServiceInstanceUnregisteredEventConsumer> logger)
+    public ServiceInstanceUnregisteredEventConsumer(IProxyConfigProvider configProvider, ILogger<ServiceInstanceUnregisteredEventConsumer> logger)
     {
         _configProvider = configProvider ?? throw new ArgumentNullException(nameof(configProvider));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -26,15 +24,20 @@ public class ServiceInstanceUnregisteredEventConsumer : IConsumer<ServiceInstanc
         Guid instanceId = context.Message.InstanceId;
         string serviceType = context.Message.ServiceType;
 
+        if (instanceId.Equals(Guid.Empty))
+            throw new InvalidDataException($"{nameof(context.Message.InstanceId)} must not be empty");
+
+        if (string.IsNullOrWhiteSpace(serviceType))
+            throw new InvalidDataException($"{nameof(context.Message.ServiceType)} must not be null or empty");
+
         _logger.LogInformation("----- Handling {ServiceType} instance unregistered event: {InstanceId}", serviceType, instanceId);
 
         var config = _configProvider.GetConfig();
         var newRoutes = config.Routes.ToList();
         var newClusters = config.Clusters.ToList();
 
-        var oldCluster = config.Clusters.Where(cluster =>
-            string.Equals(cluster.ClusterId, serviceType, StringComparison.OrdinalIgnoreCase))
-            .FirstOrDefault();
+        var oldCluster = config.Clusters.FirstOrDefault(cluster =>
+            string.Equals(cluster.ClusterId, serviceType, StringComparison.OrdinalIgnoreCase));
 
         bool clusterRecreated = false;
         if (oldCluster is not null)
@@ -49,16 +52,19 @@ public class ServiceInstanceUnregisteredEventConsumer : IConsumer<ServiceInstanc
 
                 if (newDestinations is not null && newDestinations.Any())
                 {
-                    _configProvider.GenerateCluster(oldCluster.ClusterId, newDestinations, ref newClusters);
+                    newClusters.Add(InMemoryProxyConfigProvider.GenerateCluster(oldCluster.ClusterId, newDestinations));
                     clusterRecreated = true;
                 }
             }
         }
 
-        if(!clusterRecreated)
+        if (!clusterRecreated)
             newRoutes.RemoveAll(route => string.Equals(route.ClusterId, serviceType, StringComparison.OrdinalIgnoreCase));
-        
-        _configProvider.Update(newRoutes, newClusters);
+
+        if (_configProvider is not InMemoryProxyConfigProvider inMemoryProvider)
+            throw new NotSupportedException("Dynamic Routes and Clusters update is only supported for InMemoryProxyConfigProvider");
+
+        inMemoryProvider.Update(newRoutes, newClusters);
 
         return Task.CompletedTask;
     }

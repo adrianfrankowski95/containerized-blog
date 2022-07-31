@@ -9,9 +9,14 @@ package Blog.Services.Discovery.API.Grpc;
 service GrpcDiscoveryService {
   rpc GetServiceInstancesOfType (GetServiceInstancesOfTypeRequest) returns  (GetServiceInstancesOfTypeResponse);
   rpc GetAllServiceInstances(google.protobuf.Empty) returns (GetAllServiceInstancesResponse);
+  rpc GetAddressOfServiceType(GetAddressOfServiceTypeRequest) returns (GetAddressOfServiceTypeResponse); 
 }
 
 message GetServiceInstancesOfTypeRequest {
+  string serviceType = 1;
+}
+
+message GetAddressOfServiceTypeRequest {
   string serviceType = 1;
 }
 
@@ -21,6 +26,10 @@ message GetServiceInstancesOfTypeResponse {
 
 message GetAllServiceInstancesResponse {
   repeated ServiceInstance serviceInstances = 1;
+}
+
+message GetAddressOfServiceTypeResponse {
+  string address = 1;
 }
 
 message ServiceInstance {

@@ -6,15 +6,16 @@ using Blog.Gateways.WebGateway.API.Models;
 using Blog.Gateways.WebGateway.API.Services;
 using Blog.Services.Integration.Events;
 using MassTransit;
+using Yarp.ReverseProxy.Configuration;
 
 namespace Blog.Gateways.WebGateway.API.Integration.Consumers;
 
 public class ServiceInstanceRegisteredEventConsumer : IConsumer<ServiceInstanceRegisteredEvent>
 {
-    private readonly IInMemoryProxyConfigProvider _configProvider;
+    private readonly IProxyConfigProvider _configProvider;
     private readonly ILogger<ServiceInstanceRegisteredEventConsumer> _logger;
 
-    public ServiceInstanceRegisteredEventConsumer(IInMemoryProxyConfigProvider configProvider, ILogger<ServiceInstanceRegisteredEventConsumer> logger)
+    public ServiceInstanceRegisteredEventConsumer(IProxyConfigProvider configProvider, ILogger<ServiceInstanceRegisteredEventConsumer> logger)
     {
         _configProvider = configProvider ?? throw new ArgumentNullException(nameof(configProvider));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -25,6 +26,15 @@ public class ServiceInstanceRegisteredEventConsumer : IConsumer<ServiceInstanceR
         Guid instanceId = context.Message.InstanceId;
         string serviceType = context.Message.ServiceType;
         HashSet<string> addresses = context.Message.ServiceAddresses;
+
+        if (instanceId.Equals(Guid.Empty))
+            throw new InvalidDataException($"{nameof(context.Message.InstanceId)} must not be empty");
+
+        if (string.IsNullOrWhiteSpace(serviceType))
+            throw new InvalidDataException($"{nameof(context.Message.ServiceType)} must not be null or empty");
+
+        if (addresses is null || !addresses.Any())
+            throw new InvalidDataException($"{nameof(context.Message.ServiceAddresses)} must not be null or empty");
 
         string addressesString = string.Join("; ", addresses);
 
@@ -38,7 +48,7 @@ public class ServiceInstanceRegisteredEventConsumer : IConsumer<ServiceInstanceR
             string.Equals(cluster.ClusterId, serviceType, StringComparison.OrdinalIgnoreCase))
             .FirstOrDefault();
 
-        var newDestinations = _configProvider.GenerateDestinations(
+        var newDestinations = InMemoryProxyConfigProvider.GenerateDestinations(
             serviceType,
             new HashSet<ServiceInstance>() { new ServiceInstance(instanceId, addresses) });
 
@@ -54,13 +64,16 @@ public class ServiceInstanceRegisteredEventConsumer : IConsumer<ServiceInstanceR
         else
         {
             var paths = PathsConfig.GetMatchingPaths(serviceType);
-            _configProvider.GenerateRoutes(serviceType, paths, ref newRoutes);
+            newRoutes.AddRange(InMemoryProxyConfigProvider.GenerateRoutes(serviceType, paths));
         }
 
-        _configProvider.GenerateCluster(serviceType, newDestinations, ref newClusters);
-        _configProvider.Update(newRoutes, newClusters);
+        newClusters.Add(InMemoryProxyConfigProvider.GenerateCluster(serviceType, newDestinations));
+
+        if (_configProvider is not InMemoryProxyConfigProvider inMemoryProvider)
+            throw new NotSupportedException("Dynamic Routes and Clusters update is only supported for InMemoryProxyConfigProvider");
+
+        inMemoryProvider.Update(newRoutes, newClusters);
 
         return Task.CompletedTask;
-
     }
 }
