@@ -199,11 +199,6 @@ public class EmailModel : PageModel
             return RedirectToPage();
         }
 
-        // await _emailSender.SendEmailAsync(
-        //     user.Email,
-        //     "Confirm your email",
-        //     $"Please confirm your email by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
-
         StatusMessage = "Verification email sent. Please check your email.";
         return RedirectToPage();
     }
