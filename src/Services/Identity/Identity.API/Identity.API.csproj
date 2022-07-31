@@ -17,5 +17,7 @@
 		<PackageReference Include="BCrypt.Net-Next" Version="4.0.3"/>
 		<PackageReference Include="MassTransit.RabbitMQ" Version="8.0.5"/>
 		<PackageReference Include="MassTransit" Version="8.0.5"/>
+		<Protobuf Include="..\..\Discovery\Discovery.API\Protos\discovery.proto" GrpcServices="Client"/>
+		<PackageReference Include="Grpc.AspNetCore" Version="2.47.0"/>
 	</ItemGroup>
 </Project>

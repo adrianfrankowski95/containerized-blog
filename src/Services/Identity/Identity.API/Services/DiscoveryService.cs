@@ -1,7 +1,6 @@
 using Blog.Services.Discovery.API.Grpc;
-using Blog.Services.Identity.API.Services;
 
-namespace Blog.Gateways.WebGateway.API.Services;
+namespace Blog.Services.Identity.API.Services;
 
 public class DiscoveryService : IDiscoveryService
 {
@@ -14,18 +13,22 @@ public class DiscoveryService : IDiscoveryService
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task<string> GetAddressOfServiceTypeAsync(string serviceType);
+    public async Task<string> GetAddressOfServiceTypeAsync(string serviceType)
     {
-        _logger.LogInformation("----- Sending grpc request get service type instances info to discovery service, serviceType: {ServiceType}", serviceType);
+        if (string.IsNullOrWhiteSpace(serviceType))
+            throw new ArgumentNullException(nameof(serviceType));
 
-        var response = await _client.GetServiceInstancesOfTypeAsync(
-            new GetServiceInstancesOfTypeRequest { ServiceType = serviceType })
+        _logger.LogInformation("----- Sending grpc request Get Address of Service Type to discovery service, serviceType: {ServiceType}", serviceType);
+
+        var response = await _client.GetAddressOfServiceTypeAsync(
+            new GetAddressOfServiceTypeRequest { ServiceType = serviceType })
             .ConfigureAwait(false);
 
-        _logger.LogInformation("----- Received grpc request get service type instances info response: {Response}",
-            string.Join("; ", response.ServiceInstances.Select(x => $"{x.ServiceType} - {x.InstanceId}: {string.Join(", ", x.Addresses)}")));
+        if (response is null || string.IsNullOrWhiteSpace(response.Address))
+            throw new InvalidDataException($"Error retrieving service address of type {serviceType} from Discovery Grpc service");
 
-        return response.ServiceInstances.Select(x =>
-            new Models.ServiceInstance(Guid.Parse(x.InstanceId), x.Addresses.ToHashSet())).ToHashSet();
+        _logger.LogInformation("----- Received grpc request Get Address of Service Type response: {Response}", response.Address);
+
+        return response.Address;
     }
 }

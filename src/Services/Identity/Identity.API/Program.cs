@@ -1,3 +1,4 @@
+using Blog.Services.Discovery.API.Grpc;
 using Blog.Services.Identity.API.Adapters;
 using Blog.Services.Identity.API.Configs;
 using Blog.Services.Identity.API.Core;
@@ -5,6 +6,7 @@ using Blog.Services.Identity.API.Infrastructure;
 using Blog.Services.Identity.API.Models;
 using Blog.Services.Identity.API.Services;
 using MassTransit;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 var env = builder.Environment;
