@@ -23,6 +23,15 @@ public class ServiceInstanceHeartbeatEventConsumer : IConsumer<ServiceInstanceHe
         string serviceType = context.Message.ServiceType;
         HashSet<string> addresses = context.Message.ServiceAddresses;
 
+        if (instanceId.Equals(Guid.Empty))
+            throw new InvalidDataException($"{nameof(context.Message.InstanceId)} must not be empty");
+
+        if (string.IsNullOrWhiteSpace(serviceType))
+            throw new InvalidDataException($"{nameof(context.Message.ServiceType)} must not be null or empty");
+
+        if (addresses is null || !addresses.Any())
+            throw new InvalidDataException($"{nameof(context.Message.ServiceAddresses)} must not be null or empty");
+
         string addressesString = string.Join("; ", addresses);
 
         _logger.LogInformation("----- Handling {ServiceType} instance heartbeat event: {InstanceId} - {Addresses}", serviceType, instanceId, addressesString);

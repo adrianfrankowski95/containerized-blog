@@ -87,15 +87,8 @@ static class ServiceCollectionExtensions
         services.TryAddSingleton<IProxyConfigProvider>(sp =>
         {
             var discoveryService = sp.GetRequiredService<IDiscoveryService>();
-
-            var configProvider = InMemoryProxyConfigProvider.InitializeFromDiscoveryServiceAsync(discoveryService)
-                .GetAwaiter()
-                .GetResult();
-
-            return configProvider;
+            return InMemoryProxyConfigProvider.LoadFromDiscoveryService(discoveryService);
         });
-
-        services.TryAddSingleton<IInMemoryProxyConfigProvider>(sp => sp.GetRequiredService<InMemoryProxyConfigProvider>());
 
         services.AddReverseProxy();
 

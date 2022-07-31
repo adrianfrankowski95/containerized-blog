@@ -16,6 +16,9 @@ public class DiscoveryService : IDiscoveryService
 
     public async Task<HashSet<Models.ServiceInstance>> GetServiceInstancesOfTypeAsync(string serviceType)
     {
+        if (string.IsNullOrWhiteSpace(serviceType))
+            throw new ArgumentNullException(nameof(serviceType));
+
         _logger.LogInformation("----- Sending grpc request get service type instances info to discovery service, serviceType: {ServiceType}", serviceType);
 
         var response = await _client.GetServiceInstancesOfTypeAsync(

@@ -25,13 +25,13 @@ public class ServiceInstanceStartedEventConsumer : IConsumer<ServiceInstanceStar
         HashSet<string> addresses = context.Message.ServiceAddresses;
 
         if (instanceId.Equals(Guid.Empty))
-            throw new ArgumentNullException(nameof(context.Message.InstanceId));
+            throw new InvalidDataException($"{nameof(context.Message.InstanceId)} must not be empty");
 
         if (string.IsNullOrWhiteSpace(serviceType))
-            throw new ArgumentNullException(nameof(context.Message.ServiceType));
+            throw new InvalidDataException($"{nameof(context.Message.ServiceType)} must not be null or empty");
 
         if (addresses is null || !addresses.Any())
-            throw new ArgumentNullException(nameof(context.Message.ServiceAddresses));
+            throw new InvalidDataException($"{nameof(context.Message.ServiceAddresses)} must not be null or empty");
 
         string AddressesString = string.Join("; ", addresses);
 

@@ -84,6 +84,23 @@ internal static class ServiceCollectionExtensions
         return services;
     }
 
+    public static IServiceCollection AddGrpcDiscoveryService(this IServiceCollection services, IConfiguration config)
+    {
+        var address = config.GetRequiredSection(UrlsConfig.Section).Get<UrlsConfig>().DiscoveryService;
+
+        if (string.IsNullOrWhiteSpace(address))
+            throw new InvalidOperationException($"{nameof(UrlsConfig.DiscoveryService)} URL must not be null");
+
+        services.AddGrpcClient<GrpcDiscoveryService.GrpcDiscoveryServiceClient>(opts =>
+        {
+            opts.Address = new Uri(address);
+        });
+
+        services.TryAddTransient<IDiscoveryService, DiscoveryService>();
+
+        return services;
+    }
+
     public static IServiceCollection AddMassTransitRabbitMqBus(this IServiceCollection services, IConfiguration config)
     {
         services.AddMassTransit(x =>

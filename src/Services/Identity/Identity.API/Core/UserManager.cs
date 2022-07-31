@@ -368,14 +368,14 @@ public class UserManager<TUser> where TUser : User
         var allowedChars = _passwordOptions.CurrentValue.PasswordResetCodeAllowedCharacters;
 
         if (string.IsNullOrEmpty(allowedChars))
-            throw new ArgumentNullException(nameof(allowedChars));
+            throw new InvalidDataException("Error generating password reset code");
 
         var rnd = Random.Shared;
         var code = new char[length];
 
         for (int i = 0; i < length; ++i)
         {
-            code[i] = allowedChars[rnd.Next(0, allowedChars.Length - 1)];
+            code[i] = allowedChars[rnd.Next(0, allowedChars.Length)];
         }
 
         return new string(code);

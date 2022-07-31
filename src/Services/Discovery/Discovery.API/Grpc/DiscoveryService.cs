@@ -23,6 +23,9 @@ public class DiscoveryService : GrpcDiscoveryService.GrpcDiscoveryServiceBase
 
         var serviceInstances = await _serviceRegistry.GetServiceInstancesOfType(request.ServiceType).ConfigureAwait(false);
 
+        if (serviceInstances is null || serviceInstances.Count == 0)
+            throw new InvalidDataException($"Error retreiving {request.ServiceType} instances data");
+
         _logger.LogInformation("----- Successfully fetched following {ServiceType} data from registry: {Data}",
             request.ServiceType, string.Join("; ", serviceInstances.Select(x => $"instance ID: {x.InstanceId}, addresses: {string.Join("; ", x.Addresses)}")));
 
@@ -43,6 +46,9 @@ public class DiscoveryService : GrpcDiscoveryService.GrpcDiscoveryServiceBase
 
         var serviceInstances = await _serviceRegistry.GetAllServiceInstances().ConfigureAwait(false);
 
+        if (serviceInstances is null || serviceInstances.Count == 0)
+            throw new InvalidDataException($"Error retreiving all service instances data");
+
         _logger.LogInformation("----- Successfully fetched following service instances data: {Data}",
             string.Join("; ", serviceInstances.Select(x => $"service type: {x.ServiceType}, instance ID: {x.InstanceId}, addresses: {string.Join("; ", x.Addresses)}")));
 
@@ -54,6 +60,29 @@ public class DiscoveryService : GrpcDiscoveryService.GrpcDiscoveryServiceBase
                 ServiceType = x.ServiceType,
                 Addresses = { x.Addresses }
             })}
+        };
+    }
+
+    public override async Task<GetAddressOfServiceTypeResponse> GetAddressOfServiceType(GetAddressOfServiceTypeRequest request, ServerCallContext context)
+    {
+        _logger.LogInformation("----- Handling Grpc Get Address Of Service Type request");
+
+        var serviceInstances = await _serviceRegistry.GetServiceInstancesOfType(request.ServiceType).ConfigureAwait(false);
+
+        if (serviceInstances is null || serviceInstances.Count == 0)
+            throw new InvalidDataException($"Error retreiving {request.ServiceType} instances data");
+
+        _logger.LogInformation("----- Successfully fetched following service instances data: {Data}",
+            string.Join("; ", serviceInstances.Select(x => $"service type: {x.ServiceType}, instance ID: {x.InstanceId}, addresses: {string.Join("; ", x.Addresses)}")));
+
+        var serviceInstance = serviceInstances[Random.Shared.Next(0, serviceInstances.Count)];
+
+        if (serviceInstance is null || serviceInstance.Addresses is null || serviceInstance.Addresses.Count == 0)
+            throw new InvalidDataException($"Error retreiving {request.ServiceType} addresses");
+
+        return new GetAddressOfServiceTypeResponse
+        {
+            Address = serviceInstance.Addresses.ElementAt(Random.Shared.Next(0, serviceInstance.Addresses.Count))
         };
     }
 }
