@@ -1,12 +1,12 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
+#nullable disable
+
 using System.ComponentModel.DataAnnotations;
 using System.Text;
 using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Models;
-using Blog.Services.Messaging.Requests;
-using Blog.Services.Messaging.Responses;
-using MassTransit;
+using Blog.Services.Identity.API.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
@@ -20,7 +20,7 @@ public class RegisterModel : PageModel
     private readonly UserManager<User> _userManager;
     private readonly ISignInManager<User> _signInManager;
     private readonly IOptionsMonitor<EmailOptions> _emailOptions;
-    private readonly IRequestClient<SendEmailConfirmationEmailRequest> _emailSender;
+    private readonly IEmailingService _emailingService;
     private readonly ISysTime _sysTime;
     private readonly ILogger<RegisterModel> _logger;
 
@@ -28,14 +28,14 @@ public class RegisterModel : PageModel
         UserManager<User> userManager,
         ISignInManager<User> signInManager,
         IOptionsMonitor<EmailOptions> emailOptions,
-        IRequestClient<SendEmailConfirmationEmailRequest> emailSender,
+        IEmailingService emailingService,
         ISysTime sysTime,
         ILogger<RegisterModel> logger)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _emailOptions = emailOptions;
-        _emailSender = emailSender;
+        _emailingService = emailingService;
         _sysTime = sysTime;
         _logger = logger;
     }
@@ -116,20 +116,16 @@ public class RegisterModel : PageModel
                 values: new { userId = user.Id, code, returnUrl },
                 protocol: Request.Scheme);
 
-            var response = await _emailSender.GetResponse<SendEmailConfirmationEmailResponse>(
-                    new(Username: user.FullName,
-                        EmailAddress: user.EmailAddress,
-                        CallbackUrl: callbackUrl,
-                        UrlValidUntil: _sysTime.Now.Plus(Duration.FromTimeSpan(_emailOptions.CurrentValue.EmailConfirmationCodeValidityPeriod))));
+            var isSuccess = await _emailingService.SendEmailConfirmationEmailAsync(
+                    user.FullName,
+                    user.EmailAddress,
+                    callbackUrl,
+                    _sysTime.Now.Plus(Duration.FromTimeSpan(_emailOptions.CurrentValue.EmailConfirmationCodeValidityPeriod)));
 
-            if (!response.Message.Success)
+            if (!isSuccess)
             {
                 return RedirectToPage("./EmailConfirmationSendError");
             }
-
-            // await _emailSender.SendEmailAsync(Input.Email, "Confirm your email",
-            //     $"Please confirm your email by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>." +
-            //     $"<br><br>This link will expire at {_sysTime.Now.Plus(Duration.FromTimeSpan(_emailOptions.CurrentValue.EmailConfirmationCodeValidityPeriod)).ToString("dddd, dd mmmm yyyy HH:mm:ss", DateTimeFormatInfo.InvariantInfo)}.");
 
             if (_emailOptions.CurrentValue.RequireConfirmed)
             {

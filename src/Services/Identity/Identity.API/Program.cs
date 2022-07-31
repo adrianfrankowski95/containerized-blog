@@ -33,6 +33,8 @@ services
     .AddInstanceConfig()
     .AddCustomIdentityInfrastructure<User, Role>(config)
     .AddMassTransitRabbitMqBus(config)
+    .AddGrpcDiscoveryService(config)
+    .AddGrpcEmailingService()
     .AddCustomIdentityCore<User>()
     .AddCustomIdentityCoreAdapters()
     .AddCustomServices();
@@ -99,6 +101,19 @@ internal static class ServiceCollectionExtensions
         });
 
         services.TryAddTransient<IDiscoveryService, DiscoveryService>();
+
+        return services;
+    }
+
+    public static IServiceCollection AddGrpcEmailingService(this IServiceCollection services)
+    {
+        services.AddGrpcClient<GrpcDiscoveryService.GrpcDiscoveryServiceClient>((sp, opts) =>
+        {
+            var discoveryService = sp.GetRequiredService<IDiscoveryService>();
+            opts.Address = new Uri(discoveryService.GetAddressOfServiceTypeAsync("emailing-api").GetAwaiter().GetResult());
+        });
+
+        services.TryAddTransient<IEmailingService, EmailingService>();
 
         return services;
     }

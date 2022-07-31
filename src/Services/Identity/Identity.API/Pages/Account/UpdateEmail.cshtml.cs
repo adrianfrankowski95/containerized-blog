@@ -7,9 +7,7 @@ using System.Text;
 using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Infrastructure.Validation;
 using Blog.Services.Identity.API.Models;
-using Blog.Services.Messaging.Requests;
-using Blog.Services.Messaging.Responses;
-using MassTransit;
+using Blog.Services.Identity.API.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
@@ -22,21 +20,21 @@ public class UpdateEmailModel : PageModel
 {
     private readonly UserManager<User> _userManager;
     private readonly IOptionsMonitor<EmailOptions> _emailOptions;
-    private readonly IRequestClient<SendEmailConfirmationEmailRequest> _emailSender;
+    private readonly IEmailingService _emailingService;
     private readonly ISysTime _sysTime;
     private readonly ILogger<UpdateEmailModel> _logger;
 
     public UpdateEmailModel(
         UserManager<User> userManager,
         IOptionsMonitor<EmailOptions> emailOptions,
-        IRequestClient<SendEmailConfirmationEmailRequest> emailSender,
+        IEmailingService emailingService,
         ISysTime sysTime,
         ILogger<UpdateEmailModel> logger)
     {
         _userManager = userManager;
         _emailOptions = emailOptions;
         _sysTime = sysTime;
-        _emailSender = emailSender;
+        _emailingService = emailingService;
         _logger = logger;
     }
 
@@ -144,13 +142,13 @@ public class UpdateEmailModel : PageModel
                 values: new { userId = user.Id, code },
                 protocol: Request.Scheme);
 
-            var response = await _emailSender.GetResponse<SendEmailConfirmationEmailResponse>(
-                    new(Username: user.FullName,
-                        EmailAddress: user.EmailAddress,
-                        CallbackUrl: callbackUrl,
-                        UrlValidUntil: _sysTime.Now.Plus(Duration.FromTimeSpan(_emailOptions.CurrentValue.EmailConfirmationCodeValidityPeriod))));
+            var isSuccess = await _emailingService.SendEmailConfirmationEmailAsync(
+                    user.FullName,
+                    user.EmailAddress,
+                    callbackUrl,
+                    _sysTime.Now.Plus(Duration.FromTimeSpan(_emailOptions.CurrentValue.EmailConfirmationCodeValidityPeriod)));
 
-            if (!response.Message.Success)
+            if (!isSuccess)
             {
                 StatusMessage = "Error sending an email. Please try again later.";
                 return RedirectToPage();

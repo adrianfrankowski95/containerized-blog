@@ -2,14 +2,11 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 #nullable disable
 
-
 using System.ComponentModel.DataAnnotations;
 using System.Text;
 using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Models;
-using Blog.Services.Messaging.Requests;
-using Blog.Services.Messaging.Responses;
-using MassTransit;
+using Blog.Services.Identity.API.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
@@ -22,19 +19,19 @@ public class ForgotPasswordModel : PageModel
 {
     private readonly UserManager<User> _userManager;
     private readonly IOptionsMonitor<PasswordOptions> _passwordOptions;
-    private readonly IRequestClient<SendPasswordResetEmailRequest> _emailSender;
+    private readonly IEmailingService _emailingService;
     private readonly ILogger<ForgotPasswordModel> _logger;
     private readonly ISysTime _sysTime;
 
     public ForgotPasswordModel(
         UserManager<User> userManager,
         IOptionsMonitor<PasswordOptions> passwordOptions,
-        IRequestClient<SendPasswordResetEmailRequest> emailSender,
+        IEmailingService emailingService,
         ILogger<ForgotPasswordModel> logger,
         ISysTime sysTime)
     {
         _userManager = userManager;
-        _emailSender = emailSender;
+        _emailingService = emailingService;
         _passwordOptions = passwordOptions;
         _logger = logger;
         _sysTime = sysTime;
@@ -45,7 +42,6 @@ public class ForgotPasswordModel : PageModel
 
     [BindProperty]
     public InputModel Input { get; set; }
-
 
     public class InputModel
     {
@@ -77,13 +73,13 @@ public class ForgotPasswordModel : PageModel
                     values: new { code },
                     protocol: Request.Scheme);
 
-                var response = await _emailSender.GetResponse<SendPasswordResetEmailResponse>(
-                    new(Username: user.FullName,
-                        EmailAddress: user.EmailAddress,
-                        CallbackUrl: callbackUrl,
-                        UrlValidUntil: _sysTime.Now.Plus(Duration.FromTimeSpan(_passwordOptions.CurrentValue.PasswordResetCodeValidityPeriod))));
+                var isSuccess = await _emailingService.SendPasswordResetEmailAsync(
+                    user.FullName,
+                    user.EmailAddress,
+                    callbackUrl,
+                    _sysTime.Now.Plus(Duration.FromTimeSpan(_passwordOptions.CurrentValue.PasswordResetCodeValidityPeriod)));
 
-                if (!response.Message.Success)
+                if (!isSuccess)
                 {
                     StatusMessage = "Error sending an email. Please try again later.";
                     return RedirectToPage();
