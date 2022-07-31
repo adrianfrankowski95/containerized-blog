@@ -18,6 +18,8 @@
 		<PackageReference Include="MassTransit.RabbitMQ" Version="8.0.5"/>
 		<PackageReference Include="MassTransit" Version="8.0.5"/>
 		<Protobuf Include="..\..\Discovery\Discovery.API\Protos\discovery.proto" GrpcServices="Client"/>
+		<Protobuf Include="..\..\Emailing\Emailing.API\Protos\emailing.proto" GrpcServices="Client"/>
 		<PackageReference Include="Grpc.AspNetCore" Version="2.47.0"/>
+		<PackageReference Include="NodaTime.Serialization.Protobuf" Version="2.0.0"/>
 	</ItemGroup>
 </Project>
