@@ -17,7 +17,7 @@ builder.Configuration.AddConfiguration(config);
 var services = builder.Services;
 
 // Add services to the container.
-services.AddLogging();
+services.AddLogging(opts => opts.AddConsole()); ;
 services.AddRazorPages(opts =>
 {
     opts.RootDirectory = "./Templates";
@@ -43,6 +43,8 @@ var app = builder.Build();
 
 app.UseStaticFiles(); //html, css, images, js in wwwroot folder
 app.UseCors();
+
+app.UseRouting();
 
 app.UseEndpoints(opts =>
 {

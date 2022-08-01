@@ -6,17 +6,19 @@ WORKDIR /app
 EXPOSE 7001
 
 # copy csproj and restore as distinct layers
-COPY *.csproj ./
-RUN dotnet restore
+WORKDIR /src
+COPY ["Services/Discovery/Discovery.API/Discovery.API.csproj", "Services/Discovery/Discovery.API/"]
+RUN dotnet restore "Services/Discovery/Discovery.API/Discovery.API.csproj"
 
 # copy everything else and build app
-COPY . ./
-RUN dotnet publish -c release -o /app --no-restore
+COPY . .
+WORKDIR "/src/Services/Discovery/Discovery.API"
+RUN dotnet publish "Discovery.API.csproj" -c Release -o /app
 
 # final stage/image
 FROM mcr.microsoft.com/dotnet/aspnet:6.0
 WORKDIR /app
-COPY --from=build /app ./
+COPY --from=build /app .
 
 ENV DOTNET_EnableDiagnostics=0
 

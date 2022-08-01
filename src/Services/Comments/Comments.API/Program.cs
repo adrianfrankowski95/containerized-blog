@@ -12,7 +12,7 @@ builder.Configuration.AddConfiguration(config);
 var services = builder.Services;
 
 // Add services to the container.
-services.AddLogging();
+services.AddLogging(opts => opts.AddConsole()); ;
 services.AddCors(opts =>
 {
     opts.AddDefaultPolicy(
