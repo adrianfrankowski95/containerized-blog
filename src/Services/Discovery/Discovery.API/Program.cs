@@ -17,7 +17,7 @@ builder.Configuration.AddConfiguration(config);
 var services = builder.Services;
 
 // Add services to the container.
-services.AddLogging();
+services.AddLogging(opts => opts.AddConsole()); ;
 services.AddCors(opts =>
 {
     opts.AddDefaultPolicy(
@@ -65,12 +65,6 @@ internal static class ServiceCollectionExtensions
 
             x.UsingRabbitMq((context, cfg) =>
             {
-                services
-                    .AddOptions<RabbitMqConfig>()
-                    .Bind(config.GetRequiredSection(RabbitMqConfig.Section))
-                    .ValidateDataAnnotations()
-                    .ValidateOnStart();
-
                 var rabbitMqConfig = config.GetRequiredSection(RabbitMqConfig.Section).Get<RabbitMqConfig>();
 
                 cfg.Host(rabbitMqConfig.Host, rabbitMqConfig.Port, rabbitMqConfig.VirtualHost, opts =>
