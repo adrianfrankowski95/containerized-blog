@@ -28,8 +28,8 @@ public abstract class PostBase : Entity<PostId>, IAggregateRoot, IValidatable
         IEnumerable<PostTranslationBase> translations,
         string headerImgUrl)
     {
-        if (!author.Role.Equals(UserRole.Blogger) && !author.Role.Equals(UserRole.Administrator))
-            throw new BloggingDomainException($"Only {nameof(UserRole.Blogger)} and {nameof(UserRole.Administrator)} can create Post");
+        if (!author.Role.Equals(UserRole.Author) && !author.Role.Equals(UserRole.Administrator))
+            throw new BloggingDomainException($"Only {nameof(UserRole.Author)} and {nameof(UserRole.Administrator)} can create Post");
 
         if (EditedAt != null)
             throw new BloggingDomainException($"New Post cannot be edited before");
@@ -69,16 +69,16 @@ public abstract class PostBase : Entity<PostId>, IAggregateRoot, IValidatable
         IEnumerable<PostTranslationBase> newTranslations,
         string newHeaderImgUrl)
     {
-        if (!editor.Role.Equals(UserRole.Blogger) && !editor.Role.Equals(UserRole.Administrator))
-            throw new BloggingDomainException($"Only {nameof(UserRole.Blogger)} and {nameof(UserRole.Administrator)} can edit Post");
+        if (!editor.Role.Equals(UserRole.Author) && !editor.Role.Equals(UserRole.Administrator))
+            throw new BloggingDomainException($"Only {nameof(UserRole.Author)} and {nameof(UserRole.Administrator)} can edit Post");
 
-        if (editor.Role.Equals(UserRole.Blogger))
+        if (editor.Role.Equals(UserRole.Author))
         {
             if (!editor.Id.Equals(Author.Id))
                 throw new BloggingDomainException($"Only Author can edit his Post");
 
             if (Status.Equals(PostStatus.Deleted))
-                throw new BloggingDomainException($"{nameof(PostStatus.Deleted)} Post cannot be edited by {nameof(UserRole.Blogger)}");
+                throw new BloggingDomainException($"{nameof(PostStatus.Deleted)} Post cannot be edited by {nameof(UserRole.Author)}");
         }
 
         if (newTranslations.ContainsDuplicatedLanguages())
@@ -115,16 +115,16 @@ public abstract class PostBase : Entity<PostId>, IAggregateRoot, IValidatable
 
     public virtual void ToDraftBy(User user)
     {
-        if (!user.Role.Equals(UserRole.Blogger) && !user.Role.Equals(UserRole.Administrator))
-            throw new BloggingDomainException($"Only {nameof(UserRole.Blogger)} and {nameof(UserRole.Administrator)} can set Post back to draft");
+        if (!user.Role.Equals(UserRole.Author) && !user.Role.Equals(UserRole.Administrator))
+            throw new BloggingDomainException($"Only {nameof(UserRole.Author)} and {nameof(UserRole.Administrator)} can set Post back to draft");
 
-        if (user.Role.Equals(UserRole.Blogger))
+        if (user.Role.Equals(UserRole.Author))
         {
             if (!user.Id.Equals(Author.Id))
                 throw new BloggingDomainException($"Only Author can set his Post back to draft");
 
             if (Status.Equals(PostStatus.Deleted))
-                throw new BloggingDomainException($"{nameof(PostStatus.Deleted)} Post cannot be set back to draft by {nameof(UserRole.Blogger)}");
+                throw new BloggingDomainException($"{nameof(PostStatus.Deleted)} Post cannot be set back to draft by {nameof(UserRole.Author)}");
         }
 
         Status = PostStatus.Draft;
@@ -144,8 +144,8 @@ public abstract class PostBase : Entity<PostId>, IAggregateRoot, IValidatable
 
     public virtual void SubmitBy(User user)
     {
-        if (!user.Role.Equals(UserRole.Blogger))
-            throw new BloggingDomainException($"Only {nameof(UserRole.Blogger)} can submit Post");
+        if (!user.Role.Equals(UserRole.Author))
+            throw new BloggingDomainException($"Only {nameof(UserRole.Author)} can submit Post");
 
         if (!user.Id.Equals(Author.Id))
             throw new BloggingDomainException($"Only Author can submit Post");

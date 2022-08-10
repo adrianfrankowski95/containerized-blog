@@ -6,7 +6,7 @@ namespace Blog.Services.Identity.API.Infrastructure.Repositories;
 
 public class EfUserRepository<TUser, TRole> : IUserRepository<TUser>
     where TUser : User
-    where TRole : Role
+    where TRole : UserRole
 {
     private readonly DbSet<TUser> _users;
 

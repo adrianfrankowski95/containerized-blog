@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace Blog.Services.Identity.API.Infrastructure.EntityConfigurations;
 
-public class RoleEntityConfiguration<TRole> : IEntityTypeConfiguration<TRole> where TRole : Role
+public class RoleEntityConfiguration<TRole> : IEntityTypeConfiguration<TRole> where TRole : UserRole
 {
     public void Configure(EntityTypeBuilder<TRole> builder)
     {
