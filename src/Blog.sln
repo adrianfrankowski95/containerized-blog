@@ -37,6 +37,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Discovery", "Discovery", "{
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Discovery.API", "Services\Discovery\Discovery.API\Discovery.API.csproj", "{29E5E407-3D04-4029-8838-EDA9634F3088}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Identity.Domain", "Services\Identity\Identity.Domain\Identity.Domain.csproj", "{5DE999C0-6E2C-4CA9-A065-F3CD560532D1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Identity.Infrastructure", "Services\Identity\Identity.Infrastructure\Identity.Infrastructure.csproj", "{855EF3CC-F283-4F4C-ACB7-A7E9C5B88AAA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -79,6 +83,14 @@ Global
 		{29E5E407-3D04-4029-8838-EDA9634F3088}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{29E5E407-3D04-4029-8838-EDA9634F3088}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{29E5E407-3D04-4029-8838-EDA9634F3088}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5DE999C0-6E2C-4CA9-A065-F3CD560532D1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5DE999C0-6E2C-4CA9-A065-F3CD560532D1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5DE999C0-6E2C-4CA9-A065-F3CD560532D1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5DE999C0-6E2C-4CA9-A065-F3CD560532D1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{855EF3CC-F283-4F4C-ACB7-A7E9C5B88AAA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{855EF3CC-F283-4F4C-ACB7-A7E9C5B88AAA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{855EF3CC-F283-4F4C-ACB7-A7E9C5B88AAA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{855EF3CC-F283-4F4C-ACB7-A7E9C5B88AAA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -99,6 +111,8 @@ Global
 		{CC65613C-0CC6-45F0-9587-8BAFE31B7CEF} = {8EC96C95-B340-4214-97A3-AF127ADA8B65}
 		{0267C44D-5C3B-4211-B35E-7032149ECF07} = {14C6DD11-FD06-4A05-8886-F3477F9EF436}
 		{29E5E407-3D04-4029-8838-EDA9634F3088} = {0267C44D-5C3B-4211-B35E-7032149ECF07}
+		{5DE999C0-6E2C-4CA9-A065-F3CD560532D1} = {84BCF21C-67D9-48DE-8C44-BC5DAFBE12BE}
+		{855EF3CC-F283-4F4C-ACB7-A7E9C5B88AAA} = {84BCF21C-67D9-48DE-8C44-BC5DAFBE12BE}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {61FC2AD3-FD08-4F32-A1F9-8D08B3731704}

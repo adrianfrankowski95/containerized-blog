@@ -51,7 +51,7 @@ public class UserEntityConfiguration<TUser> : IEntityTypeConfiguration<TUser> wh
             .HasColumnType("varchar(25)")
             .HasConversion(
                 x => x.Name,
-                x => Role.FromName(x));
+                x => UserRole.FromName(x));
 
         builder
             .HasOne(x => x.Role)

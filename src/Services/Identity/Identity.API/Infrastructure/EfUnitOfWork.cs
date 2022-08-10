@@ -5,7 +5,7 @@ namespace Blog.Services.Identity.API.Infrastructure;
 
 public class EfUnitOfWork<TUser, TRole> : IUnitOfWork<TUser>, IAsyncDisposable, IDisposable
     where TUser : User
-    where TRole : Role
+    where TRole : UserRole
 {
     public IUserRepository<TUser> Users { get; }
     private readonly IdentityDbContext<TUser, TRole> _ctx;

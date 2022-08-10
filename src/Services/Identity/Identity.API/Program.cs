@@ -7,6 +7,7 @@ using Blog.Services.Identity.API.Models;
 using Blog.Services.Identity.API.Services;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using NodaTime;
 
 var builder = WebApplication.CreateBuilder(args);
 var env = builder.Environment;
@@ -31,7 +32,8 @@ services.AddCors(opts =>
 
 services
     .AddInstanceConfig()
-    .AddCustomIdentityInfrastructure<User, Role>(config)
+    .AddNodaTime()
+    .AddCustomIdentityInfrastructure<User, UserRole>(config)
     .AddMassTransitRabbitMqBus(config)
     .AddGrpcDiscoveryService(config)
     .AddGrpcEmailingService()
@@ -152,6 +154,13 @@ internal static class ServiceCollectionExtensions
             .ValidateOnStart();
 
         services.AddHostedService<RabbitMqLifetimeEventsPublisher>();
+
+        return services;
+    }
+
+    public static IServiceCollection AddNodaTime(this IServiceCollection services)
+    {
+        services.TryAddSingleton<IClock>(SystemClock.Instance);
 
         return services;
     }

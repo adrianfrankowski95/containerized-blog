@@ -33,7 +33,7 @@ public class User
     public NonEmptyString Username { get; set; }
     public NonEmptyString FirstName { get; set; }
     public NonEmptyString LastName { get; set; }
-    public Role Role { get; set; }
+    public UserRole Role { get; set; }
 
     [JsonIgnore]
     public NonEmptyString FullName => FirstName + " " + LastName;

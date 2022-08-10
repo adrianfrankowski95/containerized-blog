@@ -9,13 +9,13 @@ public sealed class UserRole : Enumeration
 
     public static readonly UserRole Reader = new(0, nameof(Reader).ToLowerInvariant());
     public static readonly UserRole Moderator = new(1, nameof(Moderator).ToLowerInvariant());
-    public static readonly UserRole Blogger = new(2, nameof(Blogger).ToLowerInvariant());
+    public static readonly UserRole Author = new(2, nameof(Author).ToLowerInvariant());
     public static readonly UserRole Administrator = new(3, nameof(Administrator).ToLowerInvariant());
 
     public static IEnumerable<UserRole> List() => new[] {
         Reader,
         Moderator,
-        Blogger,
+        Author,
         Administrator };
 
     public static UserRole FromName(string name)

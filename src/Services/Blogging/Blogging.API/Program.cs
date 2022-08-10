@@ -25,7 +25,7 @@ builder.Configuration.AddConfiguration(config);
 var services = builder.Services;
 
 // Add services to the container.
-services.AddLogging(opts => opts.AddConsole());
+services.AddLogging(opts => opts.AddConsole().AddDebug());
 services.AddCors(opts =>
 {
     opts.AddDefaultPolicy(

@@ -6,7 +6,7 @@ namespace Blog.Services.Identity.API.Infrastructure;
 
 public class IdentityDbContext<TUser, TRole> : DbContext
     where TUser : User
-    where TRole : Role
+    where TRole : UserRole
 {
     public DbSet<TUser> Users { get; set; }
 

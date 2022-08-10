@@ -129,7 +129,7 @@ public class PostsController : ControllerBase
         return Ok(result);
     }
 
-    [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Blogger))]
+    [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Author))]
     [HttpGet("{id:guid}")]
     [ProducesResponseType((int)HttpStatusCode.OK)]
     [ProducesResponseType((int)HttpStatusCode.BadRequest)]
@@ -146,7 +146,7 @@ public class PostsController : ControllerBase
         return Ok(result);
     }
 
-    [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Blogger))]
+    [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Author))]
     [HttpGet("author/{id:guid}")]
     [ProducesResponseType((int)HttpStatusCode.OK)]
     public ActionResult<IAsyncEnumerable<PaginatedPostPreviewsModel>> GetAllPreviewsFromAuthorAsync(
@@ -165,7 +165,7 @@ public class PostsController : ControllerBase
         return Ok(result);
     }
 
-    [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Blogger))]
+    [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Author))]
     [HttpPost($"{nameof(PostType.Lifestyle)}/draft")]
     [ProducesResponseType((int)HttpStatusCode.Created)]
     public async Task<IActionResult> CreateLifestylePostDraftAsync(
@@ -184,7 +184,7 @@ public class PostsController : ControllerBase
         return StatusCode((int)HttpStatusCode.Created);
     }
 
-    [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Blogger))]
+    [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Author))]
     [HttpPost($"{nameof(PostType.Recipe)}/draft")]
     [ProducesResponseType((int)HttpStatusCode.Created)]
     public async Task<IActionResult> CreateRecipePostDraftAsync(
@@ -203,7 +203,7 @@ public class PostsController : ControllerBase
         return StatusCode((int)HttpStatusCode.Created);
     }
 
-    [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Blogger))]
+    [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Author))]
     [HttpPost($"{nameof(PostType.RestaurantReview)}/draft")]
     [ProducesResponseType((int)HttpStatusCode.Created)]
     public async Task<IActionResult> CreateRestaurantReviewPostDraftAsync(
@@ -222,7 +222,7 @@ public class PostsController : ControllerBase
         return StatusCode((int)HttpStatusCode.Created);
     }
 
-    [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Blogger))]
+    [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Author))]
     [HttpPost($"{nameof(PostType.ProductReview)}/draft")]
     [ProducesResponseType((int)HttpStatusCode.Created)]
     public async Task<IActionResult> CreateProductReviewPostDraftAsync(
@@ -241,7 +241,7 @@ public class PostsController : ControllerBase
         return StatusCode((int)HttpStatusCode.Created);
     }
 
-    [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Blogger))]
+    [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Author))]
     [HttpPut($"{nameof(PostType.Lifestyle)}/draft")]
     [ProducesResponseType((int)HttpStatusCode.OK)]
     public async Task<IActionResult> UpdateLifestylePostDraftAsync(
@@ -254,7 +254,7 @@ public class PostsController : ControllerBase
         return Ok();
     }
 
-    [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Blogger))]
+    [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Author))]
     [HttpPut($"{nameof(PostType.Recipe)}/draft")]
     [ProducesResponseType((int)HttpStatusCode.OK)]
     public async Task<IActionResult> UpdateRecipePostDraftAsync(
@@ -267,7 +267,7 @@ public class PostsController : ControllerBase
         return Ok();
     }
 
-    [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Blogger))]
+    [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Author))]
     [HttpPut($"{nameof(PostType.RestaurantReview)}/draft")]
     [ProducesResponseType((int)HttpStatusCode.OK)]
     public async Task<IActionResult> UpdateRestaurantReviewPostDraftAsync(
@@ -280,7 +280,7 @@ public class PostsController : ControllerBase
         return Ok();
     }
 
-    [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Blogger))]
+    [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Author))]
     [HttpPut($"{nameof(PostType.ProductReview)}/draft")]
     [ProducesResponseType((int)HttpStatusCode.OK)]
     public async Task<IActionResult> UpdateProductReviewPostDraftAsync(
@@ -425,7 +425,7 @@ public class PostsController : ControllerBase
         return Ok();
     }
 
-    [Authorize(Roles = nameof(UserRole.Blogger))]
+    [Authorize(Roles = nameof(UserRole.Author))]
     [HttpPost($"{nameof(PostType.Lifestyle)}/submit")]
     [ProducesResponseType((int)HttpStatusCode.Created)]
     [ProducesResponseType((int)HttpStatusCode.BadRequest)]
@@ -445,7 +445,7 @@ public class PostsController : ControllerBase
         return StatusCode((int)HttpStatusCode.Created);
     }
 
-    [Authorize(Roles = nameof(UserRole.Blogger))]
+    [Authorize(Roles = nameof(UserRole.Author))]
     [HttpPost($"{nameof(PostType.Recipe)}/submit")]
     [ProducesResponseType((int)HttpStatusCode.Created)]
     [ProducesResponseType((int)HttpStatusCode.BadRequest)]
@@ -465,7 +465,7 @@ public class PostsController : ControllerBase
         return StatusCode((int)HttpStatusCode.Created);
     }
 
-    [Authorize(Roles = nameof(UserRole.Blogger))]
+    [Authorize(Roles = nameof(UserRole.Author))]
     [HttpPost($"{nameof(PostType.RestaurantReview)}/submit")]
     [ProducesResponseType((int)HttpStatusCode.Created)]
     [ProducesResponseType((int)HttpStatusCode.BadRequest)]
@@ -485,7 +485,7 @@ public class PostsController : ControllerBase
         return StatusCode((int)HttpStatusCode.Created);
     }
 
-    [Authorize(Roles = nameof(UserRole.Blogger))]
+    [Authorize(Roles = nameof(UserRole.Author))]
     [HttpPost($"{nameof(PostType.ProductReview)}/submit")]
     [ProducesResponseType((int)HttpStatusCode.Created)]
     [ProducesResponseType((int)HttpStatusCode.BadRequest)]
@@ -505,7 +505,7 @@ public class PostsController : ControllerBase
         return StatusCode((int)HttpStatusCode.Created);
     }
 
-    [Authorize(Roles = nameof(UserRole.Blogger))]
+    [Authorize(Roles = nameof(UserRole.Author))]
     [HttpPut($"{nameof(PostType.Lifestyle)}/submit")]
     [ProducesResponseType((int)HttpStatusCode.OK)]
     public async Task<IActionResult> UpdateAndSubmitLifestylePostAsync(
@@ -518,7 +518,7 @@ public class PostsController : ControllerBase
         return Ok();
     }
 
-    [Authorize(Roles = nameof(UserRole.Blogger))]
+    [Authorize(Roles = nameof(UserRole.Author))]
     [HttpPut($"{nameof(PostType.Recipe)}/submit")]
     [ProducesResponseType((int)HttpStatusCode.OK)]
     public async Task<IActionResult> UpdateAndSubmitRecipePostAsync(
@@ -531,7 +531,7 @@ public class PostsController : ControllerBase
         return Ok();
     }
 
-    [Authorize(Roles = nameof(UserRole.Blogger))]
+    [Authorize(Roles = nameof(UserRole.Author))]
     [HttpPut($"{nameof(PostType.RestaurantReview)}/submit")]
     [ProducesResponseType((int)HttpStatusCode.OK)]
     public async Task<IActionResult> UpdateAndSubmitRestaurantReviewPostAsync(
@@ -544,7 +544,7 @@ public class PostsController : ControllerBase
         return Ok();
     }
 
-    [Authorize(Roles = nameof(UserRole.Blogger))]
+    [Authorize(Roles = nameof(UserRole.Author))]
     [HttpPut($"{nameof(PostType.ProductReview)}/submit")]
     [ProducesResponseType((int)HttpStatusCode.OK)]
     public async Task<IActionResult> UpdateAndSubmitProductReviewPostAsync(
@@ -583,7 +583,7 @@ public class PostsController : ControllerBase
         return Ok();
     }
 
-    [Authorize(Roles = nameof(UserRole.Blogger))]
+    [Authorize(Roles = nameof(UserRole.Author))]
     [HttpPut("submit")]
     [ProducesResponseType((int)HttpStatusCode.OK)]
     [ProducesResponseType((int)HttpStatusCode.BadRequest)]
@@ -613,7 +613,7 @@ public class PostsController : ControllerBase
         return Ok();
     }
 
-    [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Blogger))]
+    [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Author))]
     [HttpPut("setdraft")]
     [ProducesResponseType((int)HttpStatusCode.OK)]
     public async Task<IActionResult> SetPostToDraftAsync(

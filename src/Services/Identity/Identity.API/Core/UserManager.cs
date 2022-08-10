@@ -206,7 +206,7 @@ public class UserManager<TUser> where TUser : User
         if (!passwordValidationResult.Succeeded)
             return passwordValidationResult;
 
-        user.Role = Role.Reader;
+        user.Role = UserRole.Reader;
         user.CreatedAt = _sysTime.Now;
 
         user.FailedLoginAttempts = 0;
@@ -220,7 +220,7 @@ public class UserManager<TUser> where TUser : User
         return await GenerateEmailConfirmationAsync(user).ConfigureAwait(false);
     }
 
-    public Task<IdentityResult> UpdateRoleAsync(TUser user, Role role)
+    public Task<IdentityResult> UpdateRoleAsync(TUser user, UserRole role)
     {
         ThrowIfNull(user);
 
