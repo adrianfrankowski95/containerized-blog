@@ -6,10 +6,15 @@ public class PasswordHash : ValueObject<PasswordHash>
 {
     private readonly NonEmptyString _value;
 
-    public PasswordHash(Password password, IPasswordHasher passwordHasher)
+    private PasswordHash(NonEmptyString value)
     {
-        _value = passwordHasher.HashPassword(password);
+        _value = value;
     }
+
+    public static PasswordHash Create(Password password, IPasswordHasher passwordHasher)
+        => new(passwordHasher.HashPassword(password));
+        
+    public override string ToString() => _value;
 
     protected override IEnumerable<object> GetEqualityCheckAttributes()
     {

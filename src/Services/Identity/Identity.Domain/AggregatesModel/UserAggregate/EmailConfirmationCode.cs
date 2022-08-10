@@ -20,7 +20,7 @@ public class EmailConfirmationCode : ValueObject<EmailConfirmationCode>
         IssuedAt = SystemClock.Instance.GetCurrentInstant();
     }
 
-    public Guid? ToGuid() => _value;
+    //public Guid? ToGuid() => _value;
 
     public static EmailConfirmationCode NewCode() => new(Guid.NewGuid());
 
@@ -34,7 +34,18 @@ public class EmailConfirmationCode : ValueObject<EmailConfirmationCode>
         ? throw new IdentityDomainException("Error checking email confirmation code expiration.")
         : SystemClock.Instance.GetCurrentInstant() > IssuedAt?.Plus(_validityDuration);
 
-    public bool Verify(EmailConfirmationCode providedCode) => !IsEmpty() && !providedCode.IsEmpty() && !IsExpired() && Equals(providedCode);
+    public void Verify(EmailConfirmationCode providedCode)
+    {
+        // Don't reveal that the email confirmation code has not been requested
+        if(IsEmpty())
+            throw new IdentityDomainException("The email confirmation code is invalid.");
+
+        if(IsExpired())
+            throw new IdentityDomainException("The email confirmation code has expired.");
+
+        if(!Equals(providedCode))
+            throw new IdentityDomainException("The email confirmation code is invalid.");
+    }
 
     protected override IEnumerable<object> GetEqualityCheckAttributes()
     {

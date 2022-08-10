@@ -6,25 +6,25 @@ namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 
 public class Password : ValueObject<Password>
 {
-    private readonly static NonNegativeInt _length = 8;
+    // private readonly static NonNegativeInt _length = 8;
     private readonly NonEmptyString _value;
 
     public Password(NonEmptyString value)
     {
-        if (!value.Any(c => IsDigit(c)))
-            throw new IdentityDomainException("Password must contain at least one digit.");
+        // if (!value.Any(c => IsDigit(c)))
+        //     throw new IdentityDomainException("Password must contain at least one digit.");
 
-        if (!value.Any(c => IsUppercase(c)))
-            throw new IdentityDomainException("Password must contain at least one uppercase character.");
+        // if (!value.Any(c => IsUppercase(c)))
+        //     throw new IdentityDomainException("Password must contain at least one uppercase character.");
 
-        if (!value.Any(c => IsLowercase(c)))
-            throw new IdentityDomainException("Password must contain at least one lowercase character.");
+        // if (!value.Any(c => IsLowercase(c)))
+        //     throw new IdentityDomainException("Password must contain at least one lowercase character.");
 
-        if (!value.Any(c => IsNonAlphanumeric(c)))
-            throw new IdentityDomainException("Password must contain at least one non alphanumeric character.");
+        // if (!value.Any(c => IsNonAlphanumeric(c)))
+        //     throw new IdentityDomainException("Password must contain at least one non alphanumeric character.");
 
-        if (value.Length < _length)
-            throw new IdentityDomainException($"Password must be at least {_length} characters long.");
+        // if (value.Length < _length)
+        //     throw new IdentityDomainException($"Password must be at least {_length} characters long.");
 
         _value = value;
     }
@@ -37,8 +37,11 @@ public class Password : ValueObject<Password>
 
     private static bool IsNonAlphanumeric(char c) => !IsDigit(c) && !IsUppercase(c) && !IsLowercase(c);
 
-    public static implicit operator Password(NonEmptyString value) => new(value);
-    public static implicit operator NonEmptyString(Password value) => value._value;
+    public static implicit operator Password(string value) => new(value);
+    public static implicit operator string(Password value) => value._value;
+    // public override string ToString() => _value;
+    public bool Any(Func<char, bool> predicate) => _value.Any(predicate);
+    public NonNegativeInt Length => _value.Length;
 
     protected override IEnumerable<object> GetEqualityCheckAttributes()
     {
