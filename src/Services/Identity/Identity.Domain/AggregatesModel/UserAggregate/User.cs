@@ -34,56 +34,42 @@ public class User : Entity<UserId>, IAggregateRoot
         NonEmptyString username,
         NonEmptyString firstName,
         NonEmptyString lastName,
-        EmailAddress emailAddress
+        EmailAddress emailAddress,
+        bool receiveAdditionalEmails,
+        PasswordHash? passwordHash,
+        PasswordResetCode? passwordResetCode,
+        UserRole? userRole
     )
     {
+        if (passwordHash is not null && passwordResetCode is null)
+            throw new IdentityDomainException("Missing password reset code while creating user without password.");
+
         Username = username;
         FirstName = firstName;
         LastName = lastName;
         EmailAddress = emailAddress;
+        ReceiveAdditionalEmails = receiveAdditionalEmails;
+        PasswordHash = passwordHash;
 
-        FailedLoginAttempts = 0;  
-
+        Role = userRole ?? UserRole.DefaultRole();
+        FailedLoginAttempts = 0;
         CreatedAt = SystemClock.Instance.GetCurrentInstant();
-        Role = UserRole.DefaultRole();
 
-        PasswordResetCode = PasswordResetCode.EmptyCode();
+        PasswordResetCode = passwordHash is null ? PasswordResetCode.EmptyCode() : passwordResetCode!;
         EmailConfirmationCode = EmailConfirmationCode.NewCode();
         SecurityStamp = SecurityStamp.NewStamp();
     }
 
-    private User(
-        NonEmptyString username,
-        NonEmptyString firstName,
-        NonEmptyString lastName,
-        EmailAddress emailAddress,
-        UserRole userRole) : this(username, firstName, lastName, emailAddress)
-    {
-        Role = userRole;
-    }
-
-    private User(
-        NonEmptyString username,
-        PasswordHash passwordHash,
-        NonEmptyString firstName,
-        NonEmptyString lastName,
-        EmailAddress emailAddress,
-        bool receiveAdditionalEmails) : this(username, firstName, lastName, emailAddress)
-    {
-        PasswordHash = passwordHash;
-        ReceiveAdditionalEmails = receiveAdditionalEmails;
-    }
-
     public static User Create(
         NonEmptyString username,
-        PasswordHash passwordHash,
         NonEmptyString firstName,
         NonEmptyString lastName,
+        PasswordHash passwordHash,
         EmailAddress emailAddress,
         bool receiveAdditionalEmails)
-        // TODO:
-        // - issue user created event that will be consumed by emailing service
-            => new User(username, passwordHash, firstName, lastName, emailAddress, receiveAdditionalEmails);
+            // TODO:
+            // - issue user created event that will be consumed by emailing service
+            => new(username, firstName, lastName, emailAddress, receiveAdditionalEmails, passwordHash, null, null);
 
     public static User CreateBy(
         User currentUser,
@@ -97,7 +83,8 @@ public class User : Entity<UserId>, IAggregateRoot
         // - check if current user has permission to create users
         // and if provided role is allowed for current user's role
         // - issue user created event that will be consumed by emailing service
-        return new User(username, firstName, lastName, emailAddress, role);
+        var code = PasswordResetCode.NewCode();
+        return new User(username, firstName, lastName, emailAddress, false, null, code, role);
     }
 
     private void ConfirmEmailAddress() => EmailAddress = EmailAddress.Confirm();
@@ -110,7 +97,7 @@ public class User : Entity<UserId>, IAggregateRoot
     private void RefreshSecurityStamp() => SecurityStamp = SecurityStamp.NewStamp();
     private void DisallowIfSuspended()
     {
-        if(IsSuspended)
+        if (IsSuspended)
             throw new IdentityDomainException($"Account is suspended until {SuspendedUntil.ToString()}.");
     }
     public void ConfirmEmailAddress(EmailConfirmationCode providedCode)
@@ -119,7 +106,7 @@ public class User : Entity<UserId>, IAggregateRoot
         ConfirmEmailAddress();
         ClearEmailConfirmationCode();
     }
-    
+
     public void ResetPassword()
     {
         // TODO:
@@ -135,7 +122,7 @@ public class User : Entity<UserId>, IAggregateRoot
         // - issue password updated event that will be consumed by emailing service
         PasswordResetCode.Verify(providedCode);
         UpdatePasswordHash(passwordHash);
-        ClearPasswordResetCode();      
+        ClearPasswordResetCode();
         RefreshSecurityStamp();
     }
 }
@@ -153,6 +140,6 @@ public class UserId
     {
         Value = guid;
     }
-    
+
     public static UserId FromGuid(Guid guid) => new(guid);
 }
