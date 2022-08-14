@@ -8,9 +8,7 @@ namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 public class User : Entity<UserId>, IAggregateRoot
 {
     public Username Username { get; }
-    public NonEmptyString FirstName { get; }
-    public NonEmptyString LastName { get; }
-    public NonEmptyString FullName => FirstName + " " + LastName;
+    public FullName FullName { get; }
     public EmailAddress EmailAddress { get; private set; }
     public bool ReceiveAdditionalEmails { get; }
     public UserRole Role { get; private set; }
@@ -26,27 +24,34 @@ public class User : Entity<UserId>, IAggregateRoot
 
     public bool IsSuspended => SuspendedUntil is not null && SuspendedUntil < SystemClock.Instance.GetCurrentInstant();
     public bool IsLockedOut => LockedOutUntil is not null && LockedOutUntil < SystemClock.Instance.GetCurrentInstant();
-    public bool IsPasswordActive => PasswordResetCode.IsEmpty() && PasswordHash is not null;
-    public bool IsEmailAddressConfirmed => EmailAddress.IsConfirmed;
-    public bool CanLogin => !IsLockedOut && !IsSuspended && IsPasswordActive && IsEmailAddressConfirmed;
+    public bool HasActivePassword => PasswordHash is not null && PasswordResetCode.IsEmpty();
+    public bool HasConfirmedEmailAddress => EmailAddress.IsConfirmed;
+    public bool CanLogin => !IsLockedOut && !IsSuspended && HasActivePassword && HasConfirmedEmailAddress;
 
     private User(
         Username username,
-        NonEmptyString firstName,
-        NonEmptyString lastName,
+        FullName fullName,
         EmailAddress emailAddress,
         bool receiveAdditionalEmails,
-        PasswordHash? passwordHash,
-        PasswordResetCode? passwordResetCode,
-        UserRole? userRole
+        PasswordHash? passwordHash = null,
+        PasswordResetCode? passwordResetCode = null,
+        UserRole? userRole = null
     )
     {
-        if (passwordHash is not null && passwordResetCode is null)
+        if (username is null)
+            throw new IdentityDomainException("Username is required.");
+
+        if (fullName is null)
+            throw new IdentityDomainException("Full name is required.");
+
+        if (emailAddress is null)
+            throw new IdentityDomainException("Email address is required.");
+
+        if (passwordHash is null && passwordResetCode is not null)
             throw new IdentityDomainException("Missing password reset code while creating user without password.");
 
         Username = username;
-        FirstName = firstName;
-        LastName = lastName;
+        FullName = fullName;
         EmailAddress = emailAddress;
         ReceiveAdditionalEmails = receiveAdditionalEmails;
         PasswordHash = passwordHash;
@@ -62,20 +67,18 @@ public class User : Entity<UserId>, IAggregateRoot
 
     public static User Create(
         Username username,
-        NonEmptyString firstName,
-        NonEmptyString lastName,
+        FullName fullName,
         PasswordHash passwordHash,
         EmailAddress emailAddress,
         bool receiveAdditionalEmails)
             // TODO:
             // - issue user created event that will be consumed by emailing service
-            => new(username, firstName, lastName, emailAddress, receiveAdditionalEmails, passwordHash, null, null);
+            => new(username, fullName, emailAddress, receiveAdditionalEmails, passwordHash);
 
     public static User CreateBy(
         User currentUser,
         Username username,
-        NonEmptyString firstName,
-        NonEmptyString lastName,
+        FullName fullName,
         EmailAddress emailAddress,
         UserRole role)
     {
@@ -84,7 +87,7 @@ public class User : Entity<UserId>, IAggregateRoot
         // and if provided role is allowed for current user's role
         // - issue user created event that will be consumed by emailing service
         var code = PasswordResetCode.NewCode();
-        return new User(username, firstName, lastName, emailAddress, false, null, code, role);
+        return new User(username, fullName, emailAddress, false, null, code, role);
     }
 
     private void ConfirmEmailAddress() => EmailAddress = EmailAddress.Confirm();
