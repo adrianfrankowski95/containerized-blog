@@ -1,7 +1,7 @@
 namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 
-public interface IValidator<TItem, TResult> where TResult : ValidationResult<TItem>
+public interface IValidator<TItem>
 {
     public IEnumerable<IRequirement<TItem>> Requirements { get; }
-    public TResult Validate(TItem item);
+    public ValidationResult<TItem> Validate(TItem item);
 }
