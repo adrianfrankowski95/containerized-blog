@@ -18,6 +18,6 @@ public class PasswordValidator : IValidator<Password>
 
         return violatedRequirements.Any()
             ? ValidationResult<Password>.Fail(violatedRequirements.Select(m => m.Message))
-            : ValidationResult<Password>.Success();
+            : ValidationResult<Password>.Success;
     }
 }
