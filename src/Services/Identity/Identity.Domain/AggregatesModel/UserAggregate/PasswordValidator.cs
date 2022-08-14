@@ -1,6 +1,6 @@
 namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 
-public class PasswordValidator : IPasswordValidator
+public class PasswordValidator : IValidator<Password>
 {
     public IEnumerable<IRequirement<Password>> Requirements { get; }
 

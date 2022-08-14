@@ -7,7 +7,7 @@ namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 
 public class User : Entity<UserId>, IAggregateRoot
 {
-    public NonEmptyString Username { get; }
+    public Username Username { get; }
     public NonEmptyString FirstName { get; }
     public NonEmptyString LastName { get; }
     public NonEmptyString FullName => FirstName + " " + LastName;
@@ -31,7 +31,7 @@ public class User : Entity<UserId>, IAggregateRoot
     public bool CanLogin => !IsLockedOut && !IsSuspended && IsPasswordActive && IsEmailAddressConfirmed;
 
     private User(
-        NonEmptyString username,
+        Username username,
         NonEmptyString firstName,
         NonEmptyString lastName,
         EmailAddress emailAddress,
@@ -61,7 +61,7 @@ public class User : Entity<UserId>, IAggregateRoot
     }
 
     public static User Create(
-        NonEmptyString username,
+        Username username,
         NonEmptyString firstName,
         NonEmptyString lastName,
         PasswordHash passwordHash,
@@ -73,7 +73,7 @@ public class User : Entity<UserId>, IAggregateRoot
 
     public static User CreateBy(
         User currentUser,
-        NonEmptyString username,
+        Username username,
         NonEmptyString firstName,
         NonEmptyString lastName,
         EmailAddress emailAddress,
