@@ -4,8 +4,8 @@ namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 
 public class ValidationResult<TItem> : ValueObject<ValidationResult<TItem>>
 {
-    private static ValidationResult<TItem> _success => new();
-    public static ValidationResult<TItem> Success() => _success;
+    private static readonly ValidationResult<TItem> _success = new();
+    public static ValidationResult<TItem> Success => _success;
     public bool IsSuccess { get; }
     public string? Error { get; }
 

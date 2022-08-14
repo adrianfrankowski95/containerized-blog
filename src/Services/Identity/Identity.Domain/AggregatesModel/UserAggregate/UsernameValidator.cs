@@ -18,6 +18,6 @@ public class UsernameValidator : IValidator<Username>
 
         return violatedRequirements.Any()
             ? ValidationResult<Username>.Fail(violatedRequirements.Select(m => m.Message))
-            : ValidationResult<Username>.Success();
+            : ValidationResult<Username>.Success;
     }
 }

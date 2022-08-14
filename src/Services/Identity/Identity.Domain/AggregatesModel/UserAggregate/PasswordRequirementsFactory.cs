@@ -2,10 +2,10 @@ namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 
 public static class PasswordRequirementsFactory
 {
-    public static List<IRequirement<Password>> DefaultSet()
-        => new List<IRequirement<Password>>
+    public static IEnumerable<IRequirement<Password>> DefaultSet()
+        => new IRequirement<Password>[]
         {
-            new PasswordMustBe8CharactersLong(),
+            new PasswordMustBeMin8CharactersLong(),
             new PasswordMustContainDigit(),
             new PasswordMustContainLowercase(),
             new PasswordMustContainNonAlphanumeric(),
@@ -13,7 +13,7 @@ public static class PasswordRequirementsFactory
         };
 }
 
-public class PasswordMustBe8CharactersLong : IRequirement<Password>
+public class PasswordMustBeMin8CharactersLong : IRequirement<Password>
 {
     public RequirementMessage<Password> Message => "Password must be at least 8 characters long.";
     public bool IsSatisfiedBy(Password password) => password.Length >= 8;

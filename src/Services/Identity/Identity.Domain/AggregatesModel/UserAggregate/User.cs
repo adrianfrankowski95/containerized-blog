@@ -51,8 +51,8 @@ public class User : Entity<UserId>, IAggregateRoot
         ReceiveAdditionalEmails = receiveAdditionalEmails;
         PasswordHash = passwordHash;
 
-        Role = userRole ?? UserRole.DefaultRole();
         FailedLoginAttempts = 0;
+        Role = userRole ?? UserRole.DefaultRole();
         CreatedAt = SystemClock.Instance.GetCurrentInstant();
 
         PasswordResetCode = passwordHash is null ? PasswordResetCode.EmptyCode() : passwordResetCode!;
@@ -98,7 +98,7 @@ public class User : Entity<UserId>, IAggregateRoot
     private void DisallowIfSuspended()
     {
         if (IsSuspended)
-            throw new IdentityDomainException($"Account is suspended until {SuspendedUntil.ToString()}.");
+            throw new IdentityDomainException($"Account is suspended until {SuspendedUntil}.");
     }
     public void ConfirmEmailAddress(EmailConfirmationCode providedCode)
     {
