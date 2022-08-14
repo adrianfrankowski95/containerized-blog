@@ -130,7 +130,7 @@ public class User : Entity<UserId>, IAggregateRoot
     }
 }
 
-public class UserId
+public class UserId : ValueObject<UserId>
 {
     public Guid Value { get; }
 
@@ -145,4 +145,9 @@ public class UserId
     }
 
     public static UserId FromGuid(Guid guid) => new(guid);
+
+    protected override IEnumerable<object> GetEqualityCheckAttributes()
+    {
+        yield return Value;
+    }
 }
