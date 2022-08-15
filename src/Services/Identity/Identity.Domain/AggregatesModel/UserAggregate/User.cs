@@ -148,13 +148,11 @@ public class User : Entity<UserId>, IAggregateRoot
     private void LoginSuccessfully()
     {
         Login = Login.SuccessfulAttempt();
-
     }
 
     private void FailedLoginAttempt()
     {
         Login = Login.FailedAttempt(this);
-
     }
 
     public void LockOutUntil(NonPastInstant until) => LockedOutUntil = until;

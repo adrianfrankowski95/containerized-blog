@@ -10,5 +10,4 @@ public interface IUserRepository : IRepository<User>
     public User AddUser(User user);
     public User DeleteUser(User user);
     public bool IsUsernameInUse(Username username);
-
 }
