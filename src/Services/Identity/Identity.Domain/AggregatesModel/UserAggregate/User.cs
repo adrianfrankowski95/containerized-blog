@@ -100,8 +100,7 @@ public class User : Entity<UserId>, IAggregateRoot
     private void RefreshSecurityStamp() => SecurityStamp = SecurityStamp.NewStamp();
     private void DisallowIfSuspended()
     {
-        if (IsSuspended)
-            throw new IdentityDomainException($"Account is suspended until {SuspendedUntil}.");
+
     }
     public void ConfirmEmailAddress(EmailConfirmationCode providedCode)
     {
@@ -130,7 +129,21 @@ public class User : Entity<UserId>, IAggregateRoot
     }
 
     public void LoginSuccessfully()
-        => Login = Login.SuccessfulAttempt();
+    {
+        if (IsLockedOut)
+            throw new IdentityDomainException("Account has temporarily been locked out due to exceeded login attempts.");
+
+        if (IsSuspended)
+            throw new IdentityDomainException($"Account is suspended until {SuspendedUntil}.");
+
+        if (!HasConfirmedEmailAddress)
+            throw new IdentityDomainException("Account has not been confirmed.");
+
+        if (!HasActivePassword)
+            throw new IdentityDomainException("Invalid Email Address or Password.");
+
+        Login = Login.SuccessfulAttempt();
+    }
 
     public void FailedLoginAttempt()
         => Login = Login.FailedAttempt(this);
