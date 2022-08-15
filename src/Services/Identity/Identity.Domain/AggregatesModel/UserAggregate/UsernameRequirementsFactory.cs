@@ -27,7 +27,7 @@ public class UsernameMustBeUnique : IRequirement<Username>
 {
     private readonly IUserRepository _users;
     public RequirementMessage<Username> Message => "Username is already in use.";
-    public bool IsSatisfiedBy(Username username) => !_users.IsInUse(username);
+    public bool IsSatisfiedBy(Username username) => !_users.IsUsernameInUser(username);
 
     public UsernameMustBeUnique(IUserRepository users)
     {
