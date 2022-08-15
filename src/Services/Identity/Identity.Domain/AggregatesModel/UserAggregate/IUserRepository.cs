@@ -9,6 +9,6 @@ public interface IUserRepository : IRepository<User>
     public Task<User?> FindUserAsync(Username username);
     public User AddUser(User user);
     public User DeleteUser(User user);
-    public bool IsUsernameInUser(Username username);
+    public bool IsUsernameInUse(Username username);
 
 }
