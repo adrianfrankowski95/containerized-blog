@@ -14,10 +14,9 @@ public class User : Entity<UserId>, IAggregateRoot
     public UserRole Role { get; private set; }
     public PasswordHash? PasswordHash { get; private set; }
     public Instant CreatedAt { get; }
+    public Login Login { get; private set; }
     public Instant? LockedOutUntil { get; private set; }
     public Instant? SuspendedUntil { get; private set; }
-    public Instant? LastLoginAt { get; private set; }
-    public NonNegativeInt FailedLoginAttempts { get; private set; }
     public PasswordResetCode PasswordResetCode { get; private set; }
     public EmailConfirmationCode EmailConfirmationCode { get; private set; }
     public SecurityStamp SecurityStamp { get; private set; }
@@ -56,7 +55,8 @@ public class User : Entity<UserId>, IAggregateRoot
         ReceiveAdditionalEmails = receiveAdditionalEmails;
         PasswordHash = passwordHash;
 
-        FailedLoginAttempts = 0;
+        Login = new();
+
         Role = userRole ?? UserRole.DefaultRole();
         CreatedAt = SystemClock.Instance.GetCurrentInstant();
 
@@ -128,6 +128,14 @@ public class User : Entity<UserId>, IAggregateRoot
         ClearPasswordResetCode();
         RefreshSecurityStamp();
     }
+
+    public void LoginSuccessfully()
+        => Login = Login.SuccessfulAttempt();
+
+    public void FailedLoginAttempt()
+        => Login = Login.FailedAttempt(this);
+
+    public void LockOutUntil(NonPastInstant until) => LockedOutUntil = until;
 }
 
 public class UserId : ValueObject<UserId>
