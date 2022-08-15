@@ -128,25 +128,34 @@ public class User : Entity<UserId>, IAggregateRoot
         RefreshSecurityStamp();
     }
 
-    public void LoginSuccessfully()
+    public void LoginAttempt(EmailAddress emailAddress, PasswordHash passwordHash)
     {
         if (IsLockedOut)
             throw new IdentityDomainException("Account has temporarily been locked out due to exceeded login attempts.");
 
+        if (!HasActivePassword || !EmailAddress.Equals(emailAddress) || !PasswordHash!.Equals(passwordHash))
+        {
+            FailedLoginAttempt();
+            throw new IdentityDomainException("Invalid email address and/or password.");
+        }
+
         if (IsSuspended)
             throw new IdentityDomainException($"Account is suspended until {SuspendedUntil}.");
 
-        if (!HasConfirmedEmailAddress)
-            throw new IdentityDomainException("Account has not been confirmed.");
-
-        if (!HasActivePassword)
-            throw new IdentityDomainException("Invalid Email Address or Password.");
-
-        Login = Login.SuccessfulAttempt();
+        LoginSuccessfully();
     }
 
-    public void FailedLoginAttempt()
-        => Login = Login.FailedAttempt(this);
+    private void LoginSuccessfully()
+    {
+        Login = Login.SuccessfulAttempt();
+
+    }
+
+    private void FailedLoginAttempt()
+    {
+        Login = Login.FailedAttempt(this);
+
+    }
 
     public void LockOutUntil(NonPastInstant until) => LockedOutUntil = until;
 }
