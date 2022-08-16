@@ -8,10 +8,11 @@ public class EmailConfirmationCode : ValueObject<EmailConfirmationCode>
 {
     private readonly static EmailConfirmationCode _empty = new();
     private readonly Guid? _value;
+    public static EmailConfirmationCode Empty => _empty;
     public Instant? IssuedAt { get; }
     public Instant? ValidUntil => IssuedAt?.Plus(Duration.FromHours(1));
 
-    public EmailConfirmationCode()
+    private EmailConfirmationCode()
     {
         _value = null;
         IssuedAt = null;
@@ -19,6 +20,9 @@ public class EmailConfirmationCode : ValueObject<EmailConfirmationCode>
 
     private EmailConfirmationCode(Guid value)
     {
+        if(value.Equals(Guid.Empty))
+            throw new ArgumentException("Email confirmation code must not be empty.");
+
         _value = value;
         IssuedAt = SystemClock.Instance.GetCurrentInstant();
     }
@@ -29,9 +33,11 @@ public class EmailConfirmationCode : ValueObject<EmailConfirmationCode>
         : SystemClock.Instance.GetCurrentInstant() > ValidUntil;
 
     public static EmailConfirmationCode NewCode() => new(Guid.NewGuid());
-    public static EmailConfirmationCode EmptyCode() => _empty;
     public void Verify(EmailConfirmationCode providedCode)
     {
+        if(providedCode is null)
+            throw new ArgumentNullException("Provided email confirmation code must not be null.");
+
         // Don't reveal that the email confirmation code has not been requested
         if(IsEmpty())
             throw new IdentityDomainException("The email confirmation code is invalid.");

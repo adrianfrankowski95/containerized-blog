@@ -26,7 +26,6 @@ public class User : Entity<UserId>, IAggregateRoot
     public bool IsLockedOut => LockedOutUntil is not null && LockedOutUntil < SystemClock.Instance.GetCurrentInstant();
     public bool HasActivePassword => PasswordHash is not null && PasswordResetCode.IsEmpty();
     public bool HasConfirmedEmailAddress => EmailAddress.IsConfirmed;
-    public bool CanLogin => !IsLockedOut && !IsSuspended && HasActivePassword && HasConfirmedEmailAddress;
 
     private User(
         Username username,
@@ -61,7 +60,7 @@ public class User : Entity<UserId>, IAggregateRoot
         Role = userRole ?? UserRole.DefaultRole();
         CreatedAt = SystemClock.Instance.GetCurrentInstant();
 
-        PasswordResetCode = passwordHash is null ? PasswordResetCode.EmptyCode() : passwordResetCode!;
+        PasswordResetCode = passwordHash is null ? PasswordResetCode.Empty : passwordResetCode!;
         EmailConfirmationCode = EmailConfirmationCode.NewCode();
         SecurityStamp = SecurityStamp.NewStamp();
     }
@@ -93,14 +92,20 @@ public class User : Entity<UserId>, IAggregateRoot
 
     private void ConfirmEmailAddress() => EmailAddress = EmailAddress.Confirm();
     private void SetNewEmailConfirmationCode() => EmailConfirmationCode = EmailConfirmationCode.NewCode();
-    private void ClearEmailConfirmationCode() => EmailConfirmationCode = EmailConfirmationCode.EmptyCode();
+    private void ClearEmailConfirmationCode() => EmailConfirmationCode = EmailConfirmationCode.Empty;
     private void SetNewPasswordResetCode() => PasswordResetCode = PasswordResetCode.NewCode();
-    private void ClearPasswordResetCode() => PasswordResetCode = PasswordResetCode.EmptyCode();
+    private void ClearPasswordResetCode() => PasswordResetCode = PasswordResetCode.Empty;
     private void ClearPasswordHash() => PasswordHash = null;
-    private void ClearFailedLoginAttempts() => FailedLoginAttempts = LoginAttempts.None;
     private void UpdatePasswordHash(PasswordHash passwordHash) => PasswordHash = passwordHash;
+    private void AddFailedLoginAttempt() => FailedLoginAttempts = FailedLoginAttempts.Increment();
+    private void ClearFailedLoginAttempts() => FailedLoginAttempts = LoginAttempts.None;
+    private void SetLastLogin() => LastLoginAt = SystemClock.Instance.GetCurrentInstant();
+    private void LockOutUntil(NonPastInstant until)
+    {
+        LockedOutUntil = until;
+        ClearFailedLoginAttempts();
+    }
     private void RefreshSecurityStamp() => SecurityStamp = SecurityStamp.NewStamp();
-
     public void ConfirmEmailAddress(EmailConfirmationCode providedCode)
     {
         EmailConfirmationCode.Verify(providedCode);
@@ -127,24 +132,50 @@ public class User : Entity<UserId>, IAggregateRoot
         RefreshSecurityStamp();
     }
 
-    public void LoginAttempt(EmailAddress emailAddress, PasswordHash passwordHash)
+    public LoginResult Login(EmailAddress emailAddress, PasswordHash passwordHash)
     {
-        if (IsLockedOut)
-            throw new IdentityDomainException("Account has temporarily been locked out due to exceeded login attempts.");
+        if(IsLockedOut)
+            return LoginResult.Fail(LoginErrorCode.FailLockedOut);
 
-        if (!HasActivePassword || !EmailAddress.Equals(emailAddress) || !PasswordHash!.Equals(passwordHash))
+        if(emailAddress is null || passwordHash is null || !HasActivePassword ||
+            !EmailAddress.Equals(emailAddress) || !PasswordHash!.Equals(passwordHash))
         {
-            //FailedLoginAttempt();
-            throw new IdentityDomainException("Invalid email address and/or password.");
+            FailedLoginAttempt();
+            return LoginResult.Fail(LoginErrorCode.FailInvalidCredentials);
         }
 
-        if (IsSuspended)
-            throw new IdentityDomainException($"Account is suspended until {SuspendedUntil}.");
+        if(IsSuspended)
+        {
+            FailedLoginAttempt();
+            return LoginResult.Fail(LoginErrorCode.FailSuspended);
+        }
 
-        //LoginSuccessfully();
+        if(!HasConfirmedEmailAddress)
+        {
+            FailedLoginAttempt();
+            return LoginResult.Fail(LoginErrorCode.FailUnconfirmedEmail);
+        }
+
+        SuccessfulLoginAttempt();
+        return LoginResult.Success;
     }
 
-    public void LockOutUntil(NonPastInstant until) => LockedOutUntil = until;
+    private void FailedLoginAttempt()
+    {
+        if(IsLockedOut)
+            throw new IdentityDomainException("Account has already been locked out.");
+
+        if(FailedLoginAttempts == LoginAttempts.MaxAllowed)
+            LockOutUntil(SystemClock.Instance.GetCurrentInstant().Plus(Duration.FromMinutes(5)));
+        else
+            AddFailedLoginAttempt();
+    }
+
+    private void SuccessfulLoginAttempt()
+    {
+        ClearFailedLoginAttempts();
+        SetLastLogin();
+    }
 }
 
 public class UserId : ValueObject<UserId>

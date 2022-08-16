@@ -5,29 +5,36 @@ namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 public class LoginResult : ValueObject<LoginResult>
 {
     private static readonly LoginResult _success = new();
-    public static ValidationResult<TItem> Success => _success;
-    public bool IsSuccess { get; }
-    public string? Error { get; }
+    public static LoginResult Success => _success;
+    public LoginErrorCode? ErrorCode { get; private set; }
+    public string? ErrorMessage { get; }
+    public bool IsSuccess => ErrorCode is null;
 
     private LoginResult()
+    { }
+
+    private LoginResult(LoginErrorCode code)
     {
-        IsSuccess = true;
+        ErrorCode = code;
+        ErrorMessage = GetDefaultErrorMessage(code);
     }
 
-    private LoginResult(NonEmptyString error)
+    public static LoginResult Fail(LoginErrorCode code) => new(code);
+
+    private static string GetDefaultErrorMessage(LoginErrorCode code) => code switch
     {
-        if(error is null)
-            throw new ArgumentNullException(nameof(error));
-
-        IsSuccess = false;
-        Error = error;
-    }
-
-    public static ValidationResult<TItem> Fail(IEnumerable<RequirementMessage<TItem>> errors) => new(errors);
+        LoginErrorCode.FailInvalidCredentials => "Invalid email address and/or password.",
+        LoginErrorCode.FailLockedOut => "Account has temporarily been locked out.",
+        LoginErrorCode.FailSuspended => "Account has been suspended.",
+        LoginErrorCode.FailUnconfirmedEmail => "This email address has not yet been confirmed.",
+        _ => throw new ArgumentException("Invalid login error code.")
+    };
 
     protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
-        yield return IsSuccess;
-        yield return Error;
+        yield return ErrorCode;
     }
 }
+
+public enum LoginErrorCode { FailLockedOut = 0, FailSuspended = 1, FailUnconfirmedEmail = 2, FailInvalidCredentials = 3 }
+

@@ -11,6 +11,9 @@ public class EmailAddress : ValueObject<EmailAddress>
 
     public EmailAddress(NonEmptyString value)
     {
+        if(value is null)
+            throw new ArgumentNullException("Email address must not be null.");
+            
         if (!new EmailAddressAttribute().IsValid(value))
             throw new IdentityDomainException("Invalid email address format.");
 

@@ -7,6 +7,8 @@ public class UserRole : Enumeration
 
     private UserRole(int value, NonEmptyString name) : base(value, name)
     {
+        if(name is null)
+            throw new ArgumentNullException("User role name must not be null.");
     }
 
     public static readonly UserRole Reader = new(0, nameof(Reader).ToLowerInvariant());
