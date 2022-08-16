@@ -9,6 +9,9 @@ public abstract class Enumeration
     public int Value { get; protected set; }
     protected Enumeration(int value, string name)
     {
+        if(string.IsNullOrWhiteSpace(name))
+            throw new ArgumentNullException("Enumeration name must not be null.");
+
         Value = value;
         Name = name;
     }

@@ -1,4 +1,3 @@
-using Blog.Services.Identity.Domain.Exceptions;
 using Blog.Services.Identity.Domain.SeedWork;
 using NodaTime;
 
@@ -11,7 +10,7 @@ public class NonPastInstant : ValueObject<NonPastInstant>
     public NonPastInstant(Instant value)
     {
         if (value < SystemClock.Instance.GetCurrentInstant())
-            throw new IdentityDomainException($"Value cannot be in the past.");
+            throw new ArgumentNullException($"Value cannot be in the past.");
 
         _value = value;
     }

@@ -10,6 +10,9 @@ public class SecurityStamp : ValueObject<SecurityStamp>
 
     private SecurityStamp(Guid value)
     {
+        if(value.Equals(Guid.Empty))
+            throw new ArgumentException("Security stamp must not be empty.");
+            
         _value = value;
         IssuedAt = SystemClock.Instance.GetCurrentInstant();
     }

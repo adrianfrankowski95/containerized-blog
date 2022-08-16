@@ -8,6 +8,9 @@ public sealed class RequirementMessage<TItem> : ValueObject<RequirementMessage<T
 
     public RequirementMessage(NonEmptyString value)
     {
+        if(value is null)
+            throw new ArgumentNullException("Requirement message must not be null.");
+            
         _value = value;
     }
 

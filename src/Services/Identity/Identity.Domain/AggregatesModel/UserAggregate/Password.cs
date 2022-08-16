@@ -15,6 +15,9 @@ public class Password : ValueObject<Password>
 
     public static Password Create(NonEmptyString input, IEnumerable<IRequirement<Password>> requirements)
     {
+        if(input is null)
+            throw new ArgumentNullException("Password must not be null.");
+            
         var password = new Password(input);
         var result = new PasswordValidator(requirements).Validate(password);
 

@@ -1,4 +1,3 @@
-using Blog.Services.Identity.Domain.Exceptions;
 using Blog.Services.Identity.Domain.SeedWork;
 
 namespace Identity.Domain.AggregatesModel.UserAggregate;
@@ -10,7 +9,7 @@ public class NonNegativeInt : ValueObject<NonNegativeInt>
     public NonNegativeInt(int value)
     {
         if (value < 0)
-            throw new IdentityDomainException($"Value cannot be negative.");
+            throw new ArgumentException($"Value cannot be negative.");
 
         _value = value;
     }

@@ -8,7 +8,7 @@ public class LoginAttempts : ValueObject<LoginAttempts>
 {
     private readonly NonNegativeInt _count;
     private static readonly LoginAttempts _none = new();
-    private static readonly LoginAttempts _maxAllowed = new();
+    public const int MaxAllowed = 5;
 
     private LoginAttempts()
     {
@@ -17,22 +17,24 @@ public class LoginAttempts : ValueObject<LoginAttempts>
 
     private LoginAttempts(NonNegativeInt count)
     {
+        if(count is null)
+            throw new ArgumentNullException("Login attempts count must not be null.");
+
         _count = count;
     }
     public static LoginAttempts None => _none;
-    public static LoginAttempts MaxAllowed => _maxAllowed;
     public LoginAttempts Increment()
     {
         if (_count == MaxAllowed)
-            throw new IdentityDomainException($"Maximum allowed failed login attempts are {MaxAllowed}.");
+            throw new IdentityDomainException($"Maximum allowed login attempts are {MaxAllowed}.");
 
         return new(_count + 1);
     }
 
-    public static bool operator >(NonNegativeInt a, LoginAttempts b) => a > b._count;
-    public static bool operator <(NonNegativeInt a, LoginAttempts b) => a < b._count;
-    public static bool operator ==(NonNegativeInt a, LoginAttempts b) => a == b._count;
-    public static bool operator !=(NonNegativeInt a, LoginAttempts b) => a != b._count;
+    public static bool operator >(LoginAttempts a, int b) => a._count > b;
+    public static bool operator <(LoginAttempts a, int b) => a._count < b;
+    public static bool operator ==(LoginAttempts a, int b) => a._count == b;
+    public static bool operator !=(LoginAttempts a, int b) => a._count != b;
 
     public override bool Equals(LoginAttempts? second) => base.Equals(second);
     public override bool Equals(object? second) => base.Equals(second);

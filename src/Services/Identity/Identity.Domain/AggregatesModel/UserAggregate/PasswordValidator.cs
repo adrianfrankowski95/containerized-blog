@@ -2,18 +2,18 @@ namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 
 public class PasswordValidator : IValidator<Password>
 {
-    public IEnumerable<IRequirement<Password>> Requirements { get; }
+    public IEnumerable<IRequirement<Password>>? Requirements { get; }
 
     public PasswordValidator(IEnumerable<IRequirement<Password>> requirements)
     {
-        if (requirements is null || !requirements.Any())
-            throw new ArgumentNullException(nameof(requirements));
-
         Requirements = requirements;
     }
 
     public ValidationResult<Password> Validate(Password password)
     {
+        if(Requirements is null || !Requirements.Any())
+            return ValidationResult<Password>.Success;
+
         var violatedRequirements = Requirements.Where(r => !r.IsSatisfiedBy(password));
 
         return violatedRequirements.Any()

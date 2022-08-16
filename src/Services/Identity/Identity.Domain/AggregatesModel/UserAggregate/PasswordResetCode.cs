@@ -10,11 +10,12 @@ public class PasswordResetCode : ValueObject<PasswordResetCode>
     private const string AllowedCharacters = "ABCDEFGHJKLMNOPQRSTUVWXYZ1234567890!@$?_-/\\=abcdefghijkmnopqrstuvwxyz";
     private const int Length = 6;
     private readonly static PasswordResetCode _empty = new();
+    public static PasswordResetCode Empty => _empty;
     private readonly string? _value;
     public Instant? IssuedAt { get; }
     private Instant? ValidUntil => IssuedAt?.Plus(Duration.FromHours(1));
 
-    public PasswordResetCode()
+    private PasswordResetCode()
     {
         _value = null;
         IssuedAt = null;
@@ -22,6 +23,9 @@ public class PasswordResetCode : ValueObject<PasswordResetCode>
 
     private PasswordResetCode(NonEmptyString value)
     {
+        if(value is null)
+            throw new ArgumentNullException("Password reset code must not be null.");
+
         if (value.Length != Length || value.Any(c => !AllowedCharacters.Contains(c)))
             throw new IdentityDomainException("Invalid password reset code format.");
 
@@ -42,8 +46,6 @@ public class PasswordResetCode : ValueObject<PasswordResetCode>
         return new(new string(code));
     }
 
-    public static PasswordResetCode EmptyCode() => _empty;
-
     public bool IsEmpty() => string.IsNullOrWhiteSpace(_value);
     private bool IsExpired() => IsEmpty()
         ? throw new IdentityDomainException("Password must not be empty.")
@@ -51,6 +53,9 @@ public class PasswordResetCode : ValueObject<PasswordResetCode>
 
     public void Verify(PasswordResetCode providedCode)
     { 
+        if(providedCode is null)
+            throw new ArgumentNullException("Provided password reset code must not be null.");
+
         // Don't reveal that the password reset code has not been requested
         if(IsEmpty())
             throw new IdentityDomainException("The password reset code is invalid.");
