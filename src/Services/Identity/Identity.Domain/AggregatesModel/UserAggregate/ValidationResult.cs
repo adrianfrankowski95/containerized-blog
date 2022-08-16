@@ -17,7 +17,7 @@ public class ValidationResult<TItem> : ValueObject<ValidationResult<TItem>>
     private ValidationResult(IEnumerable<RequirementMessage<TItem>> errors)
     {
         IsSuccess = false;
-        Error = string.Join<RequirementMessage<TItem>>(Environment.NewLine, errors);
+        Error = string.Join(Environment.NewLine, errors);
     }
 
     public static ValidationResult<TItem> Fail(IEnumerable<RequirementMessage<TItem>> errors) => new(errors);

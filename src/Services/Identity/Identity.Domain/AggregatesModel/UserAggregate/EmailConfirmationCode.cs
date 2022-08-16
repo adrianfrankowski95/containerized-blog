@@ -6,11 +6,11 @@ namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 
 public class EmailConfirmationCode : ValueObject<EmailConfirmationCode>
 {
-    private readonly static EmailConfirmationCode _empty = new();
     private readonly Guid? _value;
-    public static EmailConfirmationCode Empty => _empty;
     public Instant? IssuedAt { get; }
     public Instant? ValidUntil => IssuedAt?.Plus(Duration.FromHours(1));
+    private readonly static EmailConfirmationCode _empty = new();
+    public static EmailConfirmationCode Empty => _empty;
 
     private EmailConfirmationCode()
     {
@@ -20,32 +20,33 @@ public class EmailConfirmationCode : ValueObject<EmailConfirmationCode>
 
     private EmailConfirmationCode(Guid value)
     {
-        if(value.Equals(Guid.Empty))
+        if (value.Equals(Guid.Empty))
             throw new ArgumentException("Email confirmation code must not be empty.");
 
         _value = value;
         IssuedAt = SystemClock.Instance.GetCurrentInstant();
     }
 
+    public static EmailConfirmationCode NewCode() => new(Guid.NewGuid());
+
     private bool IsEmpty() => _value is null;
     private bool IsExpired() => IsEmpty()
         ? throw new IdentityDomainException("Email confirmation code must not be empty.")
         : SystemClock.Instance.GetCurrentInstant() > ValidUntil;
 
-    public static EmailConfirmationCode NewCode() => new(Guid.NewGuid());
     public void Verify(EmailConfirmationCode providedCode)
     {
-        if(providedCode is null)
+        if (providedCode is null)
             throw new ArgumentNullException("Provided email confirmation code must not be null.");
 
         // Don't reveal that the email confirmation code has not been requested
-        if(IsEmpty())
+        if (IsEmpty())
             throw new IdentityDomainException("The email confirmation code is invalid.");
 
-        if(IsExpired())
+        if (IsExpired())
             throw new IdentityDomainException("The email confirmation code has expired.");
 
-        if(!Equals(providedCode))
+        if (!Equals(providedCode))
             throw new IdentityDomainException("The email confirmation code is invalid.");
     }
 
