@@ -193,8 +193,6 @@ public class UserId : ValueObject<UserId>
         Value = guid;
     }
 
-    public static UserId FromGuid(Guid guid) => new(guid);
-
     protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
         yield return Value;
