@@ -106,6 +106,12 @@ public class User : Entity<UserId>, IAggregateRoot
         ClearFailedLoginAttempts();
     }
     private void RefreshSecurityStamp() => SecurityStamp = SecurityStamp.NewStamp();
+    public void SuspendUntilBy(User currentUser, NonPastInstant until)
+    {
+        // TODO:
+        // - check if current user has permission to suspend users
+        SuspendedUntil = until;
+    }
     public void ConfirmEmailAddress(EmailConfirmationCode providedCode)
     {
         EmailConfirmationCode.Verify(providedCode);
