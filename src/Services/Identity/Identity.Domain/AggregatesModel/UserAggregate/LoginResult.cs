@@ -4,11 +4,11 @@ namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 
 public class LoginResult : ValueObject<LoginResult>
 {
-    private static readonly LoginResult _success = new();
-    public static LoginResult Success => _success;
     public LoginErrorCode? ErrorCode { get; private set; }
     public string? ErrorMessage { get; }
     public bool IsSuccess => ErrorCode is null;
+    private static readonly LoginResult _success = new();
+    public static LoginResult Success => _success;
 
     private LoginResult()
     { }
@@ -18,7 +18,6 @@ public class LoginResult : ValueObject<LoginResult>
         ErrorCode = code;
         ErrorMessage = GetDefaultErrorMessage(code);
     }
-
     public static LoginResult Fail(LoginErrorCode code) => new(code);
 
     private static string GetDefaultErrorMessage(LoginErrorCode code) => code switch

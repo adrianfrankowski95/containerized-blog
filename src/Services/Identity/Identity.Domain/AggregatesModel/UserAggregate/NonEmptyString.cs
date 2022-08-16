@@ -20,14 +20,14 @@ public class NonEmptyString : ValueObject<NonEmptyString>
         _value = value;
     }
 
+    public override string ToString() => _value;
+    public bool Contains(char value) => _value.Contains(value);
+    public bool Any(Func<char, bool> predicate) => _value.Any(predicate);
+
     protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
         yield return _value;
     }
-
-    public override string ToString() => _value;
-    public bool Contains(char value) => _value.Contains(value);
-    public bool Any(Func<char, bool> predicate) => _value.Any(predicate);
 
     public static implicit operator NonEmptyString(string value) => new(value);
     public static implicit operator string(NonEmptyString value) => value._value;
