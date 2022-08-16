@@ -7,9 +7,8 @@ namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 
 public class FailedLoginAttemptsCount : ValueObject<FailedLoginAttemptsCount>
 {
-    private readonly NonNegativeInt _count;
     private static readonly FailedLoginAttemptsCount _none = new();
-    private const int MaxAllowed = 5;
+    private readonly NonNegativeInt _count;
     public static FailedLoginAttemptsCount None => _none;
     public Instant? LastNotedAt { get; }
     public Instant? ValidUntil => LastNotedAt?.Plus(Duration.FromMinutes(5));
@@ -27,10 +26,12 @@ public class FailedLoginAttemptsCount : ValueObject<FailedLoginAttemptsCount>
         LastNotedAt = SystemClock.Instance.GetCurrentInstant();
     }
     
+    public bool IsMaxAllowed() => _count == 5;
+
     public FailedLoginAttemptsCount Increment()
     {
         if (IsMaxAllowed())
-            throw new IdentityDomainException($"Maximum allowed login attempts are {MaxAllowed}.");
+            throw new IdentityDomainException($"Exceeded maximum allowed failed login attempts.");
 
         return new(_count + 1);
     }
@@ -39,13 +40,6 @@ public class FailedLoginAttemptsCount : ValueObject<FailedLoginAttemptsCount>
     public bool IsExpired() => IsEmpty()
         ? throw new IdentityDomainException("Failed login attempts count must not be empty.")
         : SystemClock.Instance.GetCurrentInstant() > ValidUntil;
-
-    public bool IsMaxAllowed() => _count == MaxAllowed;
-
-    // public static bool operator >(FailedLoginAttemptsCount a, int b) => a._count > b;
-    // public static bool operator <(FailedLoginAttemptsCount a, int b) => a._count < b;
-    // public static bool operator ==(FailedLoginAttemptsCount a, int b) => a._count == b;
-    // public static bool operator !=(FailedLoginAttemptsCount a, int b) => a._count != b;
 
     public override bool Equals(FailedLoginAttemptsCount? second) => base.Equals(second);
     public override bool Equals(object? second) => base.Equals(second);
