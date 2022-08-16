@@ -23,10 +23,10 @@ public class LoginResult : ValueObject<LoginResult>
 
     private static string GetDefaultErrorMessage(LoginErrorCode code) => code switch
     {
-        LoginErrorCode.FailInvalidCredentials => "Invalid email address and/or password.",
-        LoginErrorCode.FailLockedOut => "Account has temporarily been locked out.",
-        LoginErrorCode.FailSuspended => "Account has been suspended.",
-        LoginErrorCode.FailUnconfirmedEmail => "This email address has not yet been confirmed.",
+        LoginErrorCode.InvalidCredentials => "Invalid email address and/or password.",
+        LoginErrorCode.LockedOut => "Account has temporarily been locked out.",
+        LoginErrorCode.Suspended => "Account has been suspended.",
+        LoginErrorCode.UnconfirmedEmail => "This email address has not yet been confirmed.",
         _ => throw new ArgumentException("Invalid login error code.")
     };
 
@@ -36,5 +36,5 @@ public class LoginResult : ValueObject<LoginResult>
     }
 }
 
-public enum LoginErrorCode { FailLockedOut = 0, FailSuspended = 1, FailUnconfirmedEmail = 2, FailInvalidCredentials = 3 }
+public enum LoginErrorCode { LockedOut = 0, Suspended = 1, UnconfirmedEmail = 2, InvalidCredentials = 3 }
 
