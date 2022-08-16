@@ -16,7 +16,7 @@ public abstract class ReviewItem : ValueObject<ReviewItem>, IValidatable
         WebsiteUrl = websiteUrl;
     }
 
-    protected override IEnumerable<object> GetEqualityCheckAttributes()
+    protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
         yield return Name;
         yield return WebsiteUrl;

@@ -32,7 +32,7 @@ public class Login : ValueObject<Login>
         LastSuccessfulAt = SystemClock.Instance.GetCurrentInstant()
     };
 
-    protected override IEnumerable<object> GetEqualityCheckAttributes()
+    protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
         yield return FailedAttempts;
         yield return LastSuccessfulAt;

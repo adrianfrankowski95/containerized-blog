@@ -2,22 +2,25 @@ using Blog.Services.Identity.Domain.SeedWork;
 
 namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 
-public class ValidationResult<TItem> : ValueObject<ValidationResult<TItem>>
+public class LoginResult : ValueObject<LoginResult>
 {
-    private static readonly ValidationResult<TItem> _success = new();
+    private static readonly LoginResult _success = new();
     public static ValidationResult<TItem> Success => _success;
     public bool IsSuccess { get; }
     public string? Error { get; }
 
-    private ValidationResult()
+    private LoginResult()
     {
         IsSuccess = true;
     }
 
-    private ValidationResult(IEnumerable<RequirementMessage<TItem>> errors)
+    private LoginResult(NonEmptyString error)
     {
+        if(error is null)
+            throw new ArgumentNullException(nameof(error));
+
         IsSuccess = false;
-        Error = string.Join<RequirementMessage<TItem>>(Environment.NewLine, errors);
+        Error = error;
     }
 
     public static ValidationResult<TItem> Fail(IEnumerable<RequirementMessage<TItem>> errors) => new(errors);

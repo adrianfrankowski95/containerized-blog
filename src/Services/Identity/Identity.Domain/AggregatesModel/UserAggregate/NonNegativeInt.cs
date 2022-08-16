@@ -21,7 +21,7 @@ public class NonNegativeInt : ValueObject<NonNegativeInt>
     public static bool operator >=(NonNegativeInt a, int b) => a._value >= b;
     public static bool operator <=(NonNegativeInt a, int b) => a._value <= b;
 
-    protected override IEnumerable<object> GetEqualityCheckAttributes()
+    protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
         yield return _value;
     }

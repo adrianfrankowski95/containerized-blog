@@ -16,7 +16,7 @@ public class PasswordHash : ValueObject<PasswordHash>
 
     public override string ToString() => _value;
 
-    protected override IEnumerable<object> GetEqualityCheckAttributes()
+    protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
         yield return _value;
     }

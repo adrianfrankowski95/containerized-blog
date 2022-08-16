@@ -2,7 +2,7 @@ namespace Blog.Services.Identity.Domain.SeedWork;
 
 public abstract class ValueObject<T> where T : ValueObject<T>
 {
-    protected abstract IEnumerable<object> GetEqualityCheckAttributes();
+    protected abstract IEnumerable<object?> GetEqualityCheckAttributes();
 
     public override bool Equals(object? second) => Equals(second as T);
 

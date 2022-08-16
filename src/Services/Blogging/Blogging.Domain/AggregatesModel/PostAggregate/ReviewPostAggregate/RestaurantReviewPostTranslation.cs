@@ -41,7 +41,7 @@ public class RestaurantReviewPostTranslation : ReviewPostTranslationBase
             _restaurantCuisines.Add(trimmedCuisine);
     }
 
-    protected override IEnumerable<object> GetEqualityCheckAttributes()
+    protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
         yield return RestaurantAddress;
         yield return RestaurantCuisines;

@@ -15,7 +15,7 @@ public sealed class Servings : ValueObject<Servings>
         Count = count;
     }
 
-    protected override IEnumerable<object> GetEqualityCheckAttributes()
+    protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
         yield return Count;
     }

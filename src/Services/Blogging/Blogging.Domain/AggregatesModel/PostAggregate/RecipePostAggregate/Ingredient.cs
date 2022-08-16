@@ -19,7 +19,7 @@ public sealed class Ingredient : ValueObject<Ingredient>
         Name = name;
     }
 
-    protected override IEnumerable<object> GetEqualityCheckAttributes()
+    protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
         yield return Name;
         yield return Amount;

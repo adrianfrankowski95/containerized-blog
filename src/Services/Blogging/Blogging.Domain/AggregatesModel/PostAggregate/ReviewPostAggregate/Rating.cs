@@ -30,7 +30,7 @@ public sealed class Rating : ValueObject<Rating>, IComparable<Rating>, IValidata
     public static bool operator >=(Rating a, Rating b) => a.CompareTo(b) >= 0;
     public static bool operator <=(Rating a, Rating b) => a.CompareTo(b) <= 0;
 
-    protected override IEnumerable<object> GetEqualityCheckAttributes()
+    protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
         yield return Value;
     }

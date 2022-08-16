@@ -18,7 +18,7 @@ public abstract class ReviewPostTranslationBase : PostTranslationBase
         IEnumerable<Tag> tags)
         : base(language, title, content, description, tags) { }
 
-    protected override IEnumerable<object> GetEqualityCheckAttributes()
+    protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
         return base.GetEqualityCheckAttributes();
     }

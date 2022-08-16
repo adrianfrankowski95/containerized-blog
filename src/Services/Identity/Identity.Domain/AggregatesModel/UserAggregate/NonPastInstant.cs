@@ -19,7 +19,7 @@ public class NonPastInstant : ValueObject<NonPastInstant>
     public static implicit operator NonPastInstant(Instant value) => new(value);
     public static implicit operator Instant(NonPastInstant value) => value._value;
 
-    protected override IEnumerable<object> GetEqualityCheckAttributes()
+    protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
         yield return _value;
     }

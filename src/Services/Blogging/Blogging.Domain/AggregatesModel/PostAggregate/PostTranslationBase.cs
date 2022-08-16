@@ -59,7 +59,7 @@ public abstract class PostTranslationBase : ValueObject<PostTranslationBase>, IT
         return newTranslation;
     }
 
-    protected override IEnumerable<object> GetEqualityCheckAttributes()
+    protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
         yield return Title;
         yield return Description;

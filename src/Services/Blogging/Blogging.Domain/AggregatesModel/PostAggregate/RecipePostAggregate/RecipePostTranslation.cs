@@ -49,7 +49,7 @@ public class RecipePostTranslation : PostTranslationBase
             _ingredients.Add(trimmedIngredient);
     }
 
-    protected override IEnumerable<object> GetEqualityCheckAttributes()
+    protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
         yield return DishName;
         yield return Cuisine;

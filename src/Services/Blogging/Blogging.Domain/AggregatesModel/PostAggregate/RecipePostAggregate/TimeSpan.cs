@@ -41,7 +41,7 @@ public sealed class TimeSpan : ValueObject<TimeSpan>, IComparable<TimeSpan>
 
     public static TimeSpan operator +(TimeSpan a, TimeSpan b) => FromMinutes(a.Hours.ToMinutes() + a.Minutes + b.Hours.ToMinutes() + b.Minutes);
 
-    protected override IEnumerable<object> GetEqualityCheckAttributes()
+    protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
         yield return Hours;
         yield return Minutes;

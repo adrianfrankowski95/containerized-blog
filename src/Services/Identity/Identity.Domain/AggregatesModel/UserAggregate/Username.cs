@@ -27,7 +27,7 @@ public class Username : ValueObject<Username>
     public bool Any(Func<char, bool> predicate) => _value.Any(predicate);
     public NonNegativeInt Length => _value.Length;
 
-    protected override IEnumerable<object> GetEqualityCheckAttributes()
+    protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
         yield return _value;
     }

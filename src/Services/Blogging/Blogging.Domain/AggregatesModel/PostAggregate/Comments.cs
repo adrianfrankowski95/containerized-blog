@@ -19,7 +19,7 @@ public class Comments : ValueObject<Comments>
     public Comments Increment() => new(++Count);
     public Comments Decrement() => new(--Count);
 
-    protected override IEnumerable<object> GetEqualityCheckAttributes()
+    protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
         yield return Count;
     }

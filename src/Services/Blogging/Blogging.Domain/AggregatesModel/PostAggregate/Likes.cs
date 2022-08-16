@@ -23,7 +23,7 @@ public class Likes : ValueObject<Likes>
     public Likes RemoveLikeBy(User user) => new(--Count);
 
 
-    protected override IEnumerable<object> GetEqualityCheckAttributes()
+    protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
         yield return Count;
     }

@@ -65,7 +65,7 @@ public class PasswordResetCode : ValueObject<PasswordResetCode>
             throw new IdentityDomainException("The password reset code is invalid.");
     }
 
-    protected override IEnumerable<object> GetEqualityCheckAttributes()
+    protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
         yield return _value;
     }

@@ -28,7 +28,7 @@ public sealed class RecipeTime : ValueObject<RecipeTime>
         PreparationTime = preparationTime;
         CookingTime = cookingTime;
     }
-    protected override IEnumerable<object> GetEqualityCheckAttributes()
+    protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
         yield return PreparationTime;
         yield return CookingTime;
