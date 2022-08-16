@@ -14,8 +14,6 @@ public class PasswordHash : ValueObject<PasswordHash>
     public static PasswordHash FromPassword(Password password, IPasswordHasher passwordHasher)
         => new(passwordHasher.HashPassword(password));
 
-    public override string ToString() => _value;
-
     protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
         yield return _value;

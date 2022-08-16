@@ -6,13 +6,16 @@ namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 
 public class EmailConfirmationCode : ValueObject<EmailConfirmationCode>
 {
-    private readonly static Duration _validityDuration = Duration.FromHours(1);
     private readonly static EmailConfirmationCode _empty = new();
     private readonly Guid? _value;
     public Instant? IssuedAt { get; }
+    public Instant? ValidUntil => IssuedAt?.Plus(Duration.FromHours(1));
 
-    private EmailConfirmationCode()
-    { }
+    public EmailConfirmationCode()
+    {
+        _value = null;
+        IssuedAt = null;
+    }
 
     private EmailConfirmationCode(Guid value)
     {
@@ -20,20 +23,13 @@ public class EmailConfirmationCode : ValueObject<EmailConfirmationCode>
         IssuedAt = SystemClock.Instance.GetCurrentInstant();
     }
 
-    //public Guid? ToGuid() => _value;
+    private bool IsEmpty() => _value is null;
+    private bool IsExpired() => IsEmpty()
+        ? throw new IdentityDomainException("Email confirmation code must not be empty.")
+        : SystemClock.Instance.GetCurrentInstant() > ValidUntil;
 
     public static EmailConfirmationCode NewCode() => new(Guid.NewGuid());
-
     public static EmailConfirmationCode EmptyCode() => _empty;
-
-    //public static EmailConfirmationCode FromExiting(Guid code, Instant? issuedAt = null) => new(code, issuedAt);
-
-    private bool IsEmpty() => _value is null;
-
-    private bool IsExpired() => IsEmpty()
-        ? throw new IdentityDomainException("Error checking email confirmation code expiration.")
-        : SystemClock.Instance.GetCurrentInstant() > IssuedAt?.Plus(_validityDuration);
-
     public void Verify(EmailConfirmationCode providedCode)
     {
         // Don't reveal that the email confirmation code has not been requested

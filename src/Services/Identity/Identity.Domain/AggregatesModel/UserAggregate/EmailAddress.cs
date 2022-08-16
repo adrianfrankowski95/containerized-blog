@@ -4,7 +4,7 @@ using Blog.Services.Identity.Domain.SeedWork;
 
 namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 
-public readonly record EmailAddress : ValueObject<EmailAddress>
+public class EmailAddress : ValueObject<EmailAddress>
 {
     private readonly NonEmptyString _value;
     public bool IsConfirmed { get; private set; }
