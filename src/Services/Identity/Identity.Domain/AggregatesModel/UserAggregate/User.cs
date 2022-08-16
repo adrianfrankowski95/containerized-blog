@@ -135,25 +135,26 @@ public class User : Entity<UserId>, IAggregateRoot
     public LoginResult Login(EmailAddress emailAddress, PasswordHash passwordHash)
     {
         if(IsLockedOut)
-            return LoginResult.Fail(LoginErrorCode.FailLockedOut);
+            return LoginResult.Fail(LoginErrorCode.LockedOut);
+
 
         if(emailAddress is null || passwordHash is null || !HasActivePassword ||
             !EmailAddress.Equals(emailAddress) || !PasswordHash!.Equals(passwordHash))
         {
             FailedLoginAttempt();
-            return LoginResult.Fail(LoginErrorCode.FailInvalidCredentials);
+            return LoginResult.Fail(LoginErrorCode.InvalidCredentials);
         }
 
         if(IsSuspended)
         {
             FailedLoginAttempt();
-            return LoginResult.Fail(LoginErrorCode.FailSuspended);
+            return LoginResult.Fail(LoginErrorCode.Suspended);
         }
 
         if(!HasConfirmedEmailAddress)
         {
             FailedLoginAttempt();
-            return LoginResult.Fail(LoginErrorCode.FailUnconfirmedEmail);
+            return LoginResult.Fail(LoginErrorCode.UnconfirmedEmail);
         }
 
         SuccessfulLoginAttempt();
