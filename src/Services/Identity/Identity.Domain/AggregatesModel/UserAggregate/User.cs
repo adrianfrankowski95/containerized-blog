@@ -38,17 +38,17 @@ public class User : Entity<UserId>, IAggregateRoot
         UserRole? userRole = null
     )
     {
-        if (username is null)
-            throw new IdentityDomainException("Username is required.");
+        if(username is null)
+            throw new ArgumentNullException($"{nameof(Username)} must not be null.");
 
-        if (fullName is null)
-            throw new IdentityDomainException("Full name is required.");
+        if(fullName is null)
+            throw new ArgumentNullException($"{nameof(FullName)} must not be null.");
 
-        if (emailAddress is null)
-            throw new IdentityDomainException("Email address is required.");
+        if(emailAddress is null)
+            throw new ArgumentNullException($"{nameof(EmailAddress)} must not be null.");
 
         if (passwordHash is null && passwordResetCode is not null)
-            throw new IdentityDomainException("Missing password reset code while creating user without password.");
+            throw new IdentityDomainException("Password reset code must not be null while creating user without password.");
 
         Username = username;
         FullName = fullName;
@@ -56,7 +56,7 @@ public class User : Entity<UserId>, IAggregateRoot
         ReceiveAdditionalEmails = receiveAdditionalEmails;
         PasswordHash = passwordHash;
 
-        FailedLoginAttempts = LoginAttempts.Zero;
+        FailedLoginAttempts = LoginAttempts.None;
 
         Role = userRole ?? UserRole.DefaultRole();
         CreatedAt = SystemClock.Instance.GetCurrentInstant();
@@ -97,7 +97,7 @@ public class User : Entity<UserId>, IAggregateRoot
     private void SetNewPasswordResetCode() => PasswordResetCode = PasswordResetCode.NewCode();
     private void ClearPasswordResetCode() => PasswordResetCode = PasswordResetCode.EmptyCode();
     private void ClearPasswordHash() => PasswordHash = null;
-    private void ClearFailedLoginAttempts() => FailedLoginAttempts = LoginAttempts.Zero;
+    private void ClearFailedLoginAttempts() => FailedLoginAttempts = LoginAttempts.None;
     private void UpdatePasswordHash(PasswordHash passwordHash) => PasswordHash = passwordHash;
     private void RefreshSecurityStamp() => SecurityStamp = SecurityStamp.NewStamp();
 

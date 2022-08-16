@@ -7,7 +7,7 @@ namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 public class LoginAttempts : ValueObject<LoginAttempts>
 {
     private readonly NonNegativeInt _count;
-    private static readonly LoginAttempts _zero = new();
+    private static readonly LoginAttempts _none = new();
     private static readonly LoginAttempts _maxAllowed = new();
 
     private LoginAttempts()
@@ -19,7 +19,7 @@ public class LoginAttempts : ValueObject<LoginAttempts>
     {
         _count = count;
     }
-    public static LoginAttempts Zero => _zero;
+    public static LoginAttempts None => _none;
     public static LoginAttempts MaxAllowed => _maxAllowed;
     public LoginAttempts Increment()
     {
