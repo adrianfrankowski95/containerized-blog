@@ -14,8 +14,8 @@ public class User : Entity<UserId>, IAggregateRoot
     public UserRole Role { get; private set; }
     public PasswordHash? PasswordHash { get; private set; }
     public Instant CreatedAt { get; }
-    public LoginAttempts FailedLoginAttempts { get; private set; }
-    public Instant? LastLoginAt { get; private set; }
+    public FailedLoginAttemptsCount FailedLoginAttemptsCount { get; private set; }
+    public Instant? LastSuccessfulLoginAt { get; private set; }
     public Instant? LockedOutUntil { get; private set; }
     public Instant? SuspendedUntil { get; private set; }
     public PasswordResetCode PasswordResetCode { get; private set; }
@@ -55,7 +55,7 @@ public class User : Entity<UserId>, IAggregateRoot
         ReceiveAdditionalEmails = receiveAdditionalEmails;
         PasswordHash = passwordHash;
 
-        FailedLoginAttempts = LoginAttempts.None;
+        FailedLoginAttemptsCount = FailedLoginAttemptsCount.None;
 
         Role = userRole ?? UserRole.DefaultRole();
         CreatedAt = SystemClock.Instance.GetCurrentInstant();
@@ -97,9 +97,14 @@ public class User : Entity<UserId>, IAggregateRoot
     private void ClearPasswordResetCode() => PasswordResetCode = PasswordResetCode.Empty;
     private void ClearPasswordHash() => PasswordHash = null;
     private void UpdatePasswordHash(PasswordHash passwordHash) => PasswordHash = passwordHash;
-    private void AddFailedLoginAttempt() => FailedLoginAttempts = FailedLoginAttempts.Increment();
-    private void ClearFailedLoginAttempts() => FailedLoginAttempts = LoginAttempts.None;
-    private void SetLastLogin() => LastLoginAt = SystemClock.Instance.GetCurrentInstant();
+    private void AddFailedLoginAttempt() => FailedLoginAttemptsCount = FailedLoginAttemptsCount.Increment();
+    private void ClearFailedLoginAttempts() => FailedLoginAttemptsCount = FailedLoginAttemptsCount.None;
+    private void ClearFailedLoginAttemptsIfExpired()
+    {
+        if(!FailedLoginAttemptsCount.IsEmpty() && FailedLoginAttemptsCount.IsExpired())
+            ClearFailedLoginAttempts();
+    }
+    private void SetSuccessfulLogin() => LastSuccessfulLoginAt = SystemClock.Instance.GetCurrentInstant();
     private void LockOutUntil(NonPastInstant until)
     {
         LockedOutUntil = until;
@@ -143,7 +148,6 @@ public class User : Entity<UserId>, IAggregateRoot
         if(IsLockedOut)
             return LoginResult.Fail(LoginErrorCode.LockedOut);
 
-
         if(emailAddress is null || passwordHash is null || !HasActivePassword ||
             !EmailAddress.Equals(emailAddress) || !PasswordHash!.Equals(passwordHash))
         {
@@ -172,7 +176,9 @@ public class User : Entity<UserId>, IAggregateRoot
         if(IsLockedOut)
             throw new IdentityDomainException("Account has already been locked out.");
 
-        if(FailedLoginAttempts == LoginAttempts.MaxAllowed)
+        ClearFailedLoginAttemptsIfExpired();
+
+        if(FailedLoginAttemptsCount.IsMaxAllowed())
             LockOutUntil(SystemClock.Instance.GetCurrentInstant().Plus(Duration.FromMinutes(5)));
         else
             AddFailedLoginAttempt();
@@ -181,7 +187,7 @@ public class User : Entity<UserId>, IAggregateRoot
     private void SuccessfulLoginAttempt()
     {
         ClearFailedLoginAttempts();
-        SetLastLogin();
+        SetSuccessfulLogin();
     }
 }
 
