@@ -47,7 +47,7 @@ public class EmailConfirmationCode : ValueObject<EmailConfirmationCode>
             throw new IdentityDomainException("The email confirmation code is invalid.");
     }
 
-    protected override IEnumerable<object> GetEqualityCheckAttributes()
+    protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
         yield return _value;
     }

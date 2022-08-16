@@ -6,7 +6,7 @@ public class Product : ReviewItem
     private Product() { }
     public Product(string name, string websiteUrl) : base(name, websiteUrl) { }
 
-    protected override IEnumerable<object> GetEqualityCheckAttributes()
+    protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
         return base.GetEqualityCheckAttributes();
     }

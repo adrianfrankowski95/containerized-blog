@@ -21,7 +21,7 @@ public sealed class Address : ValueObject<Address>, IValidatable
         City = city;
         Street = street;
     }
-    protected override IEnumerable<object> GetEqualityCheckAttributes()
+    protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
         yield return Country;
         yield return ZipCode;

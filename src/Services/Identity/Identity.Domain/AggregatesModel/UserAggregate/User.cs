@@ -14,7 +14,8 @@ public class User : Entity<UserId>, IAggregateRoot
     public UserRole Role { get; private set; }
     public PasswordHash? PasswordHash { get; private set; }
     public Instant CreatedAt { get; }
-    public Login Login { get; private set; }
+    public LoginAttempts FailedLoginAttempts { get; private set; }
+    public Instant? LastLoginAt { get; private set; }
     public Instant? LockedOutUntil { get; private set; }
     public Instant? SuspendedUntil { get; private set; }
     public PasswordResetCode PasswordResetCode { get; private set; }
@@ -55,7 +56,7 @@ public class User : Entity<UserId>, IAggregateRoot
         ReceiveAdditionalEmails = receiveAdditionalEmails;
         PasswordHash = passwordHash;
 
-        Login = new();
+        FailedLoginAttempts = LoginAttempts.Zero;
 
         Role = userRole ?? UserRole.DefaultRole();
         CreatedAt = SystemClock.Instance.GetCurrentInstant();
@@ -96,12 +97,10 @@ public class User : Entity<UserId>, IAggregateRoot
     private void SetNewPasswordResetCode() => PasswordResetCode = PasswordResetCode.NewCode();
     private void ClearPasswordResetCode() => PasswordResetCode = PasswordResetCode.EmptyCode();
     private void ClearPasswordHash() => PasswordHash = null;
+    private void ClearFailedLoginAttempts() => FailedLoginAttempts = LoginAttempts.Zero;
     private void UpdatePasswordHash(PasswordHash passwordHash) => PasswordHash = passwordHash;
     private void RefreshSecurityStamp() => SecurityStamp = SecurityStamp.NewStamp();
-    private void DisallowIfSuspended()
-    {
 
-    }
     public void ConfirmEmailAddress(EmailConfirmationCode providedCode)
     {
         EmailConfirmationCode.Verify(providedCode);
@@ -135,24 +134,14 @@ public class User : Entity<UserId>, IAggregateRoot
 
         if (!HasActivePassword || !EmailAddress.Equals(emailAddress) || !PasswordHash!.Equals(passwordHash))
         {
-            FailedLoginAttempt();
+            //FailedLoginAttempt();
             throw new IdentityDomainException("Invalid email address and/or password.");
         }
 
         if (IsSuspended)
             throw new IdentityDomainException($"Account is suspended until {SuspendedUntil}.");
 
-        LoginSuccessfully();
-    }
-
-    private void LoginSuccessfully()
-    {
-        Login = Login.SuccessfulAttempt();
-    }
-
-    private void FailedLoginAttempt()
-    {
-        Login = Login.FailedAttempt(this);
+        //LoginSuccessfully();
     }
 
     public void LockOutUntil(NonPastInstant until) => LockedOutUntil = until;
@@ -174,7 +163,7 @@ public class UserId : ValueObject<UserId>
 
     public static UserId FromGuid(Guid guid) => new(guid);
 
-    protected override IEnumerable<object> GetEqualityCheckAttributes()
+    protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
         yield return Value;
     }

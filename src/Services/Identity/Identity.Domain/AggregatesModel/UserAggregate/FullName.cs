@@ -12,7 +12,7 @@ public class FullName : ValueObject<FullName>
         LastName = lastName;
     }
     public override string ToString() => FirstName + " " + LastName;
-    protected override IEnumerable<object> GetEqualityCheckAttributes()
+    protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
         yield return FirstName;
         yield return LastName;

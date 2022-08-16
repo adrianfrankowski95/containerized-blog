@@ -30,7 +30,7 @@ public sealed class Hours : ValueObject<Hours>, IComparable<Hours>
     {
         return Value.CompareTo(other.Value);
     }
-    protected override IEnumerable<object> GetEqualityCheckAttributes()
+    protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
         yield return Value;
     }

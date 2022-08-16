@@ -4,7 +4,7 @@ using Blog.Services.Identity.Domain.SeedWork;
 
 namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 
-public class EmailAddress : ValueObject<EmailAddress>
+public readonly record EmailAddress : ValueObject<EmailAddress>
 {
     private readonly NonEmptyString _value;
     public bool IsConfirmed { get; private set; }
@@ -19,7 +19,7 @@ public class EmailAddress : ValueObject<EmailAddress>
 
     public EmailAddress Confirm() => new(_value) { IsConfirmed = true };
 
-    protected override IEnumerable<object> GetEqualityCheckAttributes()
+    protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
         yield return _value;
     }

@@ -20,7 +20,7 @@ public class NonEmptyString : ValueObject<NonEmptyString>
         _value = value;
     }
 
-    protected override IEnumerable<object> GetEqualityCheckAttributes()
+    protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
         yield return _value;
     }

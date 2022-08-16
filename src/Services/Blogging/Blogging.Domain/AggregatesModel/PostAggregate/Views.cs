@@ -18,7 +18,7 @@ public class Views : ValueObject<Views>
 
     public Views Increment() => new(++Count);
 
-    protected override IEnumerable<object> GetEqualityCheckAttributes()
+    protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
         yield return Count;
     }

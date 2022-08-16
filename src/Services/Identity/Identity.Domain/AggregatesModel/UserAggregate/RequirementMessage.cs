@@ -14,7 +14,7 @@ public sealed class RequirementMessage<TItem> : ValueObject<RequirementMessage<T
     public static implicit operator RequirementMessage<TItem>(string value) => new(value);
     public static implicit operator string(RequirementMessage<TItem> value) => value._value;
 
-    protected override IEnumerable<object> GetEqualityCheckAttributes()
+    protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
         yield return _value;
     }

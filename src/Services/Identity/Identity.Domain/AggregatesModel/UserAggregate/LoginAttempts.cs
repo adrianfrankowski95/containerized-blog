@@ -7,7 +7,8 @@ namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 public class LoginAttempts : ValueObject<LoginAttempts>
 {
     private readonly NonNegativeInt _count;
-    public static readonly LoginAttempts MaxAllowed = new(5);
+    private static readonly LoginAttempts _zero = new();
+    private static readonly LoginAttempts _maxAllowed = new();
 
     private LoginAttempts()
     {
@@ -18,7 +19,8 @@ public class LoginAttempts : ValueObject<LoginAttempts>
     {
         _count = count;
     }
-    public static LoginAttempts None() => new();
+    public static LoginAttempts Zero => _zero;
+    public static LoginAttempts MaxAllowed => _maxAllowed;
     public LoginAttempts Increment()
     {
         if (_count == MaxAllowed)
@@ -36,7 +38,7 @@ public class LoginAttempts : ValueObject<LoginAttempts>
     public override bool Equals(object? second) => base.Equals(second);
     public override int GetHashCode() => base.GetHashCode();
 
-    protected override IEnumerable<object> GetEqualityCheckAttributes()
+    protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
         yield return _count;
     }

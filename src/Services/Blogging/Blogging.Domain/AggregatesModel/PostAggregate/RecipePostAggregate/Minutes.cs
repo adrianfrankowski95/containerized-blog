@@ -23,7 +23,7 @@ public sealed class Minutes : ValueObject<Minutes>, IComparable<Minutes>
     public static Minutes FromHours(Hours hours) => hours.ToMinutes();
     public Minutes RemainderFromHours() => new(Value % 60);
 
-    protected override IEnumerable<object> GetEqualityCheckAttributes()
+    protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
         yield return Value;
     }

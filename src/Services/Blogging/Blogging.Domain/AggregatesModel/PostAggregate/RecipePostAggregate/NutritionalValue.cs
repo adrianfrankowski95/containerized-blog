@@ -19,7 +19,7 @@ public sealed class NutritionalValue : ValueObject<NutritionalValue>
         Fiber,
         Salt};
 
-    protected override IEnumerable<object> GetEqualityCheckAttributes()
+    protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
         yield return Carbohydrate;
         yield return Protein;

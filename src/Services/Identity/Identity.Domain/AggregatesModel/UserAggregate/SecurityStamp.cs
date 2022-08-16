@@ -18,7 +18,7 @@ public class SecurityStamp : ValueObject<SecurityStamp>
 
     public static SecurityStamp NewStamp() => new(Guid.NewGuid());
 
-    protected override IEnumerable<object> GetEqualityCheckAttributes()
+    protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
         yield return _value;
     }

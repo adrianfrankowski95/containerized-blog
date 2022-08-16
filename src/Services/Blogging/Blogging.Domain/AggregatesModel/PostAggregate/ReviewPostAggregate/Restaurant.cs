@@ -11,7 +11,7 @@ public class Restaurant : ReviewItem
     {
 
     }
-    protected override IEnumerable<object> GetEqualityCheckAttributes()
+    protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
         return base.GetEqualityCheckAttributes();
     }
