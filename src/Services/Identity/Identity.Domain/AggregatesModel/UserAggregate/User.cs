@@ -1,12 +1,12 @@
 using Blog.Services.Identity.Domain.Exceptions;
 using Blog.Services.Identity.Domain.SeedWork;
-using Identity.Domain.AggregatesModel.UserAggregate;
 using NodaTime;
 
 namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 
 public class User : Entity<UserId>, IAggregateRoot
 {
+    private static readonly Duration _lockoutDuration = Duration.FromMinutes(5);
     public Username Username { get; }
     public FullName FullName { get; }
     public EmailAddress EmailAddress { get; private set; }
@@ -22,8 +22,8 @@ public class User : Entity<UserId>, IAggregateRoot
     public EmailConfirmationCode EmailConfirmationCode { get; private set; }
     public SecurityStamp SecurityStamp { get; private set; }
 
-    public bool IsSuspended => SuspendedUntil is not null && SuspendedUntil < SystemClock.Instance.GetCurrentInstant();
-    public bool IsLockedOut => LockedOutUntil is not null && LockedOutUntil < SystemClock.Instance.GetCurrentInstant();
+    public bool IsSuspended(Instant now) => SuspendedUntil is not null && SuspendedUntil < now;
+    public bool IsLockedOut(Instant now) => LockedOutUntil is not null && LockedOutUntil < now;
     public bool HasActivePassword => PasswordHash is not null && PasswordResetCode.IsEmpty();
     public bool HasConfirmedEmailAddress => EmailAddress.IsConfirmed;
 
@@ -32,6 +32,7 @@ public class User : Entity<UserId>, IAggregateRoot
         FullName fullName,
         EmailAddress emailAddress,
         bool receiveAdditionalEmails,
+        Instant now,
         PasswordHash? passwordHash = null,
         PasswordResetCode? passwordResetCode = null,
         UserRole? userRole = null
@@ -58,10 +59,10 @@ public class User : Entity<UserId>, IAggregateRoot
         FailedLoginAttemptsCount = FailedLoginAttemptsCount.None;
 
         Role = userRole ?? UserRole.DefaultRole();
-        CreatedAt = SystemClock.Instance.GetCurrentInstant();
+        CreatedAt = now;
 
         PasswordResetCode = passwordHash is null ? PasswordResetCode.Empty : passwordResetCode!;
-        EmailConfirmationCode = EmailConfirmationCode.NewCode();
+        EmailConfirmationCode = EmailConfirmationCode.NewCode(now);
         SecurityStamp = SecurityStamp.NewStamp();
     }
 
@@ -70,41 +71,43 @@ public class User : Entity<UserId>, IAggregateRoot
         FullName fullName,
         PasswordHash passwordHash,
         EmailAddress emailAddress,
-        bool receiveAdditionalEmails)
+        bool receiveAdditionalEmails,
+        Instant now)
             // TODO:
             // - issue user created event that will be consumed by emailing service
-            => new(username, fullName, emailAddress, receiveAdditionalEmails, passwordHash);
+            => new(username, fullName, emailAddress, receiveAdditionalEmails, now, passwordHash);
 
     public static User CreateBy(
         User currentUser,
         Username username,
         FullName fullName,
         EmailAddress emailAddress,
-        UserRole role)
+        UserRole role,
+        Instant now)
     {
         // TODO:
         // - check if current user has permission to create users
         // and if provided role is allowed for current user's role
         // - issue user created event that will be consumed by emailing service
         var code = PasswordResetCode.NewCode();
-        return new User(username, fullName, emailAddress, false, null, code, role);
+        return new User(username, fullName, emailAddress, false, now, null, code, role);
     }
 
     private void ConfirmEmailAddress() => EmailAddress = EmailAddress.Confirm();
-    private void SetNewEmailConfirmationCode() => EmailConfirmationCode = EmailConfirmationCode.NewCode();
+    private void SetNewEmailConfirmationCode(Instant now) => EmailConfirmationCode = EmailConfirmationCode.NewCode(now);
     private void ClearEmailConfirmationCode() => EmailConfirmationCode = EmailConfirmationCode.Empty;
     private void SetNewPasswordResetCode() => PasswordResetCode = PasswordResetCode.NewCode();
     private void ClearPasswordResetCode() => PasswordResetCode = PasswordResetCode.Empty;
     private void ClearPasswordHash() => PasswordHash = null;
     private void UpdatePasswordHash(PasswordHash passwordHash) => PasswordHash = passwordHash;
-    private void AddFailedLoginAttempt() => FailedLoginAttemptsCount = FailedLoginAttemptsCount.Increment();
+    private void AddFailedLoginAttempt(Instant now) => FailedLoginAttemptsCount = FailedLoginAttemptsCount.Increment(now);
     private void ClearFailedLoginAttempts() => FailedLoginAttemptsCount = FailedLoginAttemptsCount.None;
-    private void ClearFailedLoginAttemptsIfExpired()
+    private void ClearFailedLoginAttemptsIfExpired(Instant now)
     {
-        if (!FailedLoginAttemptsCount.IsEmpty() && FailedLoginAttemptsCount.IsExpired())
+        if (!FailedLoginAttemptsCount.IsEmpty() && FailedLoginAttemptsCount.IsExpired(now))
             ClearFailedLoginAttempts();
     }
-    private void SetSuccessfulLogin() => LastLoggedInAt = SystemClock.Instance.GetCurrentInstant();
+    private void SetSuccessfulLogin(Instant now) => LastLoggedInAt = now;
     private void LockOutUntil(NonPastInstant until)
     {
         LockedOutUntil = until;
@@ -117,9 +120,9 @@ public class User : Entity<UserId>, IAggregateRoot
         // - check if current user has permission to suspend users
         SuspendedUntil = until;
     }
-    public void ConfirmEmailAddress(EmailConfirmationCode providedCode)
+    public void ConfirmEmailAddress(EmailConfirmationCode providedCode, Instant now)
     {
-        EmailConfirmationCode.Verify(providedCode);
+        EmailConfirmationCode.Verify(providedCode, now);
         ConfirmEmailAddress();
         ClearEmailConfirmationCode();
     }
@@ -133,7 +136,7 @@ public class User : Entity<UserId>, IAggregateRoot
         RefreshSecurityStamp();
     }
 
-    public void UpdatePassword(PasswordHash passwordHash, PasswordResetCode providedCode)
+    public void SetPassword(PasswordHash passwordHash, PasswordResetCode providedCode)
     {
         // TODO:
         // - issue password updated event that will be consumed by emailing service
@@ -143,51 +146,35 @@ public class User : Entity<UserId>, IAggregateRoot
         RefreshSecurityStamp();
     }
 
-    public LoginResult Login(EmailAddress emailAddress, PasswordHash passwordHash)
+    public LoginResult Login(EmailAddress providedEmailAddress, PasswordHash providedPasswordHash, ILoginService loginService, Instant now)
     {
-        if (IsLockedOut)
-            return LoginResult.Fail(LoginErrorCode.AccountLockedOut);
+        var result = loginService.Login(this, providedEmailAddress, providedPasswordHash, now);
 
-        if (emailAddress is null || passwordHash is null || !HasActivePassword ||
-            !EmailAddress.Equals(emailAddress) || !PasswordHash!.Equals(passwordHash))
-        {
-            FailedLoginAttempt();
-            return LoginResult.Fail(LoginErrorCode.InvalidCredentials);
-        }
+        if (result.IsSuccess)
+            SuccessfulLoginAttempt(now);
+        else
+            FailedLoginAttempt(now);
 
-        if (IsSuspended)
-        {
-            FailedLoginAttempt();
-            return LoginResult.Fail(LoginErrorCode.AccountSuspended);
-        }
-
-        if (!HasConfirmedEmailAddress)
-        {
-            FailedLoginAttempt();
-            return LoginResult.Fail(LoginErrorCode.UnconfirmedEmail);
-        }
-
-        SuccessfulLoginAttempt();
-        return LoginResult.Success;
+        return result;
     }
 
-    private void FailedLoginAttempt()
+    private void FailedLoginAttempt(Instant now)
     {
-        if (IsLockedOut)
+        if (IsLockedOut(now))
             throw new IdentityDomainException("Account has already been locked out.");
 
-        ClearFailedLoginAttemptsIfExpired();
+        ClearFailedLoginAttemptsIfExpired(now);
 
         if (FailedLoginAttemptsCount.IsMaxAllowed())
-            LockOutUntil(SystemClock.Instance.GetCurrentInstant().Plus(Duration.FromMinutes(5)));
+            LockOutUntil(new NonPastInstant(now.Plus(_lockoutDuration), now));
         else
-            AddFailedLoginAttempt();
+            AddFailedLoginAttempt(now);
     }
 
-    private void SuccessfulLoginAttempt()
+    private void SuccessfulLoginAttempt(Instant now)
     {
         ClearFailedLoginAttempts();
-        SetSuccessfulLogin();
+        SetSuccessfulLogin(now);
     }
 }
 
@@ -198,11 +185,6 @@ public class UserId : ValueObject<UserId>
     public UserId()
     {
         Value = Guid.NewGuid();
-    }
-
-    private UserId(Guid guid)
-    {
-        Value = guid;
     }
 
     protected override IEnumerable<object?> GetEqualityCheckAttributes()

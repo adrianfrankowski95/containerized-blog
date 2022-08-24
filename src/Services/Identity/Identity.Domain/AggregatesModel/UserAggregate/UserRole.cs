@@ -2,7 +2,7 @@ using Blog.Services.Identity.Domain.SeedWork;
 
 namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 
-public class UserRole : Enumeration
+public class UserRole : Enumeration, Entity<UserRoleId>
 {
 
     private UserRole(int value, NonEmptyString name) : base(value, name)
@@ -42,5 +42,20 @@ public class UserRole : Enumeration
             throw new InvalidOperationException($"Possible {nameof(UserRole)} values: {string.Join(',', List().Select(r => r.Value))}. Provided value: {value}");
 
         return role;
+    }
+}
+
+public class UserRoleId : ValueObject<UserId>
+{
+    public int Value { get; }
+
+    public UserRoleId()
+    {
+        Value = Guid.NewGuid();
+    }
+
+    protected override IEnumerable<object?> GetEqualityCheckAttributes()
+    {
+        yield return Value;
     }
 }

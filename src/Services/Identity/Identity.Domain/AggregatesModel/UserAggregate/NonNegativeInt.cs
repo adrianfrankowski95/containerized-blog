@@ -1,6 +1,6 @@
 using Blog.Services.Identity.Domain.SeedWork;
 
-namespace Identity.Domain.AggregatesModel.UserAggregate;
+namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 
 public class NonNegativeInt : ValueObject<NonNegativeInt>
 {
