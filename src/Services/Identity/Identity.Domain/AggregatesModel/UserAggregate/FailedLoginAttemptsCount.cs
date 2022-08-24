@@ -1,15 +1,16 @@
 using Blog.Services.Identity.Domain.Exceptions;
 using Blog.Services.Identity.Domain.SeedWork;
-using Identity.Domain.AggregatesModel.UserAggregate;
 using NodaTime;
 
 namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 
 public class FailedLoginAttemptsCount : ValueObject<FailedLoginAttemptsCount>
 {
+    private static readonly Duration _validityDuration = Duration.FromMinutes(5);
+    private static readonly NonNegativeInt _maxAllowed = 5;
     private readonly NonNegativeInt _count;
-    public Instant? LastNotedAt { get; }
-    public Instant? ValidUntil => LastNotedAt?.Plus(Duration.FromMinutes(5));
+    public Instant? LastFailAt { get; }
+    public Instant? ValidUntil => LastFailAt?.Plus(_validityDuration);
     private static readonly FailedLoginAttemptsCount _none = new();
     public static FailedLoginAttemptsCount None => _none;
 
@@ -18,27 +19,27 @@ public class FailedLoginAttemptsCount : ValueObject<FailedLoginAttemptsCount>
         _count = 0;
     }
 
-    private FailedLoginAttemptsCount(NonNegativeInt count)
+    private FailedLoginAttemptsCount(NonNegativeInt count, Instant now)
     {
-        if(count is null)
-            throw new ArgumentNullException("Login attempts count must not be null.");
+        if (count is null)
+            throw new IdentityDomainException("Login attempts count must not be null.");
 
         _count = count;
-        LastNotedAt = SystemClock.Instance.GetCurrentInstant();
+        LastFailAt = now;
     }
-    
-    public bool IsMaxAllowed() => _count == 5;
-    public FailedLoginAttemptsCount Increment()
+
+    public bool IsMaxAllowed() => _count == _maxAllowed;
+    public FailedLoginAttemptsCount Increment(Instant now)
     {
         if (IsMaxAllowed())
             throw new IdentityDomainException($"Exceeded maximum allowed failed login attempts.");
 
-        return new(_count + 1);
+        return new(_count + 1, now);
     }
     public bool IsEmpty() => _count == 0;
-    public bool IsExpired() => IsEmpty()
+    public bool IsExpired(Instant now) => IsEmpty()
         ? throw new IdentityDomainException("Failed login attempts count must not be empty.")
-        : SystemClock.Instance.GetCurrentInstant() > ValidUntil;
+        : now > ValidUntil;
 
     protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {

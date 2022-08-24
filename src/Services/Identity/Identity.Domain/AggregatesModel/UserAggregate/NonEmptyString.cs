@@ -1,5 +1,4 @@
 using Blog.Services.Identity.Domain.SeedWork;
-using Identity.Domain.AggregatesModel.UserAggregate;
 
 namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 
@@ -23,6 +22,7 @@ public class NonEmptyString : ValueObject<NonEmptyString>
     public override string ToString() => _value;
     public bool Contains(char value) => _value.Contains(value);
     public bool Any(Func<char, bool> predicate) => _value.Any(predicate);
+    public IEnumerable<char> Where(Func<char, bool> selector) => _value.Where(selector);
 
     protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {

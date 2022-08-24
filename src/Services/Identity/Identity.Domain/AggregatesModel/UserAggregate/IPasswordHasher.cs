@@ -2,5 +2,5 @@ namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 
 public interface IPasswordHasher
 {
-    public NonEmptyString HashPassword(Password password);
+    public PasswordHash HashPassword(Password password);
 }
