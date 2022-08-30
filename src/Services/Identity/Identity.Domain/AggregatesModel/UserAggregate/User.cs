@@ -191,4 +191,6 @@ public class UserId : ValueObject<UserId>
     {
         yield return Value;
     }
+
+    public override string ToString() => Value.ToString();
 }
