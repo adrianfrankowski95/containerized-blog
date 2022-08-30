@@ -4,7 +4,7 @@ namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 
 public interface ILoginService
 {
-    public LoginResult Login(User user, EmailAddress providedEmailAddress, PasswordHash providedPasswordHash, Instant now);
+    public LoginResult Login(User user, EmailAddress providedEmailAddress, PasswordHasher.PasswordHash providedPasswordHash, Instant now);
 
     //     if (IsLockedOut(now))
     //             return LoginResult.Fail(LoginErrorCode.AccountLockedOut);
