@@ -12,7 +12,7 @@ public class User : Entity<UserId>, IAggregateRoot
     public EmailAddress EmailAddress { get; private set; }
     public bool ReceiveAdditionalEmails { get; }
     public UserRole Role { get; private set; }
-    public PasswordHash? PasswordHash { get; private set; }
+    public PasswordHasher.PasswordHash? PasswordHash { get; private set; }
     public Instant CreatedAt { get; }
     public FailedLoginAttemptsCount FailedLoginAttemptsCount { get; private set; }
     public Instant? LastLoggedInAt { get; private set; }
@@ -33,7 +33,7 @@ public class User : Entity<UserId>, IAggregateRoot
         EmailAddress emailAddress,
         bool receiveAdditionalEmails,
         Instant now,
-        PasswordHash? passwordHash = null,
+        PasswordHasher.PasswordHash? passwordHash = null,
         PasswordResetCode? passwordResetCode = null,
         UserRole? userRole = null
     )
@@ -69,7 +69,7 @@ public class User : Entity<UserId>, IAggregateRoot
     public static User Create(
         Username username,
         FullName fullName,
-        PasswordHash passwordHash,
+        PasswordHasher.PasswordHash passwordHash,
         EmailAddress emailAddress,
         bool receiveAdditionalEmails,
         Instant now)
@@ -99,7 +99,7 @@ public class User : Entity<UserId>, IAggregateRoot
     private void SetNewPasswordResetCode() => PasswordResetCode = PasswordResetCode.NewCode();
     private void ClearPasswordResetCode() => PasswordResetCode = PasswordResetCode.Empty;
     private void ClearPasswordHash() => PasswordHash = null;
-    private void UpdatePasswordHash(PasswordHash passwordHash) => PasswordHash = passwordHash;
+    private void UpdatePasswordHash(PasswordHasher.PasswordHash passwordHash) => PasswordHash = passwordHash;
     private void AddFailedLoginAttempt(Instant now) => FailedLoginAttemptsCount = FailedLoginAttemptsCount.Increment(now);
     private void ClearFailedLoginAttempts() => FailedLoginAttemptsCount = FailedLoginAttemptsCount.None;
     private void ClearFailedLoginAttemptsIfExpired(Instant now)
@@ -136,7 +136,7 @@ public class User : Entity<UserId>, IAggregateRoot
         RefreshSecurityStamp();
     }
 
-    public void SetPassword(PasswordHash passwordHash, PasswordResetCode providedCode)
+    public void SetPassword(PasswordHasher.PasswordHash passwordHash, PasswordResetCode providedCode)
     {
         // TODO:
         // - issue password updated event that will be consumed by emailing service
@@ -146,7 +146,7 @@ public class User : Entity<UserId>, IAggregateRoot
         RefreshSecurityStamp();
     }
 
-    public LoginResult Login(EmailAddress providedEmailAddress, PasswordHash providedPasswordHash, ILoginService loginService, Instant now)
+    public LoginResult Login(EmailAddress providedEmailAddress, PasswordHasher.PasswordHash providedPasswordHash, ILoginService loginService, Instant now)
     {
         var result = loginService.Login(this, providedEmailAddress, providedPasswordHash, now);
 
