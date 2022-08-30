@@ -25,6 +25,7 @@ public static class InfrastructureInstaller
             {
                 opts.UseNodaTime();
                 opts.MigrationsAssembly("Blogging.API");
+                opts.EnableRetryOnFailure();
             });
             opts.UseSnakeCaseNamingConvention();
         });

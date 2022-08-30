@@ -1,5 +1,4 @@
 using System.Data;
-using Blog.Services.Blogging.API.Infrastructure.Services;
 using Blog.Services.Blogging.Infrastructure;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -19,7 +18,7 @@ public class TransactionBehavior<TRequest, TResponse> : IPipelineBehavior<TReque
     }
     public async Task<TResponse> Handle(TRequest request, CancellationToken cancellationToken, RequestHandlerDelegate<TResponse> next)
     {
-        TResponse response = default;
+        TResponse response = default!;
         string requestType = request.GetType().Name;
 
         try
@@ -27,12 +26,10 @@ public class TransactionBehavior<TRequest, TResponse> : IPipelineBehavior<TReque
             if (!_bloggingDbContext.HasActiveTransaction)
                 return await next();
 
-
             var strategy = _bloggingDbContext.Database.CreateExecutionStrategy();
 
             await strategy.ExecuteAsync(async () =>
             {
-
                 await using var transaction = await _bloggingDbContext.BeginTransactionAsync(IsolationLevel.ReadCommitted, cancellationToken);
 
                 _logger.LogInformation("----- Beginning transaction {TransactionId} for a {RequestType} ({Request})",

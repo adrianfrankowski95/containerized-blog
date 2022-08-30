@@ -23,15 +23,6 @@ services.AddRazorPages(opts =>
     opts.RootDirectory = "./Templates";
 });
 
-services.AddCors(opts =>
-{
-    opts.AddDefaultPolicy(
-        x => x.SetIsOriginAllowed(origin => true)
-        .AllowAnyHeader()
-        .AllowAnyMethod()
-        .AllowAnyOrigin());
-});
-
 services
     .AddInstanceConfig()
     .AddControllers(env)
@@ -42,7 +33,6 @@ services
 var app = builder.Build();
 
 app.UseStaticFiles(); //html, css, images, js in wwwroot folder
-app.UseCors();
 
 app.UseRouting();
 

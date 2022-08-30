@@ -7,8 +7,9 @@ namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 public class User : Entity<UserId>, IAggregateRoot
 {
     private static readonly Duration _lockoutDuration = Duration.FromMinutes(5);
-    public Username Username { get; }
-    public FullName FullName { get; }
+    public Username Username { get; private set; }
+    public FullName FullName { get; private set; }
+    public Gender Gender { get; private set; }
     public EmailAddress EmailAddress { get; private set; }
     public bool ReceiveAdditionalEmails { get; }
     public UserRole Role { get; private set; }
@@ -30,6 +31,7 @@ public class User : Entity<UserId>, IAggregateRoot
     private User(
         Username username,
         FullName fullName,
+        Gender gender,
         EmailAddress emailAddress,
         bool receiveAdditionalEmails,
         Instant now,
@@ -47,11 +49,15 @@ public class User : Entity<UserId>, IAggregateRoot
         if (emailAddress is null)
             throw new ArgumentNullException($"{nameof(EmailAddress)} must not be null.");
 
+        if (gender is null)
+            throw new IdentityDomainException($"{nameof(Gender)} must not be null.");
+
         if (passwordHash is null && passwordResetCode is not null)
             throw new IdentityDomainException("Password reset code must not be null while creating user without password.");
 
         Username = username;
         FullName = fullName;
+        Gender = gender;
         EmailAddress = emailAddress;
         ReceiveAdditionalEmails = receiveAdditionalEmails;
         PasswordHash = passwordHash;
@@ -69,17 +75,19 @@ public class User : Entity<UserId>, IAggregateRoot
     public static User Register(
         Username username,
         FullName fullName,
+        Gender gender,
         PasswordHasher.PasswordHash passwordHash,
         EmailAddress emailAddress,
         bool receiveAdditionalEmails,
         Instant now)
             // TODO:
             // - issue user created event that will be consumed by emailing service
-            => new(username, fullName, emailAddress, receiveAdditionalEmails, now, passwordHash);
+            => new(username, fullName, gender, emailAddress, receiveAdditionalEmails, now, passwordHash);
 
     public static User Create(
         Username username,
         FullName fullName,
+        Gender gender,
         EmailAddress emailAddress,
         UserRole role,
         Instant now)
@@ -87,7 +95,7 @@ public class User : Entity<UserId>, IAggregateRoot
         // TODO:
         // - issue user created event that will be consumed by emailing service
         var code = PasswordResetCode.NewCode(now);
-        return new User(username, fullName, emailAddress, false, now, null, code, role);
+        return new User(username, fullName, gender, emailAddress, false, now, null, code, role);
     }
 
     private void ConfirmEmailAddress() => EmailAddress = EmailAddress.Confirm();
@@ -148,12 +156,30 @@ public class User : Entity<UserId>, IAggregateRoot
     {
         // TODO:
         // - issue email updated event that will be consumed by emailing service
-        if(emailAddress.IsConfirmed)
+        if (emailAddress.IsConfirmed)
             throw new IdentityDomainException("New email address cannot be confirmed.");
 
         SetNewEmailConfirmationCode(now);
         UpdateEmailAddress(emailAddress);
-        RefreshSecurityStamp();
+    }
+
+    public bool UpdatePersonalData(Username? username, FullName? fullName)
+    {
+        bool isUpdated = false;
+
+        if (username is not null && !Username.Equals(username))
+        {
+            Username = username;
+            isUpdated = true;
+        }
+
+        if (fullName is not null && !FullName.Equals(fullName))
+        {
+            FullName = fullName;
+            isUpdated = true;
+        }
+
+        return isUpdated;
     }
 
     public void FailedLoginAttempt(Instant now)
@@ -178,12 +204,14 @@ public class User : Entity<UserId>, IAggregateRoot
 
 public class UserId : ValueObject<UserId>
 {
-    public Guid Value { get; }
+    public Guid Value { get; private set; }
 
     public UserId()
     {
         Value = Guid.NewGuid();
     }
+
+    public static UserId FromGuid(Guid value) => new() { Value = value };
 
     protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {

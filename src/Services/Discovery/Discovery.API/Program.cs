@@ -16,26 +16,12 @@ builder.Configuration.AddConfiguration(config);
 
 var services = builder.Services;
 
-// Add services to the container.
-services.AddLogging(opts => opts.AddConsole()); ;
-services.AddCors(opts =>
-{
-    opts.AddDefaultPolicy(
-        x => x.SetIsOriginAllowed(origin => true)
-        .AllowAnyHeader()
-        .AllowAnyMethod()
-        .AllowAnyOrigin()
-        .AllowCredentials());
-});
-
 services
     .AddMassTransitRabbitMqBus(config)
     .AddRedisServiceRegistry(config)
     .AddGrpc();
 
 var app = builder.Build();
-
-app.UseCors();
 
 app.MapGrpcService<DiscoveryService>();
 

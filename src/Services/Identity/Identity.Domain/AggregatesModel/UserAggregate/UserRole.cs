@@ -44,18 +44,3 @@ public class UserRole : Enumeration
         return role;
     }
 }
-
-public class UserRoleId : ValueObject<UserId>
-{
-    public int Value { get; }
-
-    public UserRoleId()
-    {
-
-    }
-
-    protected override IEnumerable<object?> GetEqualityCheckAttributes()
-    {
-        yield return Value;
-    }
-}
