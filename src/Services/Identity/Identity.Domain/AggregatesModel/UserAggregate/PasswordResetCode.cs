@@ -21,7 +21,7 @@ public class PasswordResetCode : ValueObject<PasswordResetCode>
         IssuedAt = null;
     }
 
-    private PasswordResetCode(NonEmptyString value)
+    private PasswordResetCode(NonEmptyString value, Instant now)
     {
         if (value is null)
             throw new ArgumentNullException("Password reset code must not be null.");
@@ -30,10 +30,10 @@ public class PasswordResetCode : ValueObject<PasswordResetCode>
             throw new IdentityDomainException("Invalid password reset code format.");
 
         _value = value;
-        IssuedAt = SystemClock.Instance.GetCurrentInstant();
+        IssuedAt = now;
     }
 
-    public static PasswordResetCode NewCode()
+    public static PasswordResetCode NewCode(Instant now)
     {
         var rnd = Random.Shared;
         var code = new char[Length];
@@ -43,7 +43,7 @@ public class PasswordResetCode : ValueObject<PasswordResetCode>
             code[i] = AllowedCharacters[rnd.Next(0, AllowedCharacters.Length)];
         }
 
-        return new(new string(code));
+        return new(new string(code), now);
     }
 
     public bool IsEmpty() => string.IsNullOrWhiteSpace(_value);
