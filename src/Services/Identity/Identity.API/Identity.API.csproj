@@ -6,20 +6,20 @@
 		<RootNamespace>Blog.Services.Identity.API</RootNamespace>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="6.0.7"/>
-		<PackageReference Include="NodaTime" Version="3.1.0"/>
-		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0"/>
-		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime" Version="6.0.5"/>
-		<PackageReference Include="EFCore.NamingConventions" Version="6.0.0"/>
-		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.7"/>
-		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="6.0.5"/>
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.7"/>
-		<PackageReference Include="BCrypt.Net-Next" Version="4.0.3"/>
-		<PackageReference Include="MassTransit.RabbitMQ" Version="8.0.5"/>
-		<PackageReference Include="MassTransit" Version="8.0.5"/>
-		<Protobuf Include="..\..\Discovery\Discovery.API\Protos\discovery.proto" GrpcServices="Client"/>
-		<Protobuf Include="..\..\Emailing\Emailing.API\Protos\emailing.proto" GrpcServices="Client"/>
-		<PackageReference Include="Grpc.AspNetCore" Version="2.47.0"/>
-		<PackageReference Include="NodaTime.Serialization.Protobuf" Version="2.0.0"/>
+		<PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="6.0.8" />
+		<PackageReference Include="NodaTime" Version="3.1.2" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime" Version="6.0.6" />
+		<PackageReference Include="EFCore.NamingConventions" Version="6.0.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.8" />
+		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="6.0.6" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.8" />
+		<PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+		<PackageReference Include="MassTransit.RabbitMQ" Version="8.0.6" />
+		<PackageReference Include="MassTransit" Version="8.0.6" />
+		<Protobuf Include="..\..\Discovery\Discovery.API\Protos\discovery.proto" GrpcServices="Client" />
+		<Protobuf Include="..\..\Emailing\Emailing.API\Protos\emailing.proto" GrpcServices="Client" />
+		<PackageReference Include="Grpc.AspNetCore" Version="2.48.0" />
+		<PackageReference Include="NodaTime.Serialization.Protobuf" Version="2.0.0" />
 	</ItemGroup>
 </Project>

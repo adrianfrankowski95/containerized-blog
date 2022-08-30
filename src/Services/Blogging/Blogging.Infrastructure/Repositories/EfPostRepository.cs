@@ -12,7 +12,7 @@ public class EfPostRepository : IPostRepository
 
     public EfPostRepository(BloggingDbContext ctx, IUnitOfWork unitOfWork)
     {
-        _posts = ctx.Posts ?? throw new ArgumentNullException(nameof(ctx));
+        _posts = ctx?.Posts ?? throw new ArgumentNullException(nameof(ctx));
         UnitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
     }
 

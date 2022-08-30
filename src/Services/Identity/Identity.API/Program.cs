@@ -1,9 +1,6 @@
 using Blog.Services.Discovery.API.Grpc;
-using Blog.Services.Identity.API.Adapters;
 using Blog.Services.Identity.API.Configs;
-using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Infrastructure;
-using Blog.Services.Identity.API.Models;
 using Blog.Services.Identity.API.Services;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -17,28 +14,15 @@ builder.Configuration.AddConfiguration(config);
 
 var services = builder.Services;
 
-// Add services to the container.
-services.AddLogging(opts => opts.AddConsole()); ;
 services.AddRazorPages();
-
-services.AddCors(opts =>
-{
-    opts.AddDefaultPolicy(
-        x => x.SetIsOriginAllowed(origin => true)
-        .AllowAnyHeader()
-        .AllowAnyMethod()
-        .AllowAnyOrigin());
-});
 
 services
     .AddInstanceConfig()
     .AddNodaTime()
-    .AddCustomIdentityInfrastructure<User, UserRole>(config)
+    
     .AddMassTransitRabbitMqBus(config)
     .AddGrpcDiscoveryService(config)
     .AddGrpcEmailingService()
-    .AddCustomIdentityCore<User>()
-    .AddCustomIdentityCoreAdapters()
     .AddCustomServices();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -55,8 +39,6 @@ if (env.IsDevelopment())
 }
 app.UseHttpsRedirection();
 app.UseStaticFiles(); //html, css, images, js in wwwroot folder
-
-app.UseCors();
 
 app.UseAuthentication();
 app.UseAuthorization();

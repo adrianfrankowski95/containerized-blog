@@ -6,21 +6,21 @@
 		<RootNamespace>Blog.Services.Blogging.API</RootNamespace>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0"/>
-		<PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning" Version="5.0.0"/>
-		<PackageReference Include="NodaTime.Serialization.SystemTextJson" Version="1.0.0"/>
-		<PackageReference Include="Dapper" Version="2.0.123"/>
-		<PackageReference Include="MediatR" Version="10.0.1"/>
-		<PackageReference Include="Grpc.Tools" Version="2.47.0"/>
-		<PackageReference Include="Grpc.AspNetCore" Version="2.47.0"/>
-		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.7"/>
-		<PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="10.0.1"/>
-		<PackageReference Include="MassTransit.RabbitMQ" Version="8.0.5"/>
-		<PackageReference Include="MassTransit" Version="8.0.5"/>
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning" Version="5.0.0" />
+		<PackageReference Include="NodaTime.Serialization.SystemTextJson" Version="1.0.0" />
+		<PackageReference Include="Dapper" Version="2.0.123" />
+		<PackageReference Include="MediatR" Version="10.0.1" />
+		<PackageReference Include="Grpc.Tools" Version="2.48.0" />
+		<PackageReference Include="Grpc.AspNetCore" Version="2.48.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.8" />
+		<PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="10.0.1" />
+		<PackageReference Include="MassTransit.RabbitMQ" Version="8.0.6" />
+		<PackageReference Include="MassTransit" Version="8.0.6" />
 	</ItemGroup>
 	<ItemGroup>
-		<ProjectReference Include="..\Blogging.Infrastructure\Blogging.Infrastructure.csproj"/>
-		<ProjectReference Include="..\Blogging.Domain\Blogging.Domain.csproj"/>
-		<Protobuf Include=".\Protos\blogging.proto"/>
+		<ProjectReference Include="..\Blogging.Infrastructure\Blogging.Infrastructure.csproj" />
+		<ProjectReference Include="..\Blogging.Domain\Blogging.Domain.csproj" />
+		<Protobuf Include=".\Protos\blogging.proto" />
 	</ItemGroup>
 </Project>

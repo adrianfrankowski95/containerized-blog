@@ -43,7 +43,7 @@ public class InMemoryProxyConfigProvider : IProxyConfigProvider, IDisposable
 
     public static IEnumerable<RouteConfig> GenerateRoutes(string serviceType, IEnumerable<(string incomingPath, string outgoingPath)> matchingPaths)
     {
-        if(string.IsNullOrWhiteSpace(serviceType))
+        if (string.IsNullOrWhiteSpace(serviceType))
             throw new ArgumentNullException(nameof(serviceType));
 
         if (matchingPaths is null || !matchingPaths.Any())
@@ -95,7 +95,7 @@ public class InMemoryProxyConfigProvider : IProxyConfigProvider, IDisposable
     {
         if (string.IsNullOrWhiteSpace(serviceType))
             throw new ArgumentNullException(nameof(serviceType));
-            
+
         return new ClusterConfig
         {
             ClusterId = serviceType,

@@ -22,5 +22,5 @@ public class RabbitMqConfig
     [Required]
     public string Password { get; set; }
 
-    public const string QueueName = "discovery-api";
+    public const string QueueName = "identity-api";
 }

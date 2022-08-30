@@ -6,12 +6,12 @@
 		<RootNamespace>Blog.Services.Discovery.API</RootNamespace>
 	</PropertyGroup>
 	<ItemGroup>
-		<Protobuf Include="Protos\discovery.proto" GrpcServices="Server"/>
+		<Protobuf Include="Protos\discovery.proto" GrpcServices="Server" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="MassTransit.RabbitMQ" Version="8.0.5"/>
-		<PackageReference Include="MassTransit" Version="8.0.5"/>
-		<PackageReference Include="Grpc.AspNetCore" Version="2.47.0"/>
-		<PackageReference Include="StackExchange.Redis" Version="2.6.48"/>
+		<PackageReference Include="MassTransit.RabbitMQ" Version="8.0.6" />
+		<PackageReference Include="MassTransit" Version="8.0.6" />
+		<PackageReference Include="Grpc.AspNetCore" Version="2.48.0" />
+		<PackageReference Include="StackExchange.Redis" Version="2.6.48" />
 	</ItemGroup>
 </Project>
