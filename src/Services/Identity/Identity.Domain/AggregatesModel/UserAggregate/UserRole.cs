@@ -2,7 +2,7 @@ using Blog.Services.Identity.Domain.SeedWork;
 
 namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 
-public class UserRole : Enumeration, Entity<UserRoleId>
+public class UserRole : Enumeration
 {
 
     private UserRole(int value, NonEmptyString name) : base(value, name)
@@ -51,7 +51,7 @@ public class UserRoleId : ValueObject<UserId>
 
     public UserRoleId()
     {
-        Value = Guid.NewGuid();
+
     }
 
     protected override IEnumerable<object?> GetEqualityCheckAttributes()
