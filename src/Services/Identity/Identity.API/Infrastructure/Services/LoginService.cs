@@ -35,18 +35,6 @@ public class LoginService : ILoginService
         if (user.IsLockedOut(now))
             return LoginResult.Fail(LoginErrorCode.AccountLockedOut);
 
-        if (user.IsSuspended(now))
-        {
-            user.FailedLoginAttempt(now);
-            return LoginResult.Fail(LoginErrorCode.AccountSuspended);
-        }
-
-        if (!user.HasActivePassword)
-        {
-            user.FailedLoginAttempt(now);
-            return LoginResult.Fail(LoginErrorCode.InactivePassword);
-        }
-
         if (!user.PasswordHash!.Equals(providedPasswordHash))
         {
             user.FailedLoginAttempt(now);
@@ -54,10 +42,13 @@ public class LoginService : ILoginService
         }
 
         if (!user.HasConfirmedEmailAddress)
-        {
-            user.FailedLoginAttempt(now);
             return LoginResult.Fail(LoginErrorCode.UnconfirmedEmail);
-        }
+
+        if (user.IsSuspended(now))
+            return LoginResult.Fail(LoginErrorCode.AccountSuspended);
+
+        if (!user.HasActivePassword)
+            return LoginResult.Fail(LoginErrorCode.InactivePassword);
 
         user.SuccessfulLoginAttempt(now);
         return LoginResult.Success;

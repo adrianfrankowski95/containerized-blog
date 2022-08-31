@@ -21,7 +21,7 @@ services.AddRazorPages();
 services
     .AddInstanceConfig()
     .AddNodaTime()
-    .AddIdentityInfrastructure(config)
+    .AddInfrastructure(config)
     .AddMassTransitRabbitMqBus(config)
     .AddGrpcDiscoveryService(config)
     .AddGrpcEmailingService()
