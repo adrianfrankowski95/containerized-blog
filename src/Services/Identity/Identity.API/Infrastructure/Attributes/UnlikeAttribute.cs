@@ -1,17 +1,11 @@
-namespace Blog.Services.Identity.API.Infrastructure.Validation;
-
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
-using System.Linq;
 using System.Reflection;
 using System.ComponentModel.DataAnnotations;
 
-
+namespace Blog.Services.Identity.API.Infrastructure.Attributes;
 public class UnlikeAttribute : ValidationAttribute
 {
-
     public UnlikeAttribute(string otherProperty)
         : base("'{0}' and '{1}' must be different.")
     {

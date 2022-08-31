@@ -30,7 +30,7 @@ public static class InfrastructureInstaller
             opts.UseSnakeCaseNamingConvention();
         });
 
-        services.TryAddSingleton<IClock, SystemClock>();
+        services.TryAddSingleton<IClock>(c => SystemClock.Instance);
         services.TryAddTransient<ISysTime, SysTime>();
         services.TryAddScoped<IRequestManager, RequestManager>();
         services.TryAddScoped<IPostRepository, EfPostRepository>();

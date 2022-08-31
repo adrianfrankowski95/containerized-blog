@@ -49,6 +49,7 @@ public class UserEntityConfiguration : IEntityTypeConfiguration<User>
                 x.Property<NonNegativeInt>("_count").HasDefaultValue(0).HasColumnName("failed_login_attempts");
                 x.Property(x => x.LastFailAt).HasColumnName("last_failed_login_attempt_at");
                 x.Property(x => x.ValidUntil).HasColumnName("failed_login_attempts_valid_until");
+                x.WithOwner();
             })
             .Navigation(x => x.FailedLoginAttemptsCount)
             .IsRequired();
@@ -58,6 +59,7 @@ public class UserEntityConfiguration : IEntityTypeConfiguration<User>
             {
                 x.Property(x => x.FirstName).HasColumnName("first_name").HasMaxLength(MaxFirstNameLength);
                 x.Property(x => x.LastName).HasColumnName("last_name").HasMaxLength(MaxLastNameLength);
+                x.WithOwner();
             });
 
         builder.Property(x => x.Gender).HasConversion(v => v.Name, v => Gender.FromName(v)).HasMaxLength(30);
@@ -66,6 +68,7 @@ public class UserEntityConfiguration : IEntityTypeConfiguration<User>
             .OwnsOne(x => x.PasswordHash, x =>
             {
                 x.Property<NonEmptyString>("_value").HasColumnName("password_hash").IsRequired();
+                x.WithOwner();
             })
             .Navigation(x => x.PasswordHash)
             .IsRequired();
@@ -74,8 +77,19 @@ public class UserEntityConfiguration : IEntityTypeConfiguration<User>
             .OwnsOne(x => x.Username, x =>
             {
                 x.Property<NonEmptyString>("_value").HasColumnName("username").HasMaxLength(MaxUsernameLength).IsRequired();
+                x.WithOwner();
             })
             .Navigation(x => x.PasswordHash)
+            .IsRequired();
+
+        builder
+            .OwnsOne(x => x.SecurityStamp, x =>
+            {
+                x.Property<Guid>("_value").HasColumnName("security_stamp").IsRequired();
+                x.Property(x => x.IssuedAt).HasColumnName("security_stamp_issued_at").IsRequired();
+                x.WithOwner();
+            })
+            .Navigation(x => x.SecurityStamp)
             .IsRequired();
 
         builder.UseXminAsConcurrencyToken();

@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.Options;
 
-namespace Blog.Services.Identity.API.Services;
+namespace Blog.Services.Identity.API.Infrastructure.Services;
 
 public class RabbitMqLifetimeEventsPublisher : BackgroundService
 {

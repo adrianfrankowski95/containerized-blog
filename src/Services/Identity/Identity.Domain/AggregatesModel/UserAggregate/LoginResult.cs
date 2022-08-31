@@ -5,7 +5,6 @@ namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 public class LoginResult : ValueObject<LoginResult>
 {
     public LoginErrorCode? ErrorCode { get; private set; }
-    public string? ErrorMessage { get; }
     public bool IsSuccess => ErrorCode is null;
     private static readonly LoginResult _success = new();
     public static LoginResult Success => _success;
@@ -16,18 +15,8 @@ public class LoginResult : ValueObject<LoginResult>
     private LoginResult(LoginErrorCode code)
     {
         ErrorCode = code;
-        ErrorMessage = GetDefaultErrorMessage(code);
     }
     public static LoginResult Fail(LoginErrorCode code) => new(code);
-
-    private static string GetDefaultErrorMessage(LoginErrorCode code) => code switch
-    {
-        LoginErrorCode.InvalidCredentials => "Invalid email address and/or password.",
-        LoginErrorCode.AccountLockedOut => "Account has temporarily been locked out.",
-        LoginErrorCode.AccountSuspended => "Account has been suspended.",
-        LoginErrorCode.UnconfirmedEmail => "This email address has not yet been confirmed.",
-        _ => throw new ArgumentException("Invalid login error code.")
-    };
 
     protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
@@ -35,5 +24,13 @@ public class LoginResult : ValueObject<LoginResult>
     }
 }
 
-public enum LoginErrorCode { AccountLockedOut = 0, AccountSuspended = 1, UnconfirmedEmail = 2, InvalidCredentials = 3 }
+public enum LoginErrorCode
+{
+    AccountLockedOut = 0,
+    AccountSuspended = 1,
+    UnconfirmedEmail = 2,
+    InactivePassword = 3,
+    InvalidPassword = 4,
+    UserNotFound = 5
+}
 

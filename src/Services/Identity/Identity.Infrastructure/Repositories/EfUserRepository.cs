@@ -22,6 +22,6 @@ public class EfUserRepository : IUserRepository
     public ValueTask<User?> FindByIdAsync(UserId userId)
         => _users.FindAsync(userId.Value);
 
-    public Task<User?> FindByUsernameAsync(Username username)
-        => _users.FirstOrDefaultAsync(x => x.Username.Equals(username));
+    public Task<User?> FindByEmailAsync(EmailAddress emailAddress)
+        => _users.FirstOrDefaultAsync(x => x.EmailAddress.Equals(emailAddress));
 }
