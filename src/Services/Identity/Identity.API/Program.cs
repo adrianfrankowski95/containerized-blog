@@ -1,7 +1,9 @@
 using Blog.Services.Discovery.API.Grpc;
 using Blog.Services.Identity.API.Configs;
-using Blog.Services.Identity.API.Infrastructure;
-using Blog.Services.Identity.API.Services;
+using Blog.Services.Identity.API.Extensions;
+using Blog.Services.Identity.API.Infrastructure.Services;
+using Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
+using Blog.Services.Identity.Infrastructure;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using NodaTime;
@@ -19,11 +21,11 @@ services.AddRazorPages();
 services
     .AddInstanceConfig()
     .AddNodaTime()
-    
+    .AddIdentityInfrastructure(config)
     .AddMassTransitRabbitMqBus(config)
     .AddGrpcDiscoveryService(config)
     .AddGrpcEmailingService()
-    .AddCustomServices();
+    .AddDomainServices();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 services.AddEndpointsApiExplorer();
@@ -37,6 +39,9 @@ if (env.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseGlobalExceptionHandler();
+
 app.UseHttpsRedirection();
 app.UseStaticFiles(); //html, css, images, js in wwwroot folder
 
@@ -142,7 +147,16 @@ internal static class ServiceCollectionExtensions
 
     public static IServiceCollection AddNodaTime(this IServiceCollection services)
     {
-        services.TryAddSingleton<IClock>(SystemClock.Instance);
+        services.TryAddSingleton<IClock>(c => SystemClock.Instance);
+
+        return services;
+    }
+
+    public static IServiceCollection AddDomainServices(this IServiceCollection services)
+    {
+        services.TryAddTransient<ISysTime, SysTime>();
+        services.TryAddTransient<ILoginService, LoginService>();
+        services.TryAddTransient<PasswordHasher, BcryptPasswordHasher>();
 
         return services;
     }

@@ -1,4 +1,4 @@
-namespace Blog.Services.Identity.API.Services;
+namespace Blog.Services.Identity.API.Infrastructure.Services;
 
 public interface IDiscoveryService
 {

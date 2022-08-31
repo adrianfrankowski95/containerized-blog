@@ -1,11 +1,10 @@
 using System.Data;
 using System.Net;
 using System.Text.Json;
-using Blog.Services.Blogging.API.Application.Exceptions;
-using Blog.Services.Blogging.Domain.Exceptions;
+using Blog.Services.Identity.Domain.Exceptions;
 using Microsoft.EntityFrameworkCore;
 
-namespace Blog.Services.Blogging.API.Middlewares;
+namespace Blog.Services.Identity.API.Middlewares;
 
 public class GlobalExceptionHandlerMiddleware
 {
@@ -40,7 +39,7 @@ public class GlobalExceptionHandlerMiddleware
 
     private static HttpStatusCode ResolveHttpStatusCode(Exception ex) => ex switch
     {
-        BloggingDomainException
+        IdentityDomainException
             => HttpStatusCode.BadRequest,
 
         KeyNotFoundException
@@ -51,9 +50,6 @@ public class GlobalExceptionHandlerMiddleware
 
         DbUpdateException
             => HttpStatusCode.InternalServerError,
-
-        IdentityException
-            => HttpStatusCode.Unauthorized,
 
         _ => HttpStatusCode.InternalServerError
     };

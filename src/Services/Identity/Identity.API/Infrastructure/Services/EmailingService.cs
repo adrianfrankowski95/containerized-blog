@@ -3,7 +3,7 @@ using Blog.Services.Emailing.API.Grpc;
 using NodaTime;
 using NodaTime.Serialization.Protobuf;
 
-namespace Blog.Services.Identity.API.Services;
+namespace Blog.Services.Identity.API.Infrastructure.Services;
 
 public class EmailingService : IEmailingService
 {

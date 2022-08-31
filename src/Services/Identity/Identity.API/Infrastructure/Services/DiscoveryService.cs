@@ -1,6 +1,6 @@
 using Blog.Services.Discovery.API.Grpc;
 
-namespace Blog.Services.Identity.API.Services;
+namespace Blog.Services.Identity.API.Infrastructure.Services;
 
 public class DiscoveryService : IDiscoveryService
 {
