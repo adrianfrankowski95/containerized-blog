@@ -155,7 +155,7 @@ internal static class ServiceCollectionExtensions
     public static IServiceCollection AddDomainServices(this IServiceCollection services)
     {
         services.TryAddTransient<ISysTime, SysTime>();
-        services.TryAddTransient<ILoginService, LoginService>();
+        services.TryAddTransient<LoginService>();
         services.TryAddTransient<PasswordHasher, BcryptPasswordHasher>();
 
         return services;

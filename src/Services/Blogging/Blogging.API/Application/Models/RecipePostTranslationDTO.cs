@@ -1,4 +1,4 @@
-namespace Blog.Services.Blogging.API.Application.Commands.Models;
+namespace Blog.Services.Blogging.API.Application.Models;
 
 public record RecipePostTranslationDTO(
     string Language,

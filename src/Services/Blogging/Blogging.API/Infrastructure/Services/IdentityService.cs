@@ -16,11 +16,10 @@ public class IdentityService : IIdentityService
     public User GetCurrentUser()
     {
         var claimsPrincipal = _httpContextAccessor?.HttpContext?.User;
+        bool isAuthenticated = claimsPrincipal?.Identity?.IsAuthenticated ?? false;
 
-        bool? isAuthenticated = claimsPrincipal?.Identity?.IsAuthenticated;
-
-        if (claimsPrincipal is null || isAuthenticated is null || !isAuthenticated.Value)
-            throw new BloggingDomainException("Error authenticating the user");
+        if (claimsPrincipal is null || !isAuthenticated)
+            throw new BloggingDomainException("Error authenticating the user.");
 
         return MapUser(claimsPrincipal);
     }

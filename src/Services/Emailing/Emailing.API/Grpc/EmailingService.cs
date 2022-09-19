@@ -89,11 +89,13 @@ public class EmailingService : GrpcEmailingService.GrpcEmailingServiceBase
         }
     }
 
+    // TODO: Implement sending new post email
     public override Task<SendEmailResponse> SendNewPostEmail(SendNewPostEmailRequest request, ServerCallContext context)
     {
         throw new NotImplementedException();
     }
 
+    // TODO: Implement sending custom email event
     public override Task<SendEmailResponse> SendCustomEmail(SendCustomEmailRequest request, ServerCallContext context)
     {
         throw new NotImplementedException();

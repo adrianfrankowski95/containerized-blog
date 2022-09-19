@@ -25,12 +25,9 @@ public class GlobalExceptionHandlerMiddleware
         catch (Exception ex)
         {
             var statusCode = ResolveHttpStatusCode(ex);
-
             var response = context.Response;
-
             response.ContentType = "application/json";
             response.StatusCode = (int)statusCode;
-
             await JsonSerializer.SerializeAsync(response.Body, ex.Message);
 
             _logger.LogError(ex, "----- Error handled globally with an HTTP response code {StatusCode}", Enum.GetName(statusCode));

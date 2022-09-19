@@ -47,7 +47,7 @@ public class TransactionBehavior<TRequest, TResponse> : IPipelineBehavior<TReque
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "----- ERROR while processing a request {RequestType} ({Request})", requestType, request);
+            _logger.LogError(ex, "----- Error while processing a request {RequestType} ({Request})", requestType, request);
             throw;
         }
     }

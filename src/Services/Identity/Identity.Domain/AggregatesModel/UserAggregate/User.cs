@@ -1,3 +1,4 @@
+using Blog.Services.Identity.Domain.Events;
 using Blog.Services.Identity.Domain.Exceptions;
 using Blog.Services.Identity.Domain.SeedWork;
 using NodaTime;
@@ -36,7 +37,6 @@ public class User : Entity<UserId>, IAggregateRoot
         bool receiveAdditionalEmails,
         Instant now,
         PasswordHasher.PasswordHash? passwordHash = null,
-        PasswordResetCode? passwordResetCode = null,
         UserRole? userRole = null
     )
     {
@@ -52,9 +52,6 @@ public class User : Entity<UserId>, IAggregateRoot
         if (gender is null)
             throw new IdentityDomainException($"{nameof(Gender)} must not be null.");
 
-        if (passwordHash is null && passwordResetCode is not null)
-            throw new IdentityDomainException("Password reset code must not be null while creating user without password.");
-
         Username = username;
         FullName = fullName;
         Gender = gender;
@@ -67,8 +64,8 @@ public class User : Entity<UserId>, IAggregateRoot
         Role = userRole ?? UserRole.DefaultRole();
         CreatedAt = now;
 
-        PasswordResetCode = passwordHash is null ? PasswordResetCode.Empty : passwordResetCode!;
-        EmailConfirmationCode = EmailConfirmationCode.NewCode(now);
+        PasswordResetCode = PasswordResetCode.Empty;
+        EmailConfirmationCode = EmailConfirmationCode.Empty;
         SecurityStamp = SecurityStamp.NewStamp();
     }
 
@@ -76,13 +73,18 @@ public class User : Entity<UserId>, IAggregateRoot
         Username username,
         FullName fullName,
         Gender gender,
-        PasswordHasher.PasswordHash passwordHash,
         EmailAddress emailAddress,
+        PasswordHasher.PasswordHash passwordHash,
         bool receiveAdditionalEmails,
         Instant now)
-            // TODO:
-            // - issue user created event that will be consumed by emailing service
-            => new(username, fullName, gender, emailAddress, receiveAdditionalEmails, now, passwordHash);
+    {
+        var user = new User(username, fullName, gender, emailAddress, receiveAdditionalEmails, now, passwordHash);
+        user.SetNewEmailConfirmationCode(now);
+
+        user.AddDomainEvent(new UserRegisteredDomainEvent(user.Username, user.EmailAddress, user.EmailConfirmationCode));
+
+        return user;
+    }
 
     public static User Create(
         Username username,
@@ -92,10 +94,12 @@ public class User : Entity<UserId>, IAggregateRoot
         UserRole role,
         Instant now)
     {
-        // TODO:
-        // - issue user created event that will be consumed by emailing service
-        var code = PasswordResetCode.NewCode(now);
-        return new User(username, fullName, gender, emailAddress, false, now, null, code, role);
+        var user = new User(username, fullName, gender, emailAddress, false, now, null, role);
+        user.SetNewPasswordResetCode(now);
+
+        user.AddDomainEvent(new UserCreatedDomainEvent(user.Username, user.EmailAddress, user.PasswordResetCode));
+
+        return user;
     }
 
     private void ConfirmEmailAddress() => EmailAddress = EmailAddress.Confirm();
@@ -122,45 +126,49 @@ public class User : Entity<UserId>, IAggregateRoot
     private void RefreshSecurityStamp() => SecurityStamp = SecurityStamp.NewStamp();
     public void SuspendUntil(NonPastInstant until)
     {
-        // TODO:
-        // - check if current user has permission to suspend users
         SuspendedUntil = until;
+        RefreshSecurityStamp();
     }
+
+    public void Restore() => SuspendedUntil = null;
+
     public void ConfirmEmailAddress(EmailConfirmationCode providedCode, Instant now)
     {
         EmailConfirmationCode.Verify(providedCode, now);
         ConfirmEmailAddress();
         ClearEmailConfirmationCode();
+
+        AddDomainEvent(new UserConfirmedEmailAddressDomainEvent(Username, EmailAddress));
     }
 
     public void ResetPassword(Instant now)
     {
-        // TODO:
-        // - issue password reset event that will be consumed by emailing service
         SetNewPasswordResetCode(now);
         ClearPasswordHash();
         RefreshSecurityStamp();
+
+        AddDomainEvent(new UserResetPasswordDomainEvent(Username, EmailAddress, PasswordResetCode));
     }
 
     public void SetPassword(PasswordHasher.PasswordHash passwordHash, PasswordResetCode providedCode)
     {
-        // TODO:
-        // - issue password updated event that will be consumed by emailing service
         PasswordResetCode.Verify(providedCode);
         UpdatePasswordHash(passwordHash);
         ClearPasswordResetCode();
         RefreshSecurityStamp();
+
+        AddDomainEvent(new UserChangedPasswordDomainEvent(Username, EmailAddress));
     }
 
     public void SetEmailAddress(EmailAddress emailAddress, Instant now)
     {
-        // TODO:
-        // - issue email updated event that will be consumed by emailing service
         if (emailAddress.IsConfirmed)
             throw new IdentityDomainException("New email address cannot be confirmed.");
 
         SetNewEmailConfirmationCode(now);
         UpdateEmailAddress(emailAddress);
+
+        AddDomainEvent(new UserChangedEmailAddressDomainEvent(Username, EmailAddress, EmailConfirmationCode));
     }
 
     public bool UpdatePersonalData(Username? username, FullName? fullName)
@@ -182,7 +190,19 @@ public class User : Entity<UserId>, IAggregateRoot
         return isUpdated;
     }
 
-    public void FailedLoginAttempt(Instant now)
+    public LoginResult LogIn(LoginService loginService, EmailAddress providedEmailAddress, PasswordHasher.PasswordHash providedPasswordHash, Instant now)
+    {
+        var result = loginService.LogIn(this, providedEmailAddress, providedPasswordHash, now);
+
+        if (result is LoginResult { ErrorCode: LoginErrorCode.InvalidEmail or LoginErrorCode.InvalidPassword })
+            FailedLoginAttempt(now);
+        else if (result.IsSuccess)
+            SuccessfulLoginAttempt(now);
+
+        return result;
+    }
+
+    private void FailedLoginAttempt(Instant now)
     {
         if (IsLockedOut(now))
             throw new IdentityDomainException("Account has already been locked out.");
@@ -195,7 +215,7 @@ public class User : Entity<UserId>, IAggregateRoot
             AddFailedLoginAttempt(now);
     }
 
-    public void SuccessfulLoginAttempt(Instant now)
+    private void SuccessfulLoginAttempt(Instant now)
     {
         ClearFailedLoginAttempts();
         SetSuccessfulLogin(now);

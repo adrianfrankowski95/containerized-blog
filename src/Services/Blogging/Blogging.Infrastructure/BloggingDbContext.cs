@@ -10,9 +10,11 @@ namespace Blog.Services.Blogging.Infrastructure;
 public class BloggingDbContext : DbContext
 {
     public const string DefaultSchema = "blogging";
+    private IDbContextTransaction? _transaction;
     public DbSet<PostBase> Posts { get; set; }
     public DbSet<Tag> Tags { get; set; }
-    private IDbContextTransaction? _transaction;
+    
+    public bool HasActiveTransaction => _transaction is not null;
 
     public BloggingDbContext(DbContextOptions<BloggingDbContext> options) : base(options)
     { }
@@ -44,12 +46,10 @@ public class BloggingDbContext : DbContext
         base.OnModelCreating(modelBuilder);
     }
 
-    public bool HasActiveTransaction => _transaction is not null;
-
     public async Task<IDbContextTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default)
     {
         if (_transaction is not null)
-            throw new InvalidOperationException($"Active transaction already exists");
+            throw new InvalidOperationException($"Active transaction already exists.");
 
         _transaction = await Database.BeginTransactionAsync(isolationLevel, cancellationToken).ConfigureAwait(false);
 
@@ -62,7 +62,7 @@ public class BloggingDbContext : DbContext
             throw new ArgumentNullException(nameof(transaction));
 
         if (transaction != _transaction)
-            throw new InvalidOperationException($"Provided transaction with ID {transaction.TransactionId} was different than existing one");
+            throw new InvalidOperationException($"Provided transaction with ID {transaction.TransactionId} was different than existing one.");
 
         await _transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
 

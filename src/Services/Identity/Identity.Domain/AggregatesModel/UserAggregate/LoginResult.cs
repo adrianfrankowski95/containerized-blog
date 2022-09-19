@@ -28,9 +28,9 @@ public enum LoginErrorCode
 {
     AccountLockedOut = 0,
     AccountSuspended = 1,
-    UnconfirmedEmail = 2,
-    InactivePassword = 3,
-    InvalidPassword = 4,
-    UserNotFound = 5
+    InvalidEmail = 2,
+    UnconfirmedEmail = 3,
+    InactivePassword = 4,
+    InvalidPassword = 5,
 }
 

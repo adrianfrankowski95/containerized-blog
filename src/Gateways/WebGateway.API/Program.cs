@@ -18,15 +18,6 @@ builder.Configuration.AddConfiguration(config);
 var services = builder.Services;
 
 services.AddSwaggerGen();
-services.AddCors(opts =>
-{
-    opts.AddDefaultPolicy(
-        x => x.SetIsOriginAllowed(origin => true)
-        .AllowAnyHeader()
-        .AllowAnyMethod()
-        .AllowAnyOrigin()
-        .AllowCredentials());
-});
 
 services
     .AddGatewayControllers(env.IsDevelopment())

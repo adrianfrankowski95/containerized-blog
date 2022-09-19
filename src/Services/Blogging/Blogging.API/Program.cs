@@ -30,7 +30,7 @@ services
     .AddNodaTime()
     .AddMassTransitRabbitMqBus(config)
     .AddBloggingInfrastructure(config)
-    .AddBloggingApplication(config)
+    .AddApplicationServices(config)
     .AddCustomJwtAuthentication(config)
     .AddCustomServices();
 
