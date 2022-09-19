@@ -30,7 +30,7 @@ public class EmailConfirmationCode : ValueObject<EmailConfirmationCode>
 
     public static EmailConfirmationCode NewCode(Instant now) => new(Guid.NewGuid(), now);
 
-    private bool IsEmpty() => _value is null;
+    public bool IsEmpty() => _value is null;
     private bool IsExpired(Instant now) => IsEmpty()
         ? throw new IdentityDomainException("Email confirmation code must not be empty.")
         : now > ValidUntil;

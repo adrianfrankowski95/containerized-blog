@@ -38,7 +38,7 @@ public class EmailingController : ControllerBase
 
         try
         {
-            var request = MapFromSendEmailRequestDto(requestDto);
+            var request = MapFromDto(requestDto);
             var email = _emailFactory.CreateCustomEmail(
                 request.Recipients,
                 request.CcRecipients,
@@ -67,7 +67,7 @@ public class EmailingController : ControllerBase
         }
     }
 
-    private static SendEmailRequest MapFromSendEmailRequestDto(SendEmailRequestDto requestDto)
+    private static SendEmailRequest MapFromDto(SendEmailRequestDto requestDto)
      => new(
             requestDto.Recipients.Select(x => new Recipient(x.EmailAddress, x.Name)),
             requestDto.CcRecipients?.Select(x => new Recipient(x.EmailAddress, x.Name)),

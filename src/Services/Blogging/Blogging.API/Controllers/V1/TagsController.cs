@@ -1,9 +1,9 @@
 using System.Net;
-using Blog.Services.Blogging.API.Application.Queries.TagQueries.Models;
 using Blog.Services.Blogging.Domain.AggregatesModel.Shared;
 using Microsoft.AspNetCore.Mvc;
 using Blog.Services.Blogging.API.Application.Queries.TagQueries;
 using Blog.Services.Blogging.Domain.Exceptions;
+using Blog.Services.Blogging.API.Application.Models;
 
 namespace Blog.Services.Blogging.API.Controllers;
 

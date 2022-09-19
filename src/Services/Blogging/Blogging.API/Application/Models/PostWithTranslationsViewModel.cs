@@ -1,6 +1,6 @@
 using NodaTime;
 
-namespace Blog.Services.Blogging.API.Application.Queries.PostQueries.Models;
+namespace Blog.Services.Blogging.API.Application.Models;
 
 public abstract record PostWithTranslationsViewModel
 {

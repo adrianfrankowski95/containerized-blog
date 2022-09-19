@@ -36,7 +36,7 @@ public class Password : ValueObject<Password>
         _value = value;
     }
 
-    public static implicit operator Password(NonEmptyString value) => new(value);
+    public static implicit operator Password(string value) => new(value);
     public static implicit operator string(Password value) => value._value;
 
     protected override IEnumerable<object?> GetEqualityCheckAttributes()

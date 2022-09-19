@@ -18,7 +18,7 @@ public class IdentifiedCommandHandler<TRequest> : IRequestHandler<IdentifiedComm
     }
     public async Task<Unit> Handle(IdentifiedCommand<TRequest> request, CancellationToken cancellationToken)
     {
-        bool exists = await _requestManager.ExistsAsync<TRequest>(request.Id);
+        bool exists = await _requestManager.ExistsAsync<TRequest>(request.Id).ConfigureAwait(false);
 
         if (exists)
         {

@@ -1,7 +1,5 @@
-using Blog.Services.Blogging.API.Application.Exceptions;
 using Blog.Services.Blogging.API.Infrastructure.Services;
 using Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate;
-using Blog.Services.Blogging.Domain.Exceptions;
 using MediatR;
 
 namespace Blog.Services.Blogging.API.Application.Commands;

@@ -1,7 +1,7 @@
 using System.Data;
 using System.Net;
 using System.Text.Json;
-using Blog.Services.Blogging.API.Application.Exceptions;
+using Blog.Services.Blogging.API.Exceptions;
 using Blog.Services.Blogging.Domain.Exceptions;
 using Microsoft.EntityFrameworkCore;
 

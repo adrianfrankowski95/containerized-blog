@@ -1,4 +1,4 @@
-namespace Blog.Services.Blogging.API.Application.Exceptions;
+namespace Blog.Services.Blogging.API.Exceptions;
 
 public class IdentityException : Exception
 {
