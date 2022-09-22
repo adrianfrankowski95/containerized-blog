@@ -19,7 +19,7 @@ public class IdentityDbContext : DbContext
     public bool HasActiveTransaction => _transaction is not null;
 
     public IdentityDbContext(DbContextOptions<IdentityDbContext> options, IMediator mediator) : base(options)
-    { 
+    {
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
     }
 
@@ -65,7 +65,7 @@ public class IdentityDbContext : DbContext
             throw new ArgumentNullException(nameof(transaction));
 
         if (transaction != _transaction)
-            throw new InvalidOperationException($"Provided transaction with ID {transaction.TransactionId} was different than existing one.");
+            throw new InvalidOperationException($"Provided transaction with ID {transaction.TransactionId} was different than existing one with ID {_transaction?.TransactionId}.");
 
         await _transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
 

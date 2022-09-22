@@ -35,7 +35,7 @@ public class EmailConfirmationCode : ValueObject<EmailConfirmationCode>
         ? throw new IdentityDomainException("Email confirmation code must not be empty.")
         : now > ValidUntil;
 
-    public void Verify(EmailConfirmationCode providedCode, Instant now)
+    public void Verify(NonEmptyString providedCode, Instant now)
     {
         if (providedCode is null)
             throw new IdentityDomainException("Provided email confirmation code must not be null.");
@@ -47,9 +47,11 @@ public class EmailConfirmationCode : ValueObject<EmailConfirmationCode>
         if (IsExpired(now))
             throw new IdentityDomainException("The email confirmation code has expired.");
 
-        if (!Equals(providedCode))
+        if (!string.Equals(ToString(), providedCode, StringComparison.Ordinal))
             throw new IdentityDomainException("The email confirmation code is invalid.");
     }
+
+    public override string ToString() => _value?.ToString() ?? "";
 
     protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
