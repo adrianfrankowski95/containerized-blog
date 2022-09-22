@@ -4,7 +4,12 @@ namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 
 public class LoginService
 {
-    public LoginResult LogIn(User user, EmailAddress providedEmailAddress, PasswordHasher.PasswordHash providedPasswordHash, Instant now)
+    public LoginResult LogIn(
+        User user,
+        EmailAddress providedEmailAddress,
+        NonEmptyString providedPassword,
+        PasswordHasher passwordHasher,
+        Instant now)
     {
         if (user is null)
             throw new ArgumentNullException(nameof(user));
@@ -12,10 +17,10 @@ public class LoginService
         if (user.IsLockedOut(now))
             return LoginResult.Fail(LoginErrorCode.AccountLockedOut);
 
-        if (!user.EmailAddress!.Equals(providedEmailAddress))
+        if (!(user.EmailAddress?.Equals(providedEmailAddress) ?? false))
             return LoginResult.Fail(LoginErrorCode.InvalidEmail);
 
-        if (!user.PasswordHash!.Equals(providedPasswordHash))
+        if (!passwordHasher.VerifyPasswordHash(providedPassword, user.PasswordHash))
             return LoginResult.Fail(LoginErrorCode.InvalidPassword);
 
         if (user.IsSuspended(now))

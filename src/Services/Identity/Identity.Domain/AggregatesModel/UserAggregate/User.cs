@@ -132,8 +132,11 @@ public class User : Entity<UserId>, IAggregateRoot
 
     public void Restore() => SuspendedUntil = null;
 
-    public void ConfirmEmailAddress(EmailConfirmationCode providedCode, Instant now)
+    public void ConfirmEmailAddress(NonEmptyString providedCode, Instant now)
     {
+        if (providedCode is null)
+            throw new IdentityDomainException("Missing email confirmation code.");
+
         EmailConfirmationCode.Verify(providedCode, now);
         ConfirmEmailAddress();
         ClearEmailConfirmationCode();
@@ -150,9 +153,9 @@ public class User : Entity<UserId>, IAggregateRoot
         AddDomainEvent(new UserResetPasswordDomainEvent(Username, EmailAddress, PasswordResetCode));
     }
 
-    public void SetPassword(PasswordHasher.PasswordHash passwordHash, PasswordResetCode providedCode)
+    public void SetPassword(PasswordHasher.PasswordHash passwordHash, NonEmptyString providedCode, Instant now)
     {
-        PasswordResetCode.Verify(providedCode);
+        PasswordResetCode.Verify(providedCode, now);
         UpdatePasswordHash(passwordHash);
         ClearPasswordResetCode();
         RefreshSecurityStamp();
@@ -190,9 +193,14 @@ public class User : Entity<UserId>, IAggregateRoot
         return isUpdated;
     }
 
-    public LoginResult LogIn(LoginService loginService, EmailAddress providedEmailAddress, PasswordHasher.PasswordHash providedPasswordHash, Instant now)
+    public LoginResult LogIn(
+        LoginService loginService,
+        EmailAddress providedEmailAddress,
+        NonEmptyString providedPassword,
+        PasswordHasher passwordHasher,
+        Instant now)
     {
-        var result = loginService.LogIn(this, providedEmailAddress, providedPasswordHash, now);
+        var result = loginService.LogIn(this, providedEmailAddress, providedPassword, passwordHasher, now);
 
         if (result is LoginResult { ErrorCode: LoginErrorCode.InvalidEmail or LoginErrorCode.InvalidPassword })
             FailedLoginAttempt(now);

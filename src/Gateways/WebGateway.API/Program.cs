@@ -1,5 +1,4 @@
 using Blog.Gateways.WebGateway.API.Configs;
-using Blog.Gateways.WebGateway.API.Controllers;
 using Blog.Gateways.WebGateway.API.Integration.Consumers;
 using Blog.Gateways.WebGateway.API.Services;
 using Blog.Services.Discovery.API.Grpc;
@@ -20,7 +19,6 @@ var services = builder.Services;
 services.AddSwaggerGen();
 
 services
-    .AddGatewayControllers(env.IsDevelopment())
     .AddGrpcDiscoveryService(config)
     .AddYarp();
 
@@ -61,7 +59,7 @@ static class ServiceCollectionExtensions
         var address = config.GetRequiredSection(UrlsConfig.Section).Get<UrlsConfig>().DiscoveryService;
 
         if (string.IsNullOrWhiteSpace(address))
-            throw new InvalidOperationException($"{nameof(UrlsConfig.DiscoveryService)} URL must not be null");
+            throw new InvalidOperationException($"{nameof(UrlsConfig.DiscoveryService)} URL must not be null.");
 
         services.AddGrpcClient<GrpcDiscoveryService.GrpcDiscoveryServiceClient>(opts =>
         {

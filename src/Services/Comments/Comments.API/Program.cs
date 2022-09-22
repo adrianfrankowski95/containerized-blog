@@ -102,7 +102,7 @@ internal static class ServiceCollectionExtensions
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
-        services.AddHostedService<RabbitMqLifetimeEventsPublisher>();
+        services.AddHostedService<RabbitMqLifetimeIntegrationEventsPublisher>();
 
         return services;
     }

@@ -47,11 +47,11 @@ public class PasswordResetCode : ValueObject<PasswordResetCode>
     }
 
     public bool IsEmpty() => string.IsNullOrWhiteSpace(_value);
-    private bool IsExpired() => IsEmpty()
+    private bool IsExpired(Instant now) => IsEmpty()
         ? throw new IdentityDomainException("Password must not be empty.")
-        : SystemClock.Instance.GetCurrentInstant() > ValidUntil;
+        : now > ValidUntil;
 
-    public void Verify(PasswordResetCode providedCode)
+    public void Verify(NonEmptyString providedCode, Instant now)
     {
         if (providedCode is null)
             throw new ArgumentNullException("Provided password reset code must not be null.");
@@ -60,12 +60,14 @@ public class PasswordResetCode : ValueObject<PasswordResetCode>
         if (IsEmpty())
             throw new IdentityDomainException("The password reset code is invalid.");
 
-        if (IsExpired())
+        if (IsExpired(now))
             throw new IdentityDomainException("The password reset code has expired.");
 
-        if (!Equals(providedCode))
+        if (!string.Equals(ToString(), providedCode, StringComparison.Ordinal))
             throw new IdentityDomainException("The password reset code is invalid.");
     }
+
+    public override string ToString() => _value ?? "";
 
     protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {

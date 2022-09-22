@@ -47,7 +47,7 @@ internal static class ServiceCollectionExtensions
 
         services.AddMassTransit(x =>
         {
-            x.AddConsumersFromNamespaceContaining<ServiceInstanceStartedEventConsumer>();
+            x.AddConsumersFromNamespaceContaining<ServiceInstanceStartedIntegrationEventConsumer>();
 
             x.UsingRabbitMq((context, cfg) =>
             {
@@ -98,7 +98,7 @@ internal static class ServiceCollectionExtensions
 
         services.TryAddScoped<IServiceRegistry, RedisServiceRegistry>();
 
-        services.AddHostedService<RedisKeyExpiredEventNotifier>();
+        services.AddHostedService<RedisKeyExpiredEventHandler>();
 
         return services;
     }

@@ -1,5 +1,5 @@
 ﻿namespace Blog.Services.Identity.Domain.SeedWork;
-public abstract class Entity<T>
+public abstract class Entity<T> where T : class
 {
     public T Id { get; protected set; } = default!;
     private List<DomainEvent> _domainEvents;

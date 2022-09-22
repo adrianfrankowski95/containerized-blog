@@ -6,6 +6,7 @@ public abstract class PasswordHasher
 {
     protected static Func<NonEmptyString, PasswordHash> _newHash;
     public abstract PasswordHash HashPassword(Password password);
+    public abstract bool VerifyPasswordHash(NonEmptyString password, PasswordHash? passwordHash);
 
     public class PasswordHash : ValueObject<PasswordHash>
     {
@@ -24,6 +25,7 @@ public abstract class PasswordHasher
             _value = value;
         }
 
+        public static implicit operator string(PasswordHash value) => value._value;
         protected override IEnumerable<object?> GetEqualityCheckAttributes()
         {
             yield return _value;
