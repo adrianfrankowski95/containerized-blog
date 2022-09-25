@@ -1,4 +1,4 @@
-namespace Blog.Services.Blogging.API.Application.Models;
+namespace Blog.Services.Blogging.API.Application.Queries.TagQueries.Models;
 
 public record TagViewModel
 {

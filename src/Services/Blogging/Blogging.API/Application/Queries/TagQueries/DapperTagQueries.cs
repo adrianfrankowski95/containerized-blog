@@ -1,9 +1,9 @@
 using System.Data.Common;
-using Blog.Services.Blogging.API.Extensions;
-using Dapper;
-using Blog.Services.Blogging.Domain.AggregatesModel.Shared;
 using Blog.Services.Blogging.API.Application.Queries.TagQueries;
-using Blog.Services.Blogging.API.Application.Models;
+using Blog.Services.Blogging.API.Application.Queries.TagQueries.Models;
+using Blog.Services.Blogging.API.Extensions;
+using Blog.Services.Blogging.Domain.AggregatesModel.Shared;
+using Dapper;
 
 namespace Blog.Services.Blogging.API.Application.Queries.PostQueries;
 

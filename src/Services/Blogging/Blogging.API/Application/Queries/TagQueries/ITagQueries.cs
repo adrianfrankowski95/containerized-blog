@@ -1,4 +1,4 @@
-using Blog.Services.Blogging.API.Application.Models;
+using Blog.Services.Blogging.API.Application.Queries.TagQueries.Models;
 using Blog.Services.Blogging.Domain.AggregatesModel.Shared;
 
 namespace Blog.Services.Blogging.API.Application.Queries.TagQueries;
