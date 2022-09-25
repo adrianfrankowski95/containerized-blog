@@ -1,4 +1,4 @@
-using Blog.Services.Blogging.API.Application.Models;
+using Blog.Services.Blogging.API.Application.Commands.Models;
 using Blog.Services.Blogging.API.Infrastructure.Services;
 using Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate;
 using Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate.RecipePostAggregate;
@@ -56,7 +56,7 @@ public class CreateAndPublishRecipePostCommandHandler : IRequestHandler<CreateAn
         _postRepository.AddPost(post);
 
         await _postRepository.UnitOfWork.CommitChangesAsync(cancellationToken).ConfigureAwait(false);
-        
+
         return Unit.Value;
     }
 
