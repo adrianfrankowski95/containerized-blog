@@ -141,7 +141,7 @@ public class User : Entity<UserId>, IAggregateRoot
         ConfirmEmailAddress();
         ClearEmailConfirmationCode();
 
-        AddDomainEvent(new UserConfirmedEmailAddressDomainEvent(Username, EmailAddress));
+        AddDomainEvent(new UserEmailConfirmedDomainEvent(Username, EmailAddress));
     }
 
     public void ResetPassword(Instant now)
@@ -150,7 +150,7 @@ public class User : Entity<UserId>, IAggregateRoot
         ClearPasswordHash();
         RefreshSecurityStamp();
 
-        AddDomainEvent(new UserResetPasswordDomainEvent(Username, EmailAddress, PasswordResetCode));
+        AddDomainEvent(new UserPasswordResetDomainEvent(Username, EmailAddress, PasswordResetCode));
     }
 
     public void SetPassword(PasswordHasher.PasswordHash passwordHash, NonEmptyString providedCode, Instant now)
@@ -160,7 +160,7 @@ public class User : Entity<UserId>, IAggregateRoot
         ClearPasswordResetCode();
         RefreshSecurityStamp();
 
-        AddDomainEvent(new UserChangedPasswordDomainEvent(Username, EmailAddress));
+        AddDomainEvent(new UserPasswordChangedDomainEvent(Username, EmailAddress));
     }
 
     public void SetEmailAddress(EmailAddress emailAddress, Instant now)
@@ -171,7 +171,7 @@ public class User : Entity<UserId>, IAggregateRoot
         SetNewEmailConfirmationCode(now);
         UpdateEmailAddress(emailAddress);
 
-        AddDomainEvent(new UserChangedEmailAddressDomainEvent(Username, EmailAddress, EmailConfirmationCode));
+        AddDomainEvent(new UserEmailChangedDomainEvent(Username, EmailAddress, EmailConfirmationCode));
     }
 
     public bool UpdatePersonalData(Username? username, FullName? fullName)
