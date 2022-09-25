@@ -4,7 +4,6 @@ namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 
 public class UserRole : Enumeration
 {
-
     private UserRole(int value, NonEmptyString name) : base(value, name)
     {
     }

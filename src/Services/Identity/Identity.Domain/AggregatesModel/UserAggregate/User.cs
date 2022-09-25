@@ -52,6 +52,8 @@ public class User : Entity<UserId>, IAggregateRoot
         if (gender is null)
             throw new IdentityDomainException($"{nameof(Gender)} must not be null.");
 
+        Id = new UserId();
+
         Username = username;
         FullName = fullName;
         Gender = gender;
