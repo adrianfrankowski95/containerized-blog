@@ -4,7 +4,7 @@ using NodaTime;
 //in order to make it work through the MassTransit
 namespace Blog.Integration.Events;
 
-public record UserEmailChangedIntegrationEvent(
+public record UserCreatedIntegrationEvent(
     string Username,
     string EmailAddress,
     string CallbackUrl,

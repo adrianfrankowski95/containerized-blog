@@ -3,11 +3,11 @@ using Blog.Services.Identity.Domain.SeedWork;
 
 namespace Blog.Services.Identity.Domain.Events;
 
-public record UserConfirmedEmailAddressDomainEvent : DomainEvent
+public record UserPasswordChangedDomainEvent : DomainEvent
 {
     public Username Username { get; }
     public EmailAddress EmailAddress { get; }
-    public UserConfirmedEmailAddressDomainEvent(Username username, EmailAddress emailAddress)
+    public UserPasswordChangedDomainEvent(Username username, EmailAddress emailAddress)
     {
         if (username is null)
             throw new ArgumentNullException(nameof(username));
