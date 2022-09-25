@@ -1,4 +1,4 @@
-using Blog.Services.Blogging.API.Application.Models;
+using Blog.Services.Blogging.API.Application.Queries.PostQueries.Models;
 using Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate;
 using Blog.Services.Blogging.Domain.AggregatesModel.Shared;
 using NodaTime;
