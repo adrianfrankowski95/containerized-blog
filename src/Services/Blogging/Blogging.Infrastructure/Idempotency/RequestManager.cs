@@ -14,24 +14,18 @@ public class RequestManager : IRequestManager
         _ctx = ctx ?? throw new ArgumentNullException(nameof(ctx));
         _sysTime = sysTime ?? throw new ArgumentNullException(nameof(sysTime));
     }
-    public async Task<bool> ExistsAsync<TRequest>(Guid requestId)
-    {
-        var request = await _ctx.Set<IdentifiedRequest>()
-            .Where(x => x.Type.Equals(typeof(TRequest).Name) && x.Id.Equals(requestId))
-            .AsNoTracking()
-            .FirstOrDefaultAsync()
-            .ConfigureAwait(false);
-
-        return request is not null;
-    }
+    public Task<bool> ExistsAsync<TRequest>(Guid requestId)
+        => _ctx
+            .Set<IdentifiedRequest>()
+            .AnyAsync(x => x.Type.Equals(typeof(TRequest).Name) && x.Id.Equals(requestId));
 
     public async Task AddRequestAsync<TRequest>(Guid requestId)
     {
         bool exists = await ExistsAsync<TRequest>(requestId).ConfigureAwait(false);
 
-        var request = exists ?
-            throw new BloggingDomainException($"Request of type {typeof(TRequest).Name} with ID {requestId} already exists") :
-            new IdentifiedRequest(requestId, typeof(TRequest).Name, _sysTime.Now);
+        var request = exists
+            ? throw new BloggingDomainException($"Request of type {typeof(TRequest).Name} with ID {requestId} already exists")
+            : new IdentifiedRequest(requestId, typeof(TRequest).Name, _sysTime.Now);
 
         _ctx.Add(request);
 

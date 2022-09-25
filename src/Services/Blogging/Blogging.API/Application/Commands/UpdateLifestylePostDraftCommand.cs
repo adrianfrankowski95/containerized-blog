@@ -1,4 +1,4 @@
-using Blog.Services.Blogging.API.Application.Models;
+using Blog.Services.Blogging.API.Application.Commands.Models;
 using MediatR;
 namespace Blog.Services.Blogging.API.Application.Commands;
 
