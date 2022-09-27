@@ -55,19 +55,4 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand>
 
         return Unit.Value;
     }
-
-    private string GetErrorMessage(LoginResult result, User user) => result switch
-    {
-        LoginResult { ErrorCode: LoginErrorCode.InvalidEmail or LoginErrorCode.InvalidPassword }
-            => "Invalid email address and/or password.",
-        LoginResult { ErrorCode: LoginErrorCode.AccountLockedOut }
-            => "Account has temporarily been locked out. Please try again later.",
-        LoginResult { ErrorCode: LoginErrorCode.AccountSuspended }
-            => $"Account has been suspended until {user.SuspendedUntil}.",
-        LoginResult { ErrorCode: LoginErrorCode.UnconfirmedEmail }
-            => "Email address has not yet been confirmed.",
-        LoginResult { ErrorCode: LoginErrorCode.InactivePassword }
-            => "Password has not yet been reset.",
-        _ => throw new NotSupportedException($"Unhandled {nameof(LoginResult)} error: {result.ErrorCode}.")
-    };
 }
