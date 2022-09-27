@@ -1,7 +1,6 @@
 using System.Data.Common;
 using Blog.Services.Blogging.API.Application.Queries.TagQueries;
 using Blog.Services.Blogging.API.Application.Queries.TagQueries.Models;
-using Blog.Services.Blogging.API.Extensions;
 using Blog.Services.Blogging.Domain.AggregatesModel.Shared;
 using Dapper;
 
@@ -38,7 +37,7 @@ public class DapperTagQueries : ITagQueries
                 GROUP BY a.id, c.posts_count
                 ORDER BY a.language, a.value ASC;";
 
-        var tagsReader = await _connection.ExecuteReaderAsync(returnTagsQuery).ConfigureAwait(false);
+        using var tagsReader = await _connection.ExecuteReaderAsync(returnTagsQuery).ConfigureAwait(false);
 
         var rowParser = tagsReader.GetRowParser<TagViewModel>();
 
@@ -71,7 +70,7 @@ public class DapperTagQueries : ITagQueries
 
         var parameters = new { Language = language.Name };
 
-        var tagsReader = await _connection.ExecuteReaderAsync(returnTagsQuery, parameters).ConfigureAwait(false);
+        using var tagsReader = await _connection.ExecuteReaderAsync(returnTagsQuery, parameters).ConfigureAwait(false);
 
         var rowParser = tagsReader.GetRowParser<TagViewModel>();
 
