@@ -1,3 +1,4 @@
+using Blog.Services.Blogging.API.Extensions;
 using Blog.Services.Blogging.Infrastructure.Idempotency;
 using MediatR;
 
@@ -30,13 +31,11 @@ public class IdentifiedCommandHandler<TRequest> : IRequestHandler<IdentifiedComm
 
         await _requestManager.AddRequestAsync<TRequest>(request.Id).ConfigureAwait(false);
 
-        _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
-            request.Command.GetType(), DateTime.UtcNow, request.Command);
+        _logger.LogSendingCommand(request.Command);
 
         var result = await _mediator.Send(request.Command, cancellationToken);
 
-        _logger.LogInformation("----- Command result of {CommandType}: {CommandResult} - ({@Command})",
-            request.Command.GetType(), result, request.Command);
+        _logger.LogReceivedRequestResponse(request.Command, result);
 
         return result;
     }
