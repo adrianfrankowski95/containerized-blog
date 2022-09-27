@@ -28,7 +28,7 @@ public class AccountController : ControllerBase
     [HttpPost("avatar")]
     [ProducesResponseType((int)HttpStatusCode.OK)]
     [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-    public async Task<IActionResult> SetAvatarAsyncAsync([FromForm] SetProfilePictureCommand command)
+    public async Task<IActionResult> SetAvatarAsyncAsync([FromForm] SetOwnAvatarCommand command)
     {
         cursor ??= _sysTime.Now;
 

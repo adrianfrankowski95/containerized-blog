@@ -37,7 +37,7 @@ public class LogInCommandHandler : IRequestHandler<LogInCommand>
         if (user is null)
             throw new IdentityDomainException("Invalid email adress and/or password.");
 
-        var result = user.LogIn(_loginService, request.EmailAddress, request.Password, _passwordHasher.VerifyPasswordHash, _sysTime.Now);
+        var result = user.LogIn(_loginService, request.EmailAddress, request.Password, _passwordHasher, _sysTime.Now);
 
         await _userRepository.UnitOfWork.CommitChangesAsync(cancellationToken).ConfigureAwait(false);
 

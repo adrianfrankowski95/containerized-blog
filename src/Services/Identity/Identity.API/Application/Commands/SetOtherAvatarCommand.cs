@@ -3,4 +3,4 @@ using MediatR;
 
 namespace Blog.Services.Identity.API.Application.Commands;
 
-public record SetProfilePictureCommand(Guid UserId, IFormFile ImageData) : IRequest<Unit>;
+public record SetOtherAvatarCommand(EmailAddress EmailAddress, IFormFile ImageFile) : IRequest<Unit>;
