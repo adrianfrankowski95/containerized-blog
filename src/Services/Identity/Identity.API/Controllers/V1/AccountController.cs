@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Net;
 using Blog.Services.Identity.API.Application.Commands;
+using Blog.Services.Identity.API.Extensions;
 using Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -26,23 +27,21 @@ public class AccountController : ControllerBase
     }
 
     [HttpPost("avatar")]
-    [ProducesResponseType((int)HttpStatusCode.OK)]
+    [ProducesResponseType((int)HttpStatusCode.Created)]
     [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-    public async Task<IActionResult> SetAvatarAsyncAsync([FromForm] SetOwnAvatarCommand command)
+    public async Task<IActionResult> SetAvatarAsyncAsync(
+        [FromForm] SetOwnAvatarCommand command,
+        [FromHeader(Name = "x-request-id"), Required] string requestId)
     {
-        cursor ??= _sysTime.Now;
+        if (!Guid.TryParse(requestId, out Guid id))
+            return BadRequest($"Incorrect or missing 'x-request-id' header");
 
-        Language language = Language.FromName(lang);
+        var request = new IdentifiedCommand<SetOwnAvatarCommand>(id, command);
 
-        _logger.LogInformation(
-            "----- Querying for paginated post previews at {UtcNow}, parameters: {PageSize}, {Cursor}, {Language}",
-            DateTime.UtcNow, pageSize, cursor, language.Name);
+        _logger.LogSendingCommand(request);
 
-        var result = await _postQueries.GetPublishedPaginatedPreviewsWithLanguageAsync(language, pageSize, cursor.Value)
-            .ConfigureAwait(false);
+        await _mediator.Send(command);
 
-        AddPostPaginationHeaders(result.TotalPostsCount, result.ReturnedPostsCount, result.RemainingPostsCount);
-
-        return Ok(result.PostPreviews);
+        return StatusCode((int)HttpStatusCode.Created);
     }
 }

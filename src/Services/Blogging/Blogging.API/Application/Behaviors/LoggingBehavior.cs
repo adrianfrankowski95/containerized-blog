@@ -1,3 +1,4 @@
+using Blog.Services.Blogging.API.Extensions;
 using MediatR;
 
 namespace Blog.Services.Blogging.API.Application.Behaviors;
@@ -13,11 +14,11 @@ public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
     }
     public async Task<TResponse> Handle(TRequest request, CancellationToken cancellationToken, RequestHandlerDelegate<TResponse> next)
     {
-        _logger.LogInformation("----- Handling request: {RequestName}", request.GetType().Name);
+        _logger.LogHandlingRequest(request);
 
         var response = await next();
 
-        _logger.LogInformation("----- Received response for request {RequestName}: {Response}", request.GetType().Name, response?.ToString());
+        _logger.LogReceivedRequestResponse(request, response);
 
         return response;
     }

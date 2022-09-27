@@ -3,6 +3,7 @@ using System.Net;
 using Blog.Services.Blogging.API.Application.Commands;
 using Blog.Services.Blogging.API.Application.Queries.PostQueries;
 using Blog.Services.Blogging.API.Application.Queries.PostQueries.Models;
+using Blog.Services.Blogging.API.Extensions;
 using Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate;
 using Blog.Services.Blogging.Domain.AggregatesModel.Shared;
 using MediatR;
@@ -177,8 +178,7 @@ public class PostsController : ControllerBase
 
         var request = new IdentifiedCommand<CreateLifestylePostDraftCommand>(id, command);
 
-        _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
-            request.GetType().Name, DateTime.UtcNow, request);
+        _logger.LogSendingCommand(request);
 
         await _mediator.Send(command);
         return StatusCode((int)HttpStatusCode.Created);
@@ -196,8 +196,7 @@ public class PostsController : ControllerBase
 
         var request = new IdentifiedCommand<CreateRecipePostDraftCommand>(id, command);
 
-        _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
-            request.GetType().Name, DateTime.UtcNow, request);
+        _logger.LogSendingCommand(request);
 
         await _mediator.Send(command);
         return StatusCode((int)HttpStatusCode.Created);
@@ -215,8 +214,7 @@ public class PostsController : ControllerBase
 
         var request = new IdentifiedCommand<CreateRestaurantReviewPostDraftCommand>(id, command);
 
-        _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
-            request.GetType().Name, DateTime.UtcNow, request);
+        _logger.LogSendingCommand(request);
 
         await _mediator.Send(command);
         return StatusCode((int)HttpStatusCode.Created);
@@ -234,8 +232,7 @@ public class PostsController : ControllerBase
 
         var request = new IdentifiedCommand<CreateProductReviewPostDraftCommand>(id, command);
 
-        _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
-            request.GetType().Name, DateTime.UtcNow, request);
+        _logger.LogSendingCommand(request);
 
         await _mediator.Send(command);
         return StatusCode((int)HttpStatusCode.Created);
@@ -247,8 +244,7 @@ public class PostsController : ControllerBase
     public async Task<IActionResult> UpdateLifestylePostDraftAsync(
         [FromBody, Required] UpdateLifestylePostDraftCommand command)
     {
-        _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
-            command.GetType(), DateTime.UtcNow, command);
+        _logger.LogSendingCommand(command);
 
         await _mediator.Send(command);
         return Ok();
@@ -260,8 +256,7 @@ public class PostsController : ControllerBase
     public async Task<IActionResult> UpdateRecipePostDraftAsync(
         [FromBody, Required] UpdateRecipePostDraftCommand command)
     {
-        _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
-            command.GetType(), DateTime.UtcNow, command);
+        _logger.LogSendingCommand(command);
 
         await _mediator.Send(command);
         return Ok();
@@ -273,8 +268,7 @@ public class PostsController : ControllerBase
     public async Task<IActionResult> UpdateRestaurantReviewPostDraftAsync(
         [FromBody, Required] UpdateRestaurantReviewPostDraftCommand command)
     {
-        _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
-            command.GetType(), DateTime.UtcNow, command);
+        _logger.LogSendingCommand(command);
 
         await _mediator.Send(command);
         return Ok();
@@ -286,8 +280,7 @@ public class PostsController : ControllerBase
     public async Task<IActionResult> UpdateProductReviewPostDraftAsync(
         [FromBody, Required] UpdateProductReviewPostDraftCommand command)
     {
-        _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
-            command.GetType(), DateTime.UtcNow, command);
+        _logger.LogSendingCommand(command);
 
         await _mediator.Send(command);
         return Ok();
@@ -306,10 +299,9 @@ public class PostsController : ControllerBase
 
         var request = new IdentifiedCommand<CreateAndPublishLifestylePostCommand>(id, command);
 
-        _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
-            request.GetType().Name, DateTime.UtcNow, request);
+        _logger.LogSendingCommand(request);
 
-        await _mediator.Send(command);
+        await _mediator.Send(request);
         return StatusCode((int)HttpStatusCode.Created);
     }
 
@@ -326,10 +318,9 @@ public class PostsController : ControllerBase
 
         var request = new IdentifiedCommand<CreateAndPublishRecipePostCommand>(id, command);
 
-        _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
-            request.GetType().Name, DateTime.UtcNow, request);
+        _logger.LogSendingCommand(request);
 
-        await _mediator.Send(command);
+        await _mediator.Send(request);
         return StatusCode((int)HttpStatusCode.Created);
     }
 
@@ -346,10 +337,9 @@ public class PostsController : ControllerBase
 
         var request = new IdentifiedCommand<CreateAndPublishRestaurantReviewPostCommand>(id, command);
 
-        _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
-            request.GetType().Name, DateTime.UtcNow, request);
+        _logger.LogSendingCommand(request);
 
-        await _mediator.Send(command);
+        await _mediator.Send(request);
         return StatusCode((int)HttpStatusCode.Created);
     }
 
@@ -366,10 +356,9 @@ public class PostsController : ControllerBase
 
         var request = new IdentifiedCommand<CreateAndPublishProductReviewPostCommand>(id, command);
 
-        _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
-            request.GetType().Name, DateTime.UtcNow, request);
+        _logger.LogSendingCommand(request);
 
-        await _mediator.Send(command);
+        await _mediator.Send(request);
         return StatusCode((int)HttpStatusCode.Created);
     }
 
@@ -379,8 +368,7 @@ public class PostsController : ControllerBase
     public async Task<IActionResult> UpdateAndPublishLifestylePostAsync(
         [FromBody, Required] UpdateAndPublishLifestylePostCommand command)
     {
-        _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
-            command.GetType(), DateTime.UtcNow, command);
+        _logger.LogSendingCommand(command);
 
         await _mediator.Send(command);
         return Ok();
@@ -392,8 +380,7 @@ public class PostsController : ControllerBase
     public async Task<IActionResult> UpdateAndPublishRecipePostAsync(
         [FromBody, Required] UpdateAndPublishRecipePostCommand command)
     {
-        _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
-            command.GetType(), DateTime.UtcNow, command);
+        _logger.LogSendingCommand(command);
 
         await _mediator.Send(command);
         return Ok();
@@ -405,8 +392,7 @@ public class PostsController : ControllerBase
     public async Task<IActionResult> UpdateAndPublishRestaurantReviewPostAsync(
         [FromBody, Required] UpdateAndPublishRestaurantReviewPostCommand command)
     {
-        _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
-            command.GetType(), DateTime.UtcNow, command);
+        _logger.LogSendingCommand(command);
 
         await _mediator.Send(command);
         return Ok();
@@ -418,8 +404,7 @@ public class PostsController : ControllerBase
     public async Task<IActionResult> UpdateAndPublishProductReviewPostAsync(
         [FromBody, Required] UpdateAndPublishProductReviewPostCommand command)
     {
-        _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
-            command.GetType(), DateTime.UtcNow, command);
+        _logger.LogSendingCommand(command);
 
         await _mediator.Send(command);
         return Ok();
@@ -438,10 +423,9 @@ public class PostsController : ControllerBase
 
         var request = new IdentifiedCommand<CreateAndSubmitLifestylePostCommand>(id, command);
 
-        _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
-            request.GetType().Name, DateTime.UtcNow, request);
+        _logger.LogSendingCommand(request);
 
-        await _mediator.Send(command);
+        await _mediator.Send(request);
         return StatusCode((int)HttpStatusCode.Created);
     }
 
@@ -458,10 +442,9 @@ public class PostsController : ControllerBase
 
         var request = new IdentifiedCommand<CreateAndSubmitRecipePostCommand>(id, command);
 
-        _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
-                request.GetType().Name, DateTime.UtcNow, request);
+        _logger.LogSendingCommand(request);
 
-        await _mediator.Send(command);
+        await _mediator.Send(request);
         return StatusCode((int)HttpStatusCode.Created);
     }
 
@@ -478,10 +461,9 @@ public class PostsController : ControllerBase
 
         var request = new IdentifiedCommand<CreateAndSubmitRestaurantReviewPostCommand>(id, command);
 
-        _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
-                request.GetType().Name, DateTime.UtcNow, request);
+        _logger.LogSendingCommand(request);
 
-        await _mediator.Send(command);
+        await _mediator.Send(request);
         return StatusCode((int)HttpStatusCode.Created);
     }
 
@@ -498,10 +480,9 @@ public class PostsController : ControllerBase
 
         var request = new IdentifiedCommand<CreateAndSubmitProductReviewPostCommand>(id, command);
 
-        _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
-                    request.GetType().Name, DateTime.UtcNow, request);
+        _logger.LogSendingCommand(request);
 
-        await _mediator.Send(command);
+        await _mediator.Send(request);
         return StatusCode((int)HttpStatusCode.Created);
     }
 
@@ -511,8 +492,7 @@ public class PostsController : ControllerBase
     public async Task<IActionResult> UpdateAndSubmitLifestylePostAsync(
         [FromBody, Required] UpdateAndSubmitLifestylePostCommand command)
     {
-        _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
-            command.GetType(), DateTime.UtcNow, command);
+        _logger.LogSendingCommand(command);
 
         await _mediator.Send(command);
         return Ok();
@@ -524,8 +504,7 @@ public class PostsController : ControllerBase
     public async Task<IActionResult> UpdateAndSubmitRecipePostAsync(
         [FromBody, Required] UpdateAndSubmitRecipePostCommand command)
     {
-        _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
-            command.GetType(), DateTime.UtcNow, command);
+        _logger.LogSendingCommand(command);
 
         await _mediator.Send(command);
         return Ok();
@@ -537,8 +516,7 @@ public class PostsController : ControllerBase
     public async Task<IActionResult> UpdateAndSubmitRestaurantReviewPostAsync(
         [FromBody, Required] UpdateAndSubmitRestaurantReviewPostCommand command)
     {
-        _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
-            command.GetType(), DateTime.UtcNow, command);
+        _logger.LogSendingCommand(command);
 
         await _mediator.Send(command);
         return Ok();
@@ -550,8 +528,7 @@ public class PostsController : ControllerBase
     public async Task<IActionResult> UpdateAndSubmitProductReviewPostAsync(
         [FromBody, Required] UpdateAndSubmitProductReviewPostCommand command)
     {
-        _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
-            command.GetType(), DateTime.UtcNow, command);
+        _logger.LogSendingCommand(command);
 
         await _mediator.Send(command);
         return Ok();
@@ -563,8 +540,7 @@ public class PostsController : ControllerBase
     public async Task<IActionResult> DeletePostAsync(
         [FromBody, Required] DeletePostCommand command)
     {
-        _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
-            command.GetType(), DateTime.UtcNow, command);
+        _logger.LogSendingCommand(command);
 
         await _mediator.Send(command);
         return Ok();
@@ -576,8 +552,7 @@ public class PostsController : ControllerBase
     public async Task<IActionResult> PublishPostAsync(
         [FromBody, Required] PublishPostCommand command)
     {
-        _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
-            command.GetType(), DateTime.UtcNow, command);
+        _logger.LogSendingCommand(command);
 
         await _mediator.Send(command);
         return Ok();
@@ -593,8 +568,7 @@ public class PostsController : ControllerBase
     public async Task<IActionResult> SubmitPostAsync(
         [FromBody, Required] SubmitPostCommand command)
     {
-        _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
-            command.GetType(), DateTime.UtcNow, command);
+        _logger.LogSendingCommand(command);
 
         await _mediator.Send(command);
         return Ok();
@@ -606,8 +580,7 @@ public class PostsController : ControllerBase
     public async Task<IActionResult> ApprovePostAsync(
         [FromBody, Required] ApprovePostCommand command)
     {
-        _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
-            command.GetType(), DateTime.UtcNow, command);
+        _logger.LogSendingCommand(command);
 
         await _mediator.Send(command);
         return Ok();
@@ -619,8 +592,7 @@ public class PostsController : ControllerBase
     public async Task<IActionResult> SetPostToDraftAsync(
         [FromBody, Required] SetPostToDraftCommand command)
     {
-        _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
-            command.GetType(), DateTime.UtcNow, command);
+        _logger.LogSendingCommand(command);
 
         await _mediator.Send(command);
         return Ok();
@@ -632,8 +604,7 @@ public class PostsController : ControllerBase
     public async Task<IActionResult> RejectPostAsync(
         [FromBody, Required] RejectPostCommand command)
     {
-        _logger.LogInformation("----- Sending command {CommandType} at {UtcNow} - ({@Command})",
-            command.GetType(), DateTime.UtcNow, command);
+        _logger.LogSendingCommand(command);
 
         await _mediator.Send(command);
         return Ok();
