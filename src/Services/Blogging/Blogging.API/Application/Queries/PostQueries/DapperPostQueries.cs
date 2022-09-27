@@ -109,7 +109,7 @@ public class DapperPostQueries : IPostQueries
 		    WHERE (p.id = t.post_id) AND (t.language = @Language));";
 
         string olderThanPostsCountQuery =
-        @"SELECT COUNT(*)
+        @$"SELECT COUNT(*)
         FROM blogging.posts p
         WHERE p.status = '{PostStatus.Published.Name}' AND created_at < @Cursor AND p.category = @Category AND EXISTS(
 		    SELECT 1
