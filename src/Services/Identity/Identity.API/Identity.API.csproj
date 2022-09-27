@@ -31,5 +31,6 @@
 		<PackageReference Include="Dapper" Version="2.0.123" />
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning" Version="5.0.0" />
 		<PackageReference Include="NodaTime.Serialization.SystemTextJson" Version="1.0.0" />
+		<PackageReference Include="SkiaSharp" Version="2.88.2" />
 	</ItemGroup>
 </Project>

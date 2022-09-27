@@ -1,15 +1,15 @@
-using Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate;
-using Blog.Services.Blogging.Domain.Exceptions;
+using Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
+using Blog.Services.Identity.Domain.Exceptions;
 using Microsoft.EntityFrameworkCore;
 
-namespace Blog.Services.Blogging.Infrastructure.Idempotency;
+namespace Blog.Services.Identity.Infrastructure.Idempotency;
 
 public class RequestManager : IRequestManager
 {
-    private readonly BloggingDbContext _ctx;
+    private readonly IdentityDbContext _ctx;
     private readonly ISysTime _sysTime;
 
-    public RequestManager(BloggingDbContext ctx, ISysTime sysTime)
+    public RequestManager(IdentityDbContext ctx, ISysTime sysTime)
     {
         _ctx = ctx ?? throw new ArgumentNullException(nameof(ctx));
         _sysTime = sysTime ?? throw new ArgumentNullException(nameof(sysTime));
@@ -24,7 +24,7 @@ public class RequestManager : IRequestManager
         bool exists = await ExistsAsync<TRequest>(requestId).ConfigureAwait(false);
 
         var request = exists
-            ? throw new BloggingDomainException($"Request of type {typeof(TRequest).Name} with ID {requestId} already exists.")
+            ? throw new IdentityDomainException($"Request of type {typeof(TRequest).Name} with ID {requestId} already exists.")
             : new IdentifiedRequest(requestId, typeof(TRequest).Name, _sysTime.Now);
 
         _ctx.Add(request);

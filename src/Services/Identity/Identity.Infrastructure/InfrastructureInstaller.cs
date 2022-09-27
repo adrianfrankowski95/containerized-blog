@@ -1,5 +1,7 @@
 using Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 using Blog.Services.Identity.Domain.SeedWork;
+using Blog.Services.Identity.Infrastructure.Avatar;
+using Blog.Services.Identity.Infrastructure.Idempotency;
 using Blog.Services.Identity.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -25,7 +27,8 @@ public static class InfrastructureInstaller
             });
             opts.UseSnakeCaseNamingConvention();
         });
-
+        services.TryAddScoped<IRequestManager, RequestManager>();
+        services.TryAddScoped<IAvatarManager, AvatarManager>();
         services.TryAddScoped<IUserRepository, EfUserRepository>();
         services.TryAddScoped<IUnitOfWork, EfUnitOfWork>();
 

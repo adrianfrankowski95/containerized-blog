@@ -25,6 +25,7 @@ services
     .AddMassTransitRabbitMqBus(config)
     .AddGrpcDiscoveryService(config)
     .AddGrpcEmailingService()
+    .AddCustomServices()
     .AddDomainServices();
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -145,10 +146,18 @@ internal static class ServiceCollectionExtensions
         return services;
     }
 
+    public static IServiceCollection AddCustomServices(this IServiceCollection services)
+    {
+        services
+            .AddHttpContextAccessor()
+            .TryAddTransient<IIdentityService, IdentityService>();
+
+        return services;
+    }
+
     public static IServiceCollection AddNodaTime(this IServiceCollection services)
     {
         services.TryAddSingleton<IClock>(c => SystemClock.Instance);
-
         return services;
     }
 

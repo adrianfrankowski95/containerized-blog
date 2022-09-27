@@ -7,8 +7,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using NodaTime;
-using SysTime = Blog.Services.Blogging.Infrastructure.Services.SysTime;
 
 namespace Blog.Services.Blogging.Infrastructure;
 
@@ -30,8 +28,6 @@ public static class InfrastructureInstaller
             opts.UseSnakeCaseNamingConvention();
         });
 
-        services.TryAddSingleton<IClock>(c => SystemClock.Instance);
-        services.TryAddTransient<ISysTime, SysTime>();
         services.TryAddScoped<IRequestManager, RequestManager>();
         services.TryAddScoped<IPostRepository, EfPostRepository>();
         services.TryAddScoped<ITagRepository, EfTagRepository>();

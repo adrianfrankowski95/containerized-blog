@@ -85,7 +85,7 @@ public class DapperPostQueries : IPostQueries
         var olderThanPostsCountTask = counts.ReadSingleAsync<int>();
         var returnedPostsCountTask = counts.ReadSingleAsync<int>();
 
-        var postsPreviewsReader = await _connection.ExecuteReaderAsync(returnPostPreviewsQuery, parameters).ConfigureAwait(false);
+        using var postsPreviewsReader = await _connection.ExecuteReaderAsync(returnPostPreviewsQuery, parameters).ConfigureAwait(false);
 
         var countsResult = await Task.WhenAll(totalPostsCountTask, olderThanPostsCountTask, returnedPostsCountTask).ConfigureAwait(false);
 
@@ -166,7 +166,7 @@ public class DapperPostQueries : IPostQueries
         var olderThanPostsCountTask = counts.ReadSingleAsync<int>();
         var returnedPostsCountTask = counts.ReadSingleAsync<int>();
 
-        var postsPreviewsReader = await _connection.ExecuteReaderAsync(returnPostPreviewsQuery, parameters).ConfigureAwait(false);
+        using var postsPreviewsReader = await _connection.ExecuteReaderAsync(returnPostPreviewsQuery, parameters).ConfigureAwait(false);
 
         var countsResult = await Task.WhenAll(totalPostsCountTask, olderThanPostsCountTask, returnedPostsCountTask).ConfigureAwait(false);
 
@@ -212,7 +212,7 @@ public class DapperPostQueries : IPostQueries
 
         var parameters = new { PostsCount = postsCount, Language = language.Name, DaysFromToday = daysFromToday };
 
-        var postsPreviewsReader = await _connection.ExecuteReaderAsync(returnPostPreviewsQuery, parameters).ConfigureAwait(false);
+        using var postsPreviewsReader = await _connection.ExecuteReaderAsync(returnPostPreviewsQuery, parameters).ConfigureAwait(false);
 
         await foreach (var postPreview in postsPreviewsReader.StreamAsync<PostPreviewModel>().ConfigureAwait(false))
             yield return postPreview;
@@ -251,7 +251,7 @@ public class DapperPostQueries : IPostQueries
 
         var parameters = new { PostsCount = postsCount, Language = language.Name, DaysFromToday = daysFromToday };
 
-        var postsPreviewsReader = await _connection.ExecuteReaderAsync(returnPostPreviewsQuery, parameters).ConfigureAwait(false);
+        using var postsPreviewsReader = await _connection.ExecuteReaderAsync(returnPostPreviewsQuery, parameters).ConfigureAwait(false);
 
         await foreach (var postPreview in postsPreviewsReader.StreamAsync<PostPreviewModel>().ConfigureAwait(false))
             yield return postPreview;
@@ -300,7 +300,7 @@ public class DapperPostQueries : IPostQueries
 
         var parameters = new { AuthorId = authorId.Value, Language = language.Name, DefaultLanguage = Language.GetDefault().Name };
 
-        var postsPreviewsReader = await _connection.ExecuteReaderAsync(returnPostPreviewsQuery, parameters).ConfigureAwait(false);
+        using var postsPreviewsReader = await _connection.ExecuteReaderAsync(returnPostPreviewsQuery, parameters).ConfigureAwait(false);
 
         await foreach (var postPreview in postsPreviewsReader.StreamAsync<PostPreviewModel>().ConfigureAwait(false))
             yield return postPreview;

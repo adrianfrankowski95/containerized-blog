@@ -34,6 +34,9 @@ public class IdentityDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfiguration(new UserEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new AvatarEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new IdentifiedRequestEntityConfiguration());
+
         base.OnModelCreating(modelBuilder);
     }
 

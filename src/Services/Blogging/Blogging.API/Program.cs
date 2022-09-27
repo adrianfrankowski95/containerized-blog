@@ -28,6 +28,7 @@ services
     .AddInstanceConfig()
     .AddControllers(env)
     .AddNodaTime()
+    .AddDomainServices()
     .AddMassTransitRabbitMqBus(config)
     .AddBloggingInfrastructure(config)
     .AddApplicationServices(config)
@@ -172,8 +173,12 @@ static class ServiceCollectionExtensions
     public static IServiceCollection AddNodaTime(this IServiceCollection services)
     {
         services.TryAddSingleton<IClock>(SystemClock.Instance);
-        services.TryAddTransient<ISysTime, SysTime>();
+        return services;
+    }
 
+    public static IServiceCollection AddDomainServices(this IServiceCollection services)
+    {
+        services.TryAddTransient<ISysTime, SysTime>();
         return services;
     }
 }
