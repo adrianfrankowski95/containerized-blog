@@ -40,8 +40,10 @@ public class DapperTagQueries : ITagQueries
 
         var tagsReader = await _connection.ExecuteReaderAsync(returnTagsQuery).ConfigureAwait(false);
 
-        await foreach (var tag in tagsReader.StreamAsync<TagViewModel>().ConfigureAwait(false))
-            yield return tag;
+        var rowParser = tagsReader.GetRowParser<TagViewModel>();
+
+        while (await tagsReader.ReadAsync().ConfigureAwait(false))
+            yield return rowParser(tagsReader);
     }
 
     public async IAsyncEnumerable<TagViewModel> GetTagsWithLanguageAsync(Language language)
@@ -71,7 +73,9 @@ public class DapperTagQueries : ITagQueries
 
         var tagsReader = await _connection.ExecuteReaderAsync(returnTagsQuery, parameters).ConfigureAwait(false);
 
-        await foreach (var tag in tagsReader.StreamAsync<TagViewModel>().ConfigureAwait(false))
-            yield return tag;
+        var rowParser = tagsReader.GetRowParser<TagViewModel>();
+
+        while (await tagsReader.ReadAsync().ConfigureAwait(false))
+            yield return rowParser(tagsReader);
     }
 }
