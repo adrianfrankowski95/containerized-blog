@@ -214,8 +214,10 @@ public class DapperPostQueries : IPostQueries
 
         using var postsPreviewsReader = await _connection.ExecuteReaderAsync(returnPostPreviewsQuery, parameters).ConfigureAwait(false);
 
-        await foreach (var postPreview in postsPreviewsReader.StreamAsync<PostPreviewModel>().ConfigureAwait(false))
-            yield return postPreview;
+        var rowParser = postsPreviewsReader.GetRowParser<PostPreviewModel>();
+
+        while (await postsPreviewsReader.ReadAsync().ConfigureAwait(false))
+            yield return rowParser(postsPreviewsReader);
     }
 
     public async IAsyncEnumerable<PostPreviewModel> GetTopPopularPublishedPreviewsWithLanguageAsync(Language language, int postsCount, int daysFromToday)
@@ -302,8 +304,10 @@ public class DapperPostQueries : IPostQueries
 
         using var postsPreviewsReader = await _connection.ExecuteReaderAsync(returnPostPreviewsQuery, parameters).ConfigureAwait(false);
 
-        await foreach (var postPreview in postsPreviewsReader.StreamAsync<PostPreviewModel>().ConfigureAwait(false))
-            yield return postPreview;
+        var rowParser = postsPreviewsReader.GetRowParser<PostPreviewModel>();
+
+        while (await postsPreviewsReader.ReadAsync().ConfigureAwait(false))
+            yield return rowParser(postsPreviewsReader);
     }
 
     public async Task<PostWithTranslationsViewModel> GetPostWithAllTranslationsAsync(PostId postId)
