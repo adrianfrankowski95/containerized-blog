@@ -8,7 +8,7 @@ public static class LoggerExtensions
         = LoggerMessage.Define<string, DateTime, string?>(
             LogLevel.Information,
             new EventId(1, "Sending command"),
-            "----- Sending command {CommandType} at {UtcNow} - ({Command})");
+            "----- Sending command {CommandType} at {UtcNow} - ({@Command})");
 
     private static readonly Action<ILogger, string, Exception?> _handlingRequest
         = LoggerMessage.Define<string>(
