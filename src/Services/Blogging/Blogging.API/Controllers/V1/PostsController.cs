@@ -53,29 +53,34 @@ public class PostsController : ControllerBase
         return Ok(result.PostPreviews);
     }
 
-    [HttpGet("view/{id:guid}")]
+    [HttpGet("view/{postId:guid:required}")]
     [ProducesResponseType((int)HttpStatusCode.OK)]
     [ProducesResponseType((int)HttpStatusCode.BadRequest)]
     [ProducesResponseType((int)HttpStatusCode.NotFound)]
-    public async Task<ActionResult<PostViewModel>> GetPostByIdAsync([Required] Guid id, [FromQuery, Required] string lang)
+    public async Task<ActionResult<PostViewModel>> GetPostByIdAsync(
+        [FromRoute, Required] Guid postId,
+        [FromQuery, Required] string lang)
     {
-        PostId postId = new(id);
+        PostId id = new(postId);
 
         Language language = Language.FromName(lang);
 
         _logger.LogInformation("----- Querying for a post at {UtcNow}, parameters: {Id}, {Language}",
-            DateTime.UtcNow, postId.Value, language.Name);
+            DateTime.UtcNow, id.Value, language.Name);
 
-        PostViewModel result = await _postQueries.GetPublishedPostWithLanguageAsync(postId, language).ConfigureAwait(false);
+        PostViewModel result = await _postQueries.GetPublishedPostWithLanguageAsync(id, language).ConfigureAwait(false);
 
         return Ok(result);
     }
 
-    [HttpGet("view/{category}")]
+    [HttpGet("view/{category:required}")]
     [ProducesResponseType((int)HttpStatusCode.OK)]
     [ProducesResponseType((int)HttpStatusCode.BadRequest)]
     public async Task<ActionResult<IAsyncEnumerable<PaginatedPostPreviewsModel>>> GetPreviewsWithCategoryAsync(
-        [Required] string category, [FromQuery, Required] string lang, [FromQuery] int pageSize = 10, [FromQuery] Instant? cursor = null)
+        [FromRoute, Required] string category,
+        [FromQuery, Required] string lang,
+        [FromQuery] int pageSize = 10,
+        [FromQuery] Instant? cursor = null)
     {
         cursor ??= _sysTime.Now;
 
@@ -130,43 +135,43 @@ public class PostsController : ControllerBase
         return Ok(result);
     }
 
-    [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Author))]
-    [HttpGet("{id:guid}")]
+    [Authorize(Roles = $"{nameof(UserRole.Administrator)},{nameof(UserRole.Author)}")]
+    [HttpGet("{postId:guid:required}")]
     [ProducesResponseType((int)HttpStatusCode.OK)]
     [ProducesResponseType((int)HttpStatusCode.BadRequest)]
     [ProducesResponseType((int)HttpStatusCode.NotFound)]
-    public async Task<ActionResult<PostWithTranslationsViewModel>> GetPostToEditByIdAsync([Required] Guid id)
+    public async Task<ActionResult<PostWithTranslationsViewModel>> GetPostToEditByIdAsync([FromRoute, Required] Guid postId)
     {
-        PostId postId = new(id);
+        PostId id = new(postId);
 
         _logger.LogInformation("----- Querying for a post with translations at {UtcNow}, parameters: {Id}",
-            DateTime.UtcNow, postId.Value);
+            DateTime.UtcNow, id.Value);
 
-        PostWithTranslationsViewModel result = await _postQueries.GetPostWithAllTranslationsAsync(postId).ConfigureAwait(false);
+        PostWithTranslationsViewModel result = await _postQueries.GetPostWithAllTranslationsAsync(id).ConfigureAwait(false);
 
         return Ok(result);
     }
 
-    [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Author))]
-    [HttpGet("author/{id:guid}")]
+    [Authorize(Roles = $"{nameof(UserRole.Administrator)},{nameof(UserRole.Author)}")]
+    [HttpGet("author/{authorId:guid:required}")]
     [ProducesResponseType((int)HttpStatusCode.OK)]
     public ActionResult<IAsyncEnumerable<PaginatedPostPreviewsModel>> GetAllPreviewsFromAuthorAsync(
-        [Required] Guid id, [FromQuery] string? lang = null)
+        [FromRoute, Required] Guid authorId, [FromQuery] string? lang = null)
     {
-        UserId authorId = new(id);
+        UserId id = new(authorId);
         Language language = string.IsNullOrWhiteSpace(lang) ?
             Language.GetDefault() :
             Language.FromName(lang);
 
         _logger.LogInformation("----- Querying for post previews from author at {UtcNow}, parameters: {AuthorId}, {Language}",
-            DateTime.UtcNow, authorId, language.Name);
+            DateTime.UtcNow, id.Value, language.Name);
 
-        IAsyncEnumerable<PostPreviewModel> result = _postQueries.GetAllPreviewsFromAuthorAsync(authorId, language);
+        IAsyncEnumerable<PostPreviewModel> result = _postQueries.GetAllPreviewsFromAuthorAsync(id, language);
 
         return Ok(result);
     }
 
-    [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Author))]
+    [Authorize(Roles = $"{nameof(UserRole.Administrator)},{nameof(UserRole.Author)}")]
     [HttpPost($"{nameof(PostType.Lifestyle)}/draft")]
     [ProducesResponseType((int)HttpStatusCode.Created)]
     public async Task<IActionResult> CreateLifestylePostDraftAsync(
@@ -184,7 +189,7 @@ public class PostsController : ControllerBase
         return StatusCode((int)HttpStatusCode.Created);
     }
 
-    [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Author))]
+    [Authorize(Roles = $"{nameof(UserRole.Administrator)},{nameof(UserRole.Author)}")]
     [HttpPost($"{nameof(PostType.Recipe)}/draft")]
     [ProducesResponseType((int)HttpStatusCode.Created)]
     public async Task<IActionResult> CreateRecipePostDraftAsync(
@@ -202,7 +207,7 @@ public class PostsController : ControllerBase
         return StatusCode((int)HttpStatusCode.Created);
     }
 
-    [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Author))]
+    [Authorize(Roles = $"{nameof(UserRole.Administrator)},{nameof(UserRole.Author)}")]
     [HttpPost($"{nameof(PostType.RestaurantReview)}/draft")]
     [ProducesResponseType((int)HttpStatusCode.Created)]
     public async Task<IActionResult> CreateRestaurantReviewPostDraftAsync(
@@ -220,7 +225,7 @@ public class PostsController : ControllerBase
         return StatusCode((int)HttpStatusCode.Created);
     }
 
-    [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Author))]
+    [Authorize(Roles = $"{nameof(UserRole.Administrator)},{nameof(UserRole.Author)}")]
     [HttpPost($"{nameof(PostType.ProductReview)}/draft")]
     [ProducesResponseType((int)HttpStatusCode.Created)]
     public async Task<IActionResult> CreateProductReviewPostDraftAsync(
@@ -238,7 +243,7 @@ public class PostsController : ControllerBase
         return StatusCode((int)HttpStatusCode.Created);
     }
 
-    [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Author))]
+    [Authorize(Roles = $"{nameof(UserRole.Administrator)},{nameof(UserRole.Author)}")]
     [HttpPut($"{nameof(PostType.Lifestyle)}/draft")]
     [ProducesResponseType((int)HttpStatusCode.OK)]
     public async Task<IActionResult> UpdateLifestylePostDraftAsync(
@@ -250,7 +255,7 @@ public class PostsController : ControllerBase
         return Ok();
     }
 
-    [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Author))]
+    [Authorize(Roles = $"{nameof(UserRole.Administrator)},{nameof(UserRole.Author)}")]
     [HttpPut($"{nameof(PostType.Recipe)}/draft")]
     [ProducesResponseType((int)HttpStatusCode.OK)]
     public async Task<IActionResult> UpdateRecipePostDraftAsync(
@@ -262,7 +267,7 @@ public class PostsController : ControllerBase
         return Ok();
     }
 
-    [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Author))]
+    [Authorize(Roles = $"{nameof(UserRole.Administrator)},{nameof(UserRole.Author)}")]
     [HttpPut($"{nameof(PostType.RestaurantReview)}/draft")]
     [ProducesResponseType((int)HttpStatusCode.OK)]
     public async Task<IActionResult> UpdateRestaurantReviewPostDraftAsync(
@@ -274,7 +279,7 @@ public class PostsController : ControllerBase
         return Ok();
     }
 
-    [Authorize(Roles = nameof(UserRole.Administrator) + "," + nameof(UserRole.Author))]
+    [Authorize(Roles = $"{nameof(UserRole.Administrator)},{nameof(UserRole.Author)}")]
     [HttpPut($"{nameof(PostType.ProductReview)}/draft")]
     [ProducesResponseType((int)HttpStatusCode.OK)]
     public async Task<IActionResult> UpdateProductReviewPostDraftAsync(

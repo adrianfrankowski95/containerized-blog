@@ -29,8 +29,8 @@ public class AccountController : ControllerBase
     [HttpPost("avatar")]
     [ProducesResponseType((int)HttpStatusCode.Created)]
     [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-    public async Task<IActionResult> SetAvatarAsyncAsync(
-        [FromForm] SetOwnAvatarCommand command,
+    public async Task<IActionResult> SetOwnAvatarAsync(
+        [FromForm, Required] SetOwnAvatarCommand command,
         [FromHeader(Name = "x-request-id"), Required] string requestId)
     {
         if (!Guid.TryParse(requestId, out Guid id))
@@ -40,7 +40,28 @@ public class AccountController : ControllerBase
 
         _logger.LogSendingCommand(request);
 
-        await _mediator.Send(command);
+        await _mediator.Send(request);
+
+        return StatusCode((int)HttpStatusCode.Created);
+    }
+
+    [HttpPost("avatar/{email:required}")]
+    [Authorize(Roles = $"{nameof(UserRole.Administrator)},{nameof(UserRole.Moderator.Name)}")]
+    [ProducesResponseType((int)HttpStatusCode.Created)]
+    [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+    public async Task<IActionResult> SetOtherAvatarAsync(
+        [FromRoute, Required] string email,
+        [FromForm, Required] IFormFile imageFile,
+        [FromHeader(Name = "x-request-id"), Required] string requestId)
+    {
+        if (!Guid.TryParse(requestId, out Guid id))
+            return BadRequest($"Incorrect or missing 'x-request-id' header");
+
+        var request = new IdentifiedCommand<SetOtherAvatarCommand>(id, new SetOtherAvatarCommand(email, imageFile));
+
+        _logger.LogSendingCommand(request);
+
+        await _mediator.Send(request);
 
         return StatusCode((int)HttpStatusCode.Created);
     }
