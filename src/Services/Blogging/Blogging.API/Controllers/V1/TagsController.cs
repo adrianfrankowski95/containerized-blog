@@ -1,8 +1,8 @@
+using System.ComponentModel.DataAnnotations;
 using System.Net;
 using Blog.Services.Blogging.API.Application.Queries.TagQueries;
 using Blog.Services.Blogging.API.Application.Queries.TagQueries.Models;
 using Blog.Services.Blogging.Domain.AggregatesModel.Shared;
-using Blog.Services.Blogging.Domain.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Blog.Services.Blogging.API.Controllers;
@@ -21,22 +21,24 @@ public class TagsController : ControllerBase
         _tagQueries = tagQueries ?? throw new ArgumentNullException(nameof(tagQueries));
     }
 
-    [HttpGet("{string:language}")]
+    [HttpGet("")]
     [ProducesResponseType((int)HttpStatusCode.OK)]
-    public ActionResult<IAsyncEnumerable<TagViewModel>> GetTagsAsync(string? lang = null)
+    public ActionResult<IAsyncEnumerable<TagViewModel>> GetTagsAsync()
     {
-        IAsyncEnumerable<TagViewModel> result;
-        if (string.IsNullOrWhiteSpace(lang))
-        {
-            _logger.LogInformation("----- Querying for tags");
-            result = _tagQueries.GetTagsAsync();
-        }
-        else
-        {
-            var language = Language.FromName(lang);
-            _logger.LogInformation("----- Querying for tags with language, parameters: {Language}", language.Name);
-            result = _tagQueries.GetTagsWithLanguageAsync(language);
-        }
+        _logger.LogInformation("----- Querying for tags");
+        var result = _tagQueries.GetTagsAsync();
+
+        return Ok(result);
+    }
+
+    [HttpGet("{language:required}")]
+    [ProducesResponseType((int)HttpStatusCode.OK)]
+    public ActionResult<IAsyncEnumerable<TagViewModel>> GetTagsWithLanguageAsync
+    ([FromRoute, Required] string language)
+    {
+        var lang = Language.FromName(language);
+        _logger.LogInformation("----- Querying for tags with language, parameters: {Language}", lang.Name);
+        var result = _tagQueries.GetTagsWithLanguageAsync(lang);
 
         return Ok(result);
     }
