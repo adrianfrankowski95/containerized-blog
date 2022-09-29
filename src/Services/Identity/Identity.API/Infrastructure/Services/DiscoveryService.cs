@@ -24,7 +24,7 @@ public class DiscoveryService : IDiscoveryService
             new GetAddressOfServiceTypeRequest { ServiceType = serviceType })
             .ConfigureAwait(false);
 
-        if (response is null || string.IsNullOrWhiteSpace(response.Address))
+        if (string.IsNullOrWhiteSpace(response?.Address))
             throw new InvalidDataException($"Error retrieving service address of type {serviceType} from Discovery Grpc service");
 
         _logger.LogInformation("----- Received grpc request Get Address of Service Type response: {Response}", response.Address);

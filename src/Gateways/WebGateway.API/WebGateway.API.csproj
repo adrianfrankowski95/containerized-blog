@@ -8,15 +8,15 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Google.Protobuf" Version="3.21.6" />
-		<PackageReference Include="Grpc.Net.Client" Version="2.48.0" />
-		<PackageReference Include="Grpc.Tools" Version="2.48.1">
+		<PackageReference Include="Grpc.Net.Client" Version="2.49.0" />
+		<PackageReference Include="Grpc.Tools" Version="2.49.1">
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 			<PrivateAssets>all</PrivateAssets>
 		</PackageReference>
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.9" />
 		<Protobuf Include="..\..\Services\Discovery\Discovery.API\Protos\discovery.proto" GrpcServices="Client" />
-		<PackageReference Include="Grpc.AspNetCore" Version="2.48.0" />
+		<PackageReference Include="Grpc.AspNetCore" Version="2.49.0" />
 		<PackageReference Include="Yarp.ReverseProxy" Version="1.1.1" />
 		<PackageReference Include="MassTransit.RabbitMQ" Version="8.0.6" />
 		<PackageReference Include="MassTransit" Version="8.0.6" />

@@ -42,7 +42,21 @@ public class IdentityService : IIdentityService
             return id;
         }
     }
-    
+
+
+    public NonEmptyString? Username
+    {
+        get
+        {
+            var username = User.FindFirstValue(UserClaimTypes.Name);
+
+            if (IsAuthenticated && string.IsNullOrWhiteSpace(username))
+                throw new InvalidOperationException("Could not retreive an ID of an authenticated user.");
+
+            return username;
+        }
+    }
+
     public UserRole? UserRole
     {
         get

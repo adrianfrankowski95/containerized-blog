@@ -17,21 +17,21 @@ public class DiscoveryService : GrpcDiscoveryService.GrpcDiscoveryServiceBase
     public override async Task<GetServiceInstancesOfTypeResponse> GetServiceInstancesOfType(GetServiceInstancesOfTypeRequest request, ServerCallContext context)
     {
         if (string.IsNullOrWhiteSpace(request.ServiceType))
-            throw new InvalidOperationException($"{request.ServiceType} must not be null");
+            throw new InvalidOperationException($"{request.ServiceType} must not be null.");
 
-        _logger.LogInformation("----- Handling Grpc Get Service Instances Data Of Type request for {ServiceType}", request.ServiceType);
+        _logger.LogInformation("----- Handling Grpc Get Service Instances Data Of Type request for {ServiceType}.", request.ServiceType);
 
         var serviceInstances = await _serviceRegistry.GetServiceInstancesOfType(request.ServiceType).ConfigureAwait(false);
 
-        if (serviceInstances is null || serviceInstances.Count == 0)
-            throw new InvalidDataException($"Error retreiving {request.ServiceType} instances data");
+        if ((serviceInstances?.Count ?? 0) == 0)
+            throw new InvalidDataException($"Error retreiving {request.ServiceType} instances data.");
 
-        _logger.LogInformation("----- Successfully fetched following {ServiceType} data from registry: {Data}",
-            request.ServiceType, string.Join("; ", serviceInstances.Select(x => $"instance ID: {x.InstanceId}, addresses: {string.Join("; ", x.Addresses)}")));
+        _logger.LogInformation("----- Successfully fetched following {ServiceType} data from registry: {Data}.",
+            request.ServiceType, string.Join("; ", serviceInstances!.Select(x => $"instance ID: {x.InstanceId}, addresses: {string.Join("; ", x.Addresses)}")));
 
         return new GetServiceInstancesOfTypeResponse
         {
-            ServiceInstances = { Array.ConvertAll(serviceInstances.ToArray(), x => new ServiceInstance
+            ServiceInstances = { Array.ConvertAll(serviceInstances!.ToArray(), x => new ServiceInstance
             {
                 InstanceId = x.InstanceId.ToString(),
                 ServiceType = x.ServiceType,
@@ -42,19 +42,19 @@ public class DiscoveryService : GrpcDiscoveryService.GrpcDiscoveryServiceBase
 
     public override async Task<GetAllServiceInstancesResponse> GetAllServiceInstances(Empty request, ServerCallContext context)
     {
-        _logger.LogInformation("----- Handling Grpc Get All Service Instances Data request");
+        _logger.LogInformation("----- Handling Grpc Get All Service Instances Data request.");
 
         var serviceInstances = await _serviceRegistry.GetAllServiceInstances().ConfigureAwait(false);
 
-        if (serviceInstances is null || serviceInstances.Count == 0)
-            throw new InvalidDataException($"Error retreiving all service instances data");
+        if ((serviceInstances?.Count ?? 0) == 0)
+            throw new InvalidDataException($"Error retreiving all service instances data.");
 
-        _logger.LogInformation("----- Successfully fetched following service instances data: {Data}",
-            string.Join("; ", serviceInstances.Select(x => $"service type: {x.ServiceType}, instance ID: {x.InstanceId}, addresses: {string.Join("; ", x.Addresses)}")));
+        _logger.LogInformation("----- Successfully fetched following service instances data: {Data}.",
+            string.Join("; ", serviceInstances!.Select(x => $"service type: {x.ServiceType}, instance ID: {x.InstanceId}, addresses: {string.Join("; ", x.Addresses)}")));
 
         return new GetAllServiceInstancesResponse
         {
-            ServiceInstances = { Array.ConvertAll(serviceInstances.ToArray(), x => new ServiceInstance
+            ServiceInstances = { Array.ConvertAll(serviceInstances!.ToArray(), x => new ServiceInstance
             {
                 InstanceId = x.InstanceId.ToString(),
                 ServiceType = x.ServiceType,
@@ -65,24 +65,24 @@ public class DiscoveryService : GrpcDiscoveryService.GrpcDiscoveryServiceBase
 
     public override async Task<GetAddressOfServiceTypeResponse> GetAddressOfServiceType(GetAddressOfServiceTypeRequest request, ServerCallContext context)
     {
-        _logger.LogInformation("----- Handling Grpc Get Address Of Service Type request");
+        _logger.LogInformation("----- Handling Grpc Get Address Of Service Type request.");
 
         var serviceInstances = await _serviceRegistry.GetServiceInstancesOfType(request.ServiceType).ConfigureAwait(false);
 
-        if (serviceInstances is null || serviceInstances.Count == 0)
-            throw new InvalidDataException($"Error retreiving {request.ServiceType} instances data");
+        if ((serviceInstances?.Count ?? 0) == 0)
+            throw new InvalidDataException($"Error retreiving {request.ServiceType} instances data.");
 
-        _logger.LogInformation("----- Successfully fetched following service instances data: {Data}",
-            string.Join("; ", serviceInstances.Select(x => $"service type: {x.ServiceType}, instance ID: {x.InstanceId}, addresses: {string.Join("; ", x.Addresses)}")));
+        _logger.LogInformation("----- Successfully fetched following service instances data: {Data}.",
+            string.Join("; ", serviceInstances!.Select(x => $"service type: {x.ServiceType}, instance ID: {x.InstanceId}, addresses: {string.Join("; ", x.Addresses)}")));
 
-        var serviceInstance = serviceInstances[Random.Shared.Next(0, serviceInstances.Count)];
+        var serviceInstance = serviceInstances![Random.Shared.Next(0, serviceInstances.Count)];
 
-        if (serviceInstance is null || serviceInstance.Addresses is null || serviceInstance.Addresses.Count == 0)
-            throw new InvalidDataException($"Error retreiving {request.ServiceType} addresses");
+        if ((serviceInstance?.Addresses?.Count ?? 0) == 0)
+            throw new InvalidDataException($"Error retreiving {request.ServiceType} addresses.");
 
         return new GetAddressOfServiceTypeResponse
         {
-            Address = serviceInstance.Addresses.ElementAt(Random.Shared.Next(0, serviceInstance.Addresses.Count))
+            Address = serviceInstance!.Addresses.ElementAt(Random.Shared.Next(0, serviceInstance.Addresses.Count))
         };
     }
 }
