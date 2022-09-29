@@ -42,7 +42,7 @@ public class AccountController : ControllerBase
 
         await _mediator.Send(request);
 
-        return StatusCode((int)HttpStatusCode.Created);
+        return Created()
     }
 
     [HttpPost("avatar/{email:required}")]

@@ -1,6 +1,7 @@
 using Blog.Gateways.WebGateway.API.Configs;
 using Blog.Gateways.WebGateway.API.Models;
 using Yarp.ReverseProxy.Configuration;
+using static Blog.Gateways.WebGateway.API.Configs.GatewayConstants;
 
 namespace Blog.Gateways.WebGateway.API.Services;
 
@@ -18,23 +19,29 @@ public class InMemoryProxyConfigProvider : IProxyConfigProvider, IDisposable
 
     public static InMemoryProxyConfigProvider LoadFromDiscoveryService(IDiscoveryService discoveryService)
     {
-        var serviceInstances = discoveryService.GetAllInstancesAsync().GetAwaiter().GetResult();
+        var services = discoveryService.GetServicesAsync().GetAwaiter().GetResult();
 
-        if (serviceInstances is null)
-            throw new InvalidOperationException("Error discovering services during reverse proxy initialization");
+        if (services is null)
+            throw new InvalidOperationException("Error discovering services during reverse proxy initialization.");
 
-        if (serviceInstances.Any(x => x.Value.Any(a => a.Addresses is null || a.Addresses.Count == 0)))
-            throw new InvalidOperationException("Error requesting addresses from discovery service");
+        var servicesWithoutAddresses = ServiceTypes
+            .List()
+            .Where(serviceType =>
+                (services[serviceType]?.Count ?? 0) == 0 ||
+                !(services[serviceType].SelectMany(instances => instances.Addresses)?.Any() ?? false));
+
+        if (servicesWithoutAddresses.Any())
+            throw new InvalidOperationException($"Error getting addresses of the following services: {string.Join(", ", servicesWithoutAddresses)}.");
 
         List<RouteConfig> routes = new();
         List<ClusterConfig> clusters = new();
 
-        foreach (var serviceType in serviceInstances.Keys)
+        foreach (var serviceType in services.Keys)
         {
             var paths = PathsConfig.GetMatchingPaths(serviceType);
             routes.AddRange(GenerateRoutes(serviceType, paths));
 
-            var destinations = GenerateDestinations(serviceType, serviceInstances[serviceType]);
+            var destinations = GenerateDestinations(serviceType, services[serviceType]);
             clusters.Add(GenerateCluster(serviceType, destinations));
         }
 
@@ -46,7 +53,7 @@ public class InMemoryProxyConfigProvider : IProxyConfigProvider, IDisposable
         if (string.IsNullOrWhiteSpace(serviceType))
             throw new ArgumentNullException(nameof(serviceType));
 
-        if (matchingPaths is null || !matchingPaths.Any())
+        if (matchingPaths?.Any() ?? true)
             throw new ArgumentNullException(nameof(matchingPaths));
 
         var routes = new List<RouteConfig>(matchingPaths.Count());

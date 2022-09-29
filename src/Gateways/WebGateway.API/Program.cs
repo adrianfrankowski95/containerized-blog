@@ -1,5 +1,4 @@
 using Blog.Gateways.WebGateway.API.Configs;
-using Blog.Gateways.WebGateway.API.Integration.Consumers;
 using Blog.Gateways.WebGateway.API.Services;
 using Blog.Services.Discovery.API.Grpc;
 using MassTransit;
