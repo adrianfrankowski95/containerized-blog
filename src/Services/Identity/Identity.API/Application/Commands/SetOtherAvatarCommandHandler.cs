@@ -10,20 +10,17 @@ namespace Blog.Services.Identity.API.Application.Commands;
 public class SetOtherAvatarCommandHandler : IRequestHandler<SetOtherAvatarCommand>
 {
     private readonly IAvatarUploadService _avatarUploadService;
-    private readonly IAvatarManager _avatarManager;
     private readonly IUserRepository _userRepository;
     private readonly IIdentityService _identityService;
     private readonly ILogger<SetOwnAvatarCommandHandler> _logger;
 
     public SetOtherAvatarCommandHandler(
         IAvatarUploadService avatarUploadService,
-        IAvatarManager avatarManager,
         IUserRepository userRepository,
         IIdentityService identityService,
         ILogger<SetOwnAvatarCommandHandler> logger)
     {
         _avatarUploadService = avatarUploadService ?? throw new ArgumentNullException(nameof(avatarUploadService));
-        _avatarManager = avatarManager ?? throw new ArgumentNullException(nameof(avatarManager));
         _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
         _identityService = identityService ?? throw new ArgumentNullException(nameof(identityService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
@@ -36,14 +33,14 @@ public class SetOtherAvatarCommandHandler : IRequestHandler<SetOtherAvatarComman
 
         if (!(_identityService.IsInRole(UserRole.Administrator) || _identityService.IsInRole(UserRole.Moderator)))
         {
-            _logger.LogInformation("----- Refused to set avatar of another user due to unsufficient role: {Role}", _identityService.UserRole);
+            _logger.LogInformation("----- Denied to set avatar of another user due to unsufficient role: {Role}", _identityService.UserRole);
             throw new IdentityDomainException("User is not authorized to set another user's avatar.");
         }
 
-        var user = await _userRepository.FindByEmailAsync(request.EmailAddress).ConfigureAwait(false);
+        var user = await _userRepository.FindByUsernameAsync(request.Username).ConfigureAwait(false);
 
         if (user is null)
-            throw new IdentityDomainException($"Could not find user with provided email address: {request.EmailAddress}.");
+            throw new IdentityDomainException($"Could not find user with provided username: {request.Username}.");
 
         await _avatarUploadService
             .UploadAvatarAsync(user.Id.Value, request.ImageFile, cancellationToken)

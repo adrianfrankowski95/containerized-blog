@@ -26,11 +26,14 @@ public class UserEntityConfiguration : IEntityTypeConfiguration<User>
             .OwnsOne(x => x.EmailAddress, x =>
             {
                 x.Property<NonEmptyString>("_value").HasColumnName("email_address").HasMaxLength(MaxEmailAddressLength).IsRequired();
+                x.HasIndex("_value").IsUnique();
                 x.Property(x => x.IsConfirmed).HasColumnName("email_address_confirmed").HasDefaultValue(false).IsRequired();
                 x.WithOwner();
             })
             .Navigation(x => x.EmailAddress)
             .IsRequired();
+
+
 
         builder
             .OwnsOne(x => x.EmailConfirmationCode, x =>
@@ -77,9 +80,10 @@ public class UserEntityConfiguration : IEntityTypeConfiguration<User>
             .OwnsOne(x => x.Username, x =>
             {
                 x.Property<NonEmptyString>("_value").HasColumnName("username").HasMaxLength(MaxUsernameLength).IsRequired();
+                x.HasIndex("_value").IsUnique();
                 x.WithOwner();
             })
-            .Navigation(x => x.PasswordHash)
+            .Navigation(x => x.Username)
             .IsRequired();
 
         builder

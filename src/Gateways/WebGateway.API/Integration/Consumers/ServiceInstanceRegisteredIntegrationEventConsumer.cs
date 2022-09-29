@@ -23,30 +23,32 @@ public class ServiceInstanceRegisteredIntegrationEventConsumer : IConsumer<Servi
 
     public Task Consume(ConsumeContext<ServiceInstanceRegisteredIntegrationEvent> context)
     {
+        if (_configProvider is not InMemoryProxyConfigProvider inMemoryProvider)
+            throw new NotSupportedException("Dynamic Routes and Clusters update is only supported for InMemoryProxyConfigProvider.");
+
         Guid instanceId = context.Message.InstanceId;
         string serviceType = context.Message.ServiceType;
         HashSet<string> addresses = context.Message.ServiceAddresses;
 
         if (instanceId.Equals(Guid.Empty))
-            throw new InvalidDataException($"{nameof(context.Message.InstanceId)} must not be empty");
+            throw new InvalidDataException($"{nameof(context.Message.InstanceId)} must not be empty.");
 
         if (string.IsNullOrWhiteSpace(serviceType))
-            throw new InvalidDataException($"{nameof(context.Message.ServiceType)} must not be null or empty");
+            throw new InvalidDataException($"{nameof(context.Message.ServiceType)} must not be null or empty.");
 
-        if (addresses is null || !addresses.Any())
-            throw new InvalidDataException($"{nameof(context.Message.ServiceAddresses)} must not be null or empty");
+        if (!(addresses?.Any() ?? false))
+            throw new InvalidDataException($"{nameof(context.Message.ServiceAddresses)} must not be null or empty.");
 
         string addressesString = string.Join("; ", addresses);
 
-        _logger.LogInformation("----- Handling {ServiceType} instance registered event: {InstanceId} - {Addresses}", serviceType, instanceId, addressesString);
+        _logger.LogInformation("----- Handling {ServiceType} instance registered event: {InstanceId} - {Addresses}.", serviceType, instanceId, addressesString);
 
         var config = _configProvider.GetConfig();
         var newRoutes = config.Routes.ToList();
         var newClusters = config.Clusters.ToList();
 
-        var oldCluster = config.Clusters.Where(cluster =>
-            string.Equals(cluster.ClusterId, serviceType, StringComparison.OrdinalIgnoreCase))
-            .FirstOrDefault();
+        var oldCluster = config.Clusters.FirstOrDefault(cluster =>
+            string.Equals(cluster.ClusterId, serviceType, StringComparison.OrdinalIgnoreCase));
 
         var newDestinations = InMemoryProxyConfigProvider.GenerateDestinations(
             serviceType,
@@ -58,8 +60,8 @@ public class ServiceInstanceRegisteredIntegrationEventConsumer : IConsumer<Servi
         {
             newClusters.Remove(oldCluster);
 
-            if (oldCluster.Destinations is not null && oldCluster.Destinations.Count > 0)
-                newDestinations = newDestinations.Union(oldCluster.Destinations).ToDictionary(k => k.Key, v => v.Value);
+            if ((oldCluster?.Destinations?.Count ?? 0) > 0)
+                newDestinations = newDestinations.Union(oldCluster!.Destinations!).ToDictionary(k => k.Key, v => v.Value);
         }
         else
         {
@@ -68,10 +70,6 @@ public class ServiceInstanceRegisteredIntegrationEventConsumer : IConsumer<Servi
         }
 
         newClusters.Add(InMemoryProxyConfigProvider.GenerateCluster(serviceType, newDestinations));
-
-        if (_configProvider is not InMemoryProxyConfigProvider inMemoryProvider)
-            throw new NotSupportedException("Dynamic Routes and Clusters update is only supported for InMemoryProxyConfigProvider");
-
         inMemoryProvider.Update(newRoutes, newClusters);
 
         return Task.CompletedTask;

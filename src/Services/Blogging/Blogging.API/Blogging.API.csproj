@@ -11,8 +11,8 @@
 		<PackageReference Include="NodaTime.Serialization.SystemTextJson" Version="1.0.0" />
 		<PackageReference Include="Dapper" Version="2.0.123" />
 		<PackageReference Include="MediatR" Version="10.0.1" />
-		<PackageReference Include="Grpc.Tools" Version="2.48.1" />
-		<PackageReference Include="Grpc.AspNetCore" Version="2.48.0" />
+		<PackageReference Include="Grpc.Tools" Version="2.49.1" />
+		<PackageReference Include="Grpc.AspNetCore" Version="2.49.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.9" />
 		<PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="10.0.1" />
 		<PackageReference Include="MassTransit.RabbitMQ" Version="8.0.6" />
