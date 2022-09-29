@@ -1,4 +1,4 @@
-using Blog.Gateways.WebGateway.API.Models;
+using System.Collections.Immutable;
 using Blog.Services.Discovery.API.Grpc;
 
 namespace Blog.Gateways.WebGateway.API.Services;
@@ -14,43 +14,44 @@ public class DiscoveryService : IDiscoveryService
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task<HashSet<Models.ServiceInstance>> GetServiceInstancesOfTypeAsync(string serviceType)
+    public async Task<IReadOnlySet<Models.ServiceInstance>> GetInstancesOfTypeAsync(string serviceType)
     {
         if (string.IsNullOrWhiteSpace(serviceType))
             throw new ArgumentNullException(nameof(serviceType));
 
-        _logger.LogInformation("----- Sending grpc request get service type instances info to discovery service, serviceType: {ServiceType}", serviceType);
+        _logger.LogInformation("----- Sending grpc request get service type instances info to discovery service, serviceType: {ServiceType}.", serviceType);
 
         var response = await _client.GetServiceInstancesOfTypeAsync(
             new GetServiceInstancesOfTypeRequest { ServiceType = serviceType })
             .ConfigureAwait(false);
 
-        if (response is null || response.ServiceInstances is null || !response.ServiceInstances.Any())
-            throw new InvalidDataException($"Error retrieving service instances of type {serviceType} from Discovery Grpc service");
+        if (!(response?.ServiceInstances?.Any() ?? false))
+            throw new InvalidDataException($"Error retrieving service instances of type {serviceType} from Discovery Grpc service.");
 
-        _logger.LogInformation("----- Received grpc request get service type instances info response: {Response}",
-            string.Join("; ", response.ServiceInstances.Select(x => $"{x.ServiceType} - {x.InstanceId}: {string.Join(", ", x.Addresses)}")));
+        _logger.LogInformation("----- Received grpc request get service type instances info response: {Response}.",
+            string.Join("; ", response.ServiceInstances.Select(x => $"{x.ServiceType} - {x.InstanceId}: {string.Join(", ", x.Addresses)}.")));
 
-        return response.ServiceInstances.Select(x =>
-            new Models.ServiceInstance(Guid.Parse(x.InstanceId), x.Addresses.ToHashSet())).ToHashSet();
+        return response?.ServiceInstances?.Select(x =>
+            new Models.ServiceInstance(Guid.Parse(x.InstanceId), x.Addresses.ToHashSet())).ToImmutableHashSet()
+            ?? ImmutableHashSet<Models.ServiceInstance>.Empty;
     }
 
-    public async Task<IDictionary<string, HashSet<Models.ServiceInstance>>> GetAllInstancesAsync()
+    public async Task<IReadOnlyDictionary<string, HashSet<Models.ServiceInstance>>> GetServicesAsync()
     {
-        _logger.LogInformation("----- Sending grpc request get all service instances info to discovery service");
+        _logger.LogInformation("----- Sending grpc request get all service instances info to discovery service.");
 
         var response = await _client.GetAllServiceInstancesAsync(new Google.Protobuf.WellKnownTypes.Empty())
             .ConfigureAwait(false);
 
-        if (response is null || response.ServiceInstances is null || !response.ServiceInstances.Any())
-            throw new InvalidDataException($"Error retrieving all service instances from Discovery Grpc service");
+        if (!(response?.ServiceInstances?.Any() ?? false))
+            throw new InvalidDataException($"Error retrieving all service instances from Discovery Grpc service.");
 
-        _logger.LogInformation("----- Received grpc request get all service instances info response: {Response}",
+        _logger.LogInformation("----- Received grpc request get all service instances info response: {Response}.",
             string.Join("; ", response.ServiceInstances.Select(x => $"{x.ServiceType} - {x.InstanceId}: {string.Join(", ", x.Addresses)}")));
 
         var result = new Dictionary<string, HashSet<Models.ServiceInstance>>();
 
-        foreach (var serviceInstance in response.ServiceInstances)
+        foreach (var serviceInstance in response?.ServiceInstances ?? Enumerable.Empty<ServiceInstance>())
         {
             var instance = new Models.ServiceInstance(Guid.Parse(serviceInstance.InstanceId), serviceInstance.Addresses.ToHashSet());
 
@@ -58,6 +59,6 @@ public class DiscoveryService : IDiscoveryService
                 result[serviceInstance.ServiceType].Add(instance);
         }
 
-        return result;
+        return result.ToImmutableDictionary();
     }
 }
