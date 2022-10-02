@@ -16,11 +16,11 @@ public class RabbitMqLifetimeIntegrationEventsPublisher : BackgroundService
     private readonly IHostApplicationLifetime _lifetime;
 
     public RabbitMqLifetimeIntegrationEventsPublisher(
-        IBus bus,
-        IServer server,
-        IOptions<InstanceConfig> config,
-        IHostApplicationLifetime lifetime,
-        ILogger<RabbitMqLifetimeIntegrationEventsPublisher> logger)
+       IBus bus,
+       IServer server,
+       IOptions<InstanceConfig> config,
+       IHostApplicationLifetime lifetime,
+       ILogger<RabbitMqLifetimeIntegrationEventsPublisher> logger)
     {
         _bus = bus ?? throw new ArgumentNullException(nameof(bus));
         _server = server ?? throw new ArgumentNullException(nameof(server));
@@ -31,10 +31,11 @@ public class RabbitMqLifetimeIntegrationEventsPublisher : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        //We are waiting for an ApplicationStarted token trigger, because only then
-        //IServer instance is available and can be resolved by a service provider
-        //in order to obtain app's Addresses
-        await WaitForStartupOrCancellationAsync(_lifetime, stoppingToken).ConfigureAwait(false);
+        // We are waiting for an ApplicationStarted token trigger, because only then
+        // IServer instance is available and can be resolved by a service provider
+        // in order to obtain app's Addresses
+        await WaitForStartupOrCancellationAsync(_lifetime, stoppingToken, out CancellationTokenRegistration tokenRegistration).ConfigureAwait(false);
+        await tokenRegistration.DisposeAsync().ConfigureAwait(false);
 
         var config = _config.Value;
         if (stoppingToken.IsCancellationRequested)
@@ -43,11 +44,6 @@ public class RabbitMqLifetimeIntegrationEventsPublisher : BackgroundService
                 config.ServiceType, config.InstanceId);
             return;
         }
-
-        // TODO: If received hostname:port does not work, check following solution:
-        // var name = Dns.GetHostName(); // get container id
-        // var ip = Dns.GetHostEntry(name).AddressList
-        //     .FirstOrDefault(x => x.AddressFamily == AddressFamily.InterNetwork);
 
         var addresses = GetAddresses();
 
@@ -90,18 +86,21 @@ public class RabbitMqLifetimeIntegrationEventsPublisher : BackgroundService
     {
         var addressFeature = _server.Features.Get<IServerAddressesFeature>();
 
-        if (addressFeature is null || !addressFeature.Addresses.Any())
-            throw new InvalidOperationException($"Error getting {_config.Value.ServiceType} Addresses");
+        if (!(addressFeature?.Addresses?.Any() ?? false))
+            throw new InvalidOperationException($"Error getting {_config.Value.ServiceType} Addresses.");
 
         return addressFeature.Addresses.ToHashSet();
     }
 
-    private static Task WaitForStartupOrCancellationAsync(IHostApplicationLifetime lifetime, CancellationToken stoppingToken)
+    private static Task WaitForStartupOrCancellationAsync(
+        IHostApplicationLifetime lifetime,
+        CancellationToken stoppingToken,
+        out CancellationTokenRegistration registration)
     {
         var appStartedOrCancelled = new TaskCompletionSource();
         var startedOrCancelledToken = CancellationTokenSource.CreateLinkedTokenSource(lifetime.ApplicationStarted, stoppingToken).Token;
 
-        using var registration = startedOrCancelledToken.Register(() => appStartedOrCancelled.SetResult());
+        registration = startedOrCancelledToken.Register(() => appStartedOrCancelled.SetResult());
 
         return appStartedOrCancelled.Task;
     }

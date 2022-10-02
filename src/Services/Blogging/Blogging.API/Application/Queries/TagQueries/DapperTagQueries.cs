@@ -2,6 +2,7 @@ using System.Data.Common;
 using Blog.Services.Blogging.API.Application.Queries.TagQueries;
 using Blog.Services.Blogging.API.Application.Queries.TagQueries.Models;
 using Blog.Services.Blogging.Domain.AggregatesModel.Shared;
+using Blog.Services.Blogging.Infrastructure;
 using Dapper;
 
 namespace Blog.Services.Blogging.API.Application.Queries.PostQueries;
@@ -23,13 +24,13 @@ public class DapperTagQueries : ITagQueries
                     a.value AS {nameof(TagViewModel.Value)},
                     a.language {nameof(TagViewModel.Language)},
                     c.posts_count AS {nameof(TagViewModel.PostsCount)}
-                FROM blogging.tags AS a
+                FROM {BloggingDbContext.DefaultSchema}.tags AS a
                 LEFT JOIN(
                     SELECT COUNT(c0.post_id) AS posts_count, c0.tag_id
                     FROM(
                         SELECT t.post_id, pt.tag_id
-                        FROM blogging.post_translations_tags AS pt
-                        LEFT JOIN blogging.post_translations AS t ON t.id = pt.post_translation_id
+                        FROM {BloggingDbContext.DefaultSchema}.post_translations_tags AS pt
+                        LEFT JOIN {BloggingDbContext.DefaultSchema}.post_translations AS t ON t.id = pt.post_translation_id
                         GROUP BY t.post_id, pt.tag_id
                     ) AS c0
                     GROUP BY c0.tag_id
@@ -53,13 +54,13 @@ public class DapperTagQueries : ITagQueries
                     a.value AS {nameof(TagViewModel.Value)},
                     a.language {nameof(TagViewModel.Language)},
                     c.posts_count AS {nameof(TagViewModel.PostsCount)}
-                FROM blogging.tags AS a
+                FROM {BloggingDbContext.DefaultSchema}.tags AS a
                 LEFT JOIN(
                     SELECT COUNT(c0.post_id) AS posts_count, c0.tag_id
                     FROM(
                         SELECT t.post_id, pt.tag_id
-                        FROM blogging.post_translations_tags AS pt
-                        LEFT JOIN blogging.post_translations AS t ON t.id = pt.post_translation_id
+                        FROM {BloggingDbContext.DefaultSchema}.post_translations_tags AS pt
+                        LEFT JOIN {BloggingDbContext.DefaultSchema}.post_translations AS t ON t.id = pt.post_translation_id
                         GROUP BY t.post_id, pt.tag_id
                     ) AS c0
                     GROUP BY c0.tag_id

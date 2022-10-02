@@ -1,4 +1,5 @@
 using Blog.Services.Discovery.API.Grpc;
+using Blog.Services.Identity.API.Controllers;
 using Blog.Services.Identity.API.Configs;
 using Blog.Services.Identity.API.Extensions;
 using Blog.Services.Identity.API.Infrastructure.Services;
@@ -7,11 +8,13 @@ using Blog.Services.Identity.Infrastructure;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using NodaTime;
+using Blog.Services.Identity.API.Application;
 
 var builder = WebApplication.CreateBuilder(args);
-var env = builder.Environment;
 
+var env = builder.Environment;
 var config = GetConfiguration(env);
+
 builder.Configuration.AddConfiguration(config);
 
 var services = builder.Services;
@@ -20,13 +23,16 @@ services.AddRazorPages();
 
 services
     .AddInstanceConfig()
+    .AddControllers(env)
     .AddNodaTime()
-    .AddInfrastructure(config)
+    .AddCustomServices()
+    .AddDomainServices()
+    .AddApplicationServices(config)
+    .AddIdentityInfrastructure(config)
     .AddMassTransitRabbitMqBus(config)
     .AddGrpcDiscoveryService(config)
-    .AddGrpcEmailingService()
-    .AddCustomServices()
-    .AddDomainServices();
+    .AddGrpcEmailingService();
+
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 services.AddEndpointsApiExplorer();
@@ -112,6 +118,12 @@ internal static class ServiceCollectionExtensions
     {
         services.AddMassTransit(x =>
         {
+            x.AddEntityFrameworkOutbox<IdentityDbContext>(cfg =>
+            {
+                cfg.UsePostgres();
+                cfg.UseBusOutbox();
+            });
+
             x.UsingRabbitMq((context, cfg) =>
             {
                 var rabbitMqConfig = config.GetRequiredSection(RabbitMqConfig.Section).Get<RabbitMqConfig>();

@@ -1,9 +1,10 @@
 using System.Data.Common;
-using Blog.Services.Blogging.API.Infrastructure.TypeHandlers;
+using Blog.Services.Identity.API.Infrastructure.TypeHandlers;
+using Blog.Services.Identity.API.Application.Queries.AvatarQueries;
 using MediatR;
 using Npgsql;
 
-namespace Blog.Services.Blogging.API.Application;
+namespace Blog.Services.Identity.API.Application;
 
 public static class ApplicationInstaller
 {
@@ -15,6 +16,7 @@ public static class ApplicationInstaller
 
         services
             .AddTransient<DbConnection, NpgsqlConnection>(sp => new NpgsqlConnection(connectionString))
+            .AddScoped<IAvatarQueries, DapperAvatarQueries>()
             .AddScoped<IUserQueries, DapperUserQueries>()
             .AddMediatR(typeof(Program).Assembly);
 

@@ -17,7 +17,7 @@ public class AvatarManager : IAvatarManager
     public ValueTask<AvatarModel?> GetAvatarAsync(Guid userId)
         => _ctx.Set<AvatarModel>().FindAsync(userId);
 
-    public Task<int> AddOrUpdateAvatarAsync(Guid userId, byte[] imageData, string type, CancellationToken cancellationToken)
+    public Task<int> AddOrUpdateAvatarAsync(Guid userId, byte[] imageData, string format, CancellationToken cancellationToken)
     {
         return _ctx
             .Set<AvatarModel>()
@@ -25,7 +25,7 @@ public class AvatarManager : IAvatarManager
             {
                 UserId = userId,
                 ImageData = imageData,
-                Type = type,
+                Format = format,
                 UpdatedAt = _sysTime.Now
             })
             .On(a => a.UserId)
@@ -33,7 +33,7 @@ public class AvatarManager : IAvatarManager
             {
                 UserId = a.UserId,
                 ImageData = imageData,
-                Type = type,
+                Format = format,
                 UpdatedAt = _sysTime.Now
             })
             .RunAsync(cancellationToken);

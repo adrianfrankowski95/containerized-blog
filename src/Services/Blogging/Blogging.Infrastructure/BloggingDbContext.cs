@@ -2,6 +2,7 @@ using System.Data;
 using Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate;
 using Blog.Services.Blogging.Domain.AggregatesModel.TagAggregate;
 using Blog.Services.Blogging.Infrastructure.EntityConfigurations;
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 
@@ -13,7 +14,7 @@ public class BloggingDbContext : DbContext
     private IDbContextTransaction? _transaction;
     public DbSet<PostBase> Posts { get; set; }
     public DbSet<Tag> Tags { get; set; }
-    
+
     public bool HasActiveTransaction => _transaction is not null;
 
     public BloggingDbContext(DbContextOptions<BloggingDbContext> options) : base(options)
@@ -21,6 +22,8 @@ public class BloggingDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
+
         modelBuilder.ApplyConfiguration(new PostBaseEntityConfiguration());
         modelBuilder.ApplyConfiguration(new PostTranslationBaseEntityConfiguration());
 
@@ -43,7 +46,10 @@ public class BloggingDbContext : DbContext
 
         modelBuilder.ApplyConfiguration(new IdentifiedRequestEntityConfiguration());
 
-        base.OnModelCreating(modelBuilder);
+        // Mass transit EF Core outbox configurations
+        modelBuilder.AddInboxStateEntity(x => x.ToTable("inbox_state", "outbox"));
+        modelBuilder.AddOutboxMessageEntity(x => x.ToTable("message", "outbox"));
+        modelBuilder.AddOutboxStateEntity(x => x.ToTable("outbox_state", "outbox"));
     }
 
     public async Task<IDbContextTransaction> BeginTransactionAsync(IsolationLevel isolationLevel, CancellationToken cancellationToken = default)
