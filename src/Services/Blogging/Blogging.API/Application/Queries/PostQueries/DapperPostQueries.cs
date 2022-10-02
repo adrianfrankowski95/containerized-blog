@@ -3,6 +3,7 @@ using Blog.Services.Blogging.API.Application.Queries.PostQueries.Models;
 using Blog.Services.Blogging.API.Extensions;
 using Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate;
 using Blog.Services.Blogging.Domain.AggregatesModel.Shared;
+using Blog.Services.Blogging.Infrastructure;
 using Dapper;
 using NodaTime;
 
@@ -21,28 +22,28 @@ public class DapperPostQueries : IPostQueries
     {
         string totalPostsCountQuery =
         @$"SELECT COUNT(*)
-        FROM blogging.posts p
+        FROM {BloggingDbContext.DefaultSchema}.posts p
         WHERE p.status = '{PostStatus.Published.Name}' AND EXISTS(
 		    SELECT 1
-		    FROM blogging.post_translations AS t
+		    FROM {BloggingDbContext.DefaultSchema}.post_translations AS t
 		    WHERE (p.id = t.post_id) AND (t.language = @Language));";
 
         string olderThanPostsCountQuery =
         @$"SELECT COUNT(*)
-        FROM blogging.posts p
+        FROM {BloggingDbContext.DefaultSchema}.posts p
         WHERE p.status = '{PostStatus.Published.Name}' AND p.created_at < @Cursor AND EXISTS(
 		    SELECT 1
-		    FROM blogging.post_translations AS t
+		    FROM {BloggingDbContext.DefaultSchema}.post_translations AS t
 		    WHERE (p.id = t.post_id) AND (t.language = @Language));";
 
         string returnedPostsCountQuery =
         @$"SELECT COUNT(*)
         FROM (
 	        SELECT 1
-	        FROM blogging.posts p
+	        FROM {BloggingDbContext.DefaultSchema}.posts p
 	        WHERE p.status = '{PostStatus.Published.Name}' AND p.created_at < @Cursor AND EXISTS(
 		        SELECT 1
-		        FROM blogging.post_translations AS t
+		        FROM {BloggingDbContext.DefaultSchema}.post_translations AS t
 		        WHERE (p.id = t.post_id) AND (t.language = @Language))
 	        LIMIT(@PageSize)
         ) AS c;";
@@ -63,14 +64,14 @@ public class DapperPostQueries : IPostQueries
             x.tags AS {nameof(PostPreviewModel.Tags)}
         FROM (
 	        SELECT p0.id, p0.category, p0.author_name, p0.created_at, p0.views_count, p0.likes_count, p0.comments_count, p0.header_img_url
-	        FROM blogging.posts AS p0
+	        FROM {BloggingDbContext.DefaultSchema}.posts AS p0
 	        WHERE p0.status = '{PostStatus.Published.Name}' AND p0.created_at < @Cursor
         ) AS p
-        INNER JOIN blogging.post_translations AS t ON (t.post_id = p.id) AND (t.language = @Language)
+        INNER JOIN {BloggingDbContext.DefaultSchema}.post_translations AS t ON (t.post_id = p.id) AND (t.language = @Language)
         LEFT JOIN (                                                                   
 	        SELECT pt.post_translation_id AS translation_id, array_agg(a.value) AS tags
-	            FROM blogging.post_translations_tags AS pt
-	            LEFT JOIN blogging.tags AS a ON (pt.tag_id = a.id)
+	            FROM {BloggingDbContext.DefaultSchema}.post_translations_tags AS pt
+	            LEFT JOIN {BloggingDbContext.DefaultSchema}.tags AS a ON (pt.tag_id = a.id)
 	            GROUP BY pt.post_translation_id
         ) AS x ON (x.translation_id = t.id)
         LIMIT (@PageSize);";
@@ -102,28 +103,28 @@ public class DapperPostQueries : IPostQueries
     {
         string totalPostsCountQuery =
         @$"SELECT COUNT(*)
-        FROM blogging.posts p
+        FROM {BloggingDbContext.DefaultSchema}.posts p
         WHERE p.status = '{PostStatus.Published.Name}' AND p.category = @Category AND EXISTS(
 		    SELECT 1
-		    FROM blogging.post_translations AS t
+		    FROM {BloggingDbContext.DefaultSchema}.post_translations AS t
 		    WHERE (p.id = t.post_id) AND (t.language = @Language));";
 
         string olderThanPostsCountQuery =
         @$"SELECT COUNT(*)
-        FROM blogging.posts p
+        FROM {BloggingDbContext.DefaultSchema}.posts p
         WHERE p.status = '{PostStatus.Published.Name}' AND created_at < @Cursor AND p.category = @Category AND EXISTS(
 		    SELECT 1
-		    FROM blogging.post_translations AS t
+		    FROM {BloggingDbContext.DefaultSchema}.post_translations AS t
 		    WHERE (p.id = t.post_id) AND (t.language = @Language));";
 
         string returnedPostsCountQuery =
         @$"SELECT COUNT(*)
         FROM (
 	        SELECT 1
-	        FROM blogging.posts p
+	        FROM {BloggingDbContext.DefaultSchema}.posts p
 	        WHERE p.status = '{PostStatus.Published.Name}' AND created_at < @Cursor AND p.category = @Category AND EXISTS(
 		        SELECT 1
-		        FROM blogging.post_translations AS t
+		        FROM {BloggingDbContext.DefaultSchema}.post_translations AS t
 		        WHERE (p.id = t.post_id) AND (t.language = @Language))
 	        LIMIT(@PageSize)
         ) AS p;";
@@ -144,14 +145,14 @@ public class DapperPostQueries : IPostQueries
             x.tags AS {nameof(PostPreviewModel.Tags)}
         FROM (
 	        SELECT p0.id, p0.category, p0.author_name, p0.created_at, p0.views_count, p0.likes_count, p0.comments_count, p0.header_img_url
-	        FROM blogging.posts AS p0
+	        FROM {BloggingDbContext.DefaultSchema}.posts AS p0
 	        WHERE p0.status = '{PostStatus.Published.Name}' AND p0.created_at < @Cursor AND p0.category = @Category
         ) AS p
-        INNER JOIN blogging.post_translations AS t ON (t.post_id = p.id) AND (t.language = @Language)
+        INNER JOIN {BloggingDbContext.DefaultSchema}.post_translations AS t ON (t.post_id = p.id) AND (t.language = @Language)
         LEFT JOIN (                                                                   
 	        SELECT pt.post_translation_id AS translation_id, array_agg(a.value) AS tags
-	            FROM blogging.post_translations_tags AS pt
-	            LEFT JOIN blogging.tags AS a ON (pt.tag_id = a.id)
+	            FROM {BloggingDbContext.DefaultSchema}.post_translations_tags AS pt
+	            LEFT JOIN {BloggingDbContext.DefaultSchema}.tags AS a ON (pt.tag_id = a.id)
 	            GROUP BY pt.post_translation_id
         ) AS x ON (x.translation_id = t.id)
         LIMIT (@PageSize);";
@@ -197,14 +198,14 @@ public class DapperPostQueries : IPostQueries
             x.tags AS {nameof(PostPreviewModel.Tags)}
         FROM (
 	        SELECT p0.id, p0.category, p0.author_name, p0.created_at, p0.views_count, p0.likes_count, p0.comments_count, p0.header_img_url
-	        FROM blogging.posts AS p0
+	        FROM {BloggingDbContext.DefaultSchema}.posts AS p0
 	        WHERE (p0.status = '{PostStatus.Published.Name}') AND (EXTRACT (DAY FROM NOW() - p0.created_at) <= @DaysFromToday)
         ) AS p
-        INNER JOIN blogging.post_translations AS t ON (t.post_id = p.id) AND (t.language = @Language)
+        INNER JOIN {BloggingDbContext.DefaultSchema}.post_translations AS t ON (t.post_id = p.id) AND (t.language = @Language)
         LEFT JOIN (                                                                   
 	        SELECT pt.post_translation_id AS translation_id, array_agg(a.value) AS tags
-	            FROM blogging.post_translations_tags AS pt
-	            LEFT JOIN blogging.tags AS a ON (pt.tag_id = a.id)
+	            FROM {BloggingDbContext.DefaultSchema}.post_translations_tags AS pt
+	            LEFT JOIN {BloggingDbContext.DefaultSchema}.tags AS a ON (pt.tag_id = a.id)
 	            GROUP BY pt.post_translation_id
         ) AS x ON (x.translation_id = t.id)
         ORDER BY p.likes_count, p.created_at DESC
@@ -238,14 +239,14 @@ public class DapperPostQueries : IPostQueries
             x.tags AS {nameof(PostPreviewModel.Tags)}
         FROM (
 	        SELECT p0.id, p0.category, p0.author_name, p0.created_at, p0.views_count, p0.likes_count, p0.comments_count, p0.header_img_url
-	        FROM blogging.posts AS p0
+	        FROM {BloggingDbContext.DefaultSchema}.posts AS p0
 	        WHERE (p0.status = '{PostStatus.Published.Name}') AND (EXTRACT (DAY FROM NOW() - p0.created_at) <= @DaysFromToday)
         ) AS p
-        INNER JOIN blogging.post_translations AS t ON (t.post_id = p.id) AND (t.language = @Language)
+        INNER JOIN {BloggingDbContext.DefaultSchema}.post_translations AS t ON (t.post_id = p.id) AND (t.language = @Language)
         INNER JOIN (                                                                   
 	        SELECT pt.post_translation_id AS translation_id, array_agg(a.value) AS tags
-	            FROM blogging.post_translations_tags AS pt
-	            INNER JOIN blogging.tags AS a ON (pt.tag_id = a.id)
+	            FROM {BloggingDbContext.DefaultSchema}.post_translations_tags AS pt
+	            INNER JOIN {BloggingDbContext.DefaultSchema}.tags AS a ON (pt.tag_id = a.id)
 	            GROUP BY pt.post_translation_id
         ) AS x ON (x.translation_id = t.id)
         ORDER BY p.views_count, p.created_at DESC
@@ -277,14 +278,14 @@ public class DapperPostQueries : IPostQueries
             x.tags AS {nameof(PostPreviewModel.Tags)}
         FROM (
 	        SELECT p0.id, p0.category, p0.author_name, p0.created_at, p0.views_count, p0.likes_count, p0.comments_count, p0.header_img_url
-	        FROM blogging.posts AS p0
+	        FROM {BloggingDbContext.DefaultSchema}.posts AS p0
 	        WHERE (p0.author_id = @AuthorId)
         ) AS p
-        LEFT JOIN blogging.post_translations AS t ON (t.post_id = p.id)
+        LEFT JOIN {BloggingDbContext.DefaultSchema}.post_translations AS t ON (t.post_id = p.id)
             AND (
                 EXISTS (
                     SELECT 1
-                    FROM blogging.post_translations AS t0
+                    FROM {BloggingDbContext.DefaultSchema}.post_translations AS t0
                     WHERE (p.id = t0.post_id) AND (t0.language = @Language)
                 )
 				AND
@@ -294,8 +295,8 @@ public class DapperPostQueries : IPostQueries
             )
         LEFT JOIN (                                                                   
 	        SELECT pt.post_translation_id AS translation_id, array_agg(a.value) AS tags
-	            FROM blogging.post_translations_tags AS pt
-	            LEFT JOIN blogging.tags AS a ON (pt.tag_id = a.id)
+	            FROM {BloggingDbContext.DefaultSchema}.post_translations_tags AS pt
+	            LEFT JOIN {BloggingDbContext.DefaultSchema}.tags AS a ON (pt.tag_id = a.id)
 	            GROUP BY pt.post_translation_id
         ) AS x ON (x.translation_id = t.id)
         LIMIT (@PostsCount);";
@@ -349,7 +350,7 @@ public class DapperPostQueries : IPostQueries
                 t.review_restaurant_city AS {nameof(RestaurantReviewPostTranslationViewModel.RestaurantAddressCity)},
                 t.review_restaurant_street AS {nameof(RestaurantReviewPostTranslationViewModel.RestaurantAddressStreet)},
                 t.review_restaurant_cuisines AS {nameof(RestaurantReviewPostTranslationViewModel.RestaurantCuisines)}          
-            FROM blogging.posts AS p
+            FROM {BloggingDbContext.DefaultSchema}.posts AS p
             LEFT JOIN (
                 SELECT t.id,
                     t.post_id,
@@ -366,9 +367,9 @@ public class DapperPostQueries : IPostQueries
                     t.review_restaurant_cuisines,
                     t.language,
                     array_agg(a.value) AS tags
-                FROM blogging.post_translations_tags AS pt
-                LEFT JOIN blogging.post_translations AS t ON t.post_id = @PostId
-                LEFT JOIN blogging.tags AS a ON (pt.tag_id = a.id) AND (t.language = a.language)
+                FROM {BloggingDbContext.DefaultSchema}.post_translations_tags AS pt
+                LEFT JOIN {BloggingDbContext.DefaultSchema}.post_translations AS t ON t.post_id = @PostId
+                LEFT JOIN {BloggingDbContext.DefaultSchema}.tags AS a ON (pt.tag_id = a.id) AND (t.language = a.language)
                 WHERE (pt.post_translation_id = t.id) AND (pt.tag_id = a.id) 
                 GROUP BY t.id, t.post_id, t.title, t.content, t.description, t.recipe_dish_name, t.recipe_cuisine, t.recipe_ingredients, 
                     t.review_restaurant_country, t.review_restaurant_zipcode, t.review_restaurant_city, t.review_restaurant_street,
@@ -380,10 +381,10 @@ public class DapperPostQueries : IPostQueries
 
         var result = await _connection.QueryAsync<dynamic>(returnPostWithTranslationsQuery, parameters).ConfigureAwait(false);
 
-        if (result is null || result.AsList().Count == 0)
+        if ((result?.AsList()?.Count ?? 0) == 0)
             throw new KeyNotFoundException($"Could not find a post with the following ID: {postId.Value}");
 
-        return MapToViewModelWithTranslations(result);
+        return MapToViewModelWithTranslations(result!);
     }
 
     public async Task<PostViewModel> GetPublishedPostWithLanguageAsync(PostId postId, Language language)
@@ -425,7 +426,7 @@ public class DapperPostQueries : IPostQueries
                 t.review_restaurant_city AS {nameof(RestaurantReviewPostTranslationViewModel.RestaurantAddressCity)},
                 t.review_restaurant_street AS {nameof(RestaurantReviewPostTranslationViewModel.RestaurantAddressStreet)},
                 t.review_restaurant_cuisines AS {nameof(RestaurantReviewPostTranslationViewModel.RestaurantCuisines)}          
-            FROM blogging.posts AS p
+            FROM {BloggingDbContext.DefaultSchema}.posts AS p
             INNER JOIN (
                 SELECT t.id,
                     t.post_id,
@@ -442,9 +443,9 @@ public class DapperPostQueries : IPostQueries
                     t.review_restaurant_cuisines,
                     t.language,
                     array_agg(a.value) AS tags
-                FROM blogging.post_translations_tags AS pt
-                INNER JOIN blogging.post_translations AS t ON (t.post_id = @PostId) AND (t.language = @Language)
-                LEFT JOIN blogging.tags AS a ON (pt.tag_id = a.id) AND (t.language = a.language)
+                FROM {BloggingDbContext.DefaultSchema}.post_translations_tags AS pt
+                INNER JOIN {BloggingDbContext.DefaultSchema}.post_translations AS t ON (t.post_id = @PostId) AND (t.language = @Language)
+                LEFT JOIN {BloggingDbContext.DefaultSchema}.tags AS a ON (pt.tag_id = a.id) AND (t.language = a.language)
                 WHERE (pt.post_translation_id = t.id) AND (pt.tag_id = a.id) 
                 GROUP BY t.id, t.post_id, t.title, t.content, t.description, t.recipe_dish_name, t.recipe_cuisine, t.recipe_ingredients, 
                     t.review_restaurant_country, t.review_restaurant_zipcode, t.review_restaurant_city, t.review_restaurant_street,

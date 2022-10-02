@@ -33,7 +33,7 @@ public class SetOtherAvatarCommandHandler : IRequestHandler<SetOtherAvatarComman
 
         if (!(_identityService.IsInRole(UserRole.Administrator) || _identityService.IsInRole(UserRole.Moderator)))
         {
-            _logger.LogInformation("----- Denied to set avatar of another user due to unsufficient role: {Role}", _identityService.UserRole);
+            _logger.LogInformation("----- Denied setting avatar of another user due to unsufficient role: {Role}", _identityService.UserRole);
             throw new IdentityDomainException("User is not authorized to set another user's avatar.");
         }
 

@@ -13,7 +13,7 @@ namespace Blog.Services.Identity.Infrastructure;
 
 public static class InfrastructureInstaller
 {
-    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration config)
+    public static IServiceCollection AddIdentityInfrastructure(this IServiceCollection services, IConfiguration config)
     {
         string connectionString = config.GetConnectionString("Postgres");
 

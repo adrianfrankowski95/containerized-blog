@@ -5,7 +5,6 @@ using Blog.Services.Blogging.API.Extensions;
 using Blog.Services.Blogging.API.Infrastructure.Services;
 using Blog.Services.Blogging.API.Models;
 using Blog.Services.Blogging.API.Options;
-using Blog.Services.Blogging.API.Services;
 using Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate;
 using Blog.Services.Blogging.Infrastructure;
 using MassTransit;
@@ -28,12 +27,12 @@ services
     .AddInstanceConfig()
     .AddControllers(env)
     .AddNodaTime()
+    .AddCustomServices()
     .AddDomainServices()
-    .AddMassTransitRabbitMqBus(config)
-    .AddBloggingInfrastructure(config)
     .AddApplicationServices(config)
-    .AddCustomJwtAuthentication(config)
-    .AddCustomServices();
+    .AddBloggingInfrastructure(config)
+    .AddMassTransitRabbitMqBus(config)
+    .AddCustomJwtAuthentication(config);
 
 //services.AddEndpointsApiExplorer();
 
@@ -127,6 +126,12 @@ static class ServiceCollectionExtensions
 
         services.AddMassTransit(x =>
         {
+            x.AddEntityFrameworkOutbox<BloggingDbContext>(cfg =>
+            {
+                cfg.UsePostgres();
+                cfg.UseBusOutbox();
+            });
+
             x.UsingRabbitMq((context, cfg) =>
             {
                 var rabbitMqConfig = config.GetRequiredSection(RabbitMqConfig.Section).Get<RabbitMqConfig>();

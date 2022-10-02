@@ -1,5 +1,5 @@
-using Blog.Services.Comments.API.Configs;
 using Blog.Integration.Events;
+using Blog.Services.Comments.API.Configs;
 using MassTransit;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
@@ -34,7 +34,8 @@ public class RabbitMqLifetimeIntegrationEventsPublisher : BackgroundService
         // We are waiting for an ApplicationStarted token trigger, because only then
         // IServer instance is available and can be resolved by a service provider
         // in order to obtain app's Addresses
-        await WaitForStartupOrCancellationAsync(_lifetime, stoppingToken).ConfigureAwait(false);
+        await WaitForStartupOrCancellationAsync(_lifetime, stoppingToken, out CancellationTokenRegistration tokenRegistration).ConfigureAwait(false);
+        await tokenRegistration.DisposeAsync().ConfigureAwait(false);
 
         var config = _config.Value;
         if (stoppingToken.IsCancellationRequested)
@@ -78,25 +79,28 @@ public class RabbitMqLifetimeIntegrationEventsPublisher : BackgroundService
         var config = _config.Value;
 
         _logger.LogInformation("----- {Type} heartbeat: {Id} - {Addresses}", config.ServiceType, config.InstanceId, string.Join("; ", addresses));
-        return _bus.Publish<ServiceInstanceHeartbeatEvent>(new(config.InstanceId, config.ServiceType, addresses), stoppingToken);
+        return _bus.Publish<ServiceInstanceHeartbeatIntegrationEvent>(new(config.InstanceId, config.ServiceType, addresses), stoppingToken);
     }
 
     private HashSet<string> GetAddresses()
     {
         var addressFeature = _server.Features.Get<IServerAddressesFeature>();
 
-        if (addressFeature is null || !addressFeature.Addresses.Any())
-            throw new InvalidOperationException($"Error getting {_config.Value.ServiceType} Addresses");
+        if (!(addressFeature?.Addresses?.Any() ?? false))
+            throw new InvalidOperationException($"Error getting {_config.Value.ServiceType} Addresses.");
 
         return addressFeature.Addresses.ToHashSet();
     }
 
-    private static Task WaitForStartupOrCancellationAsync(IHostApplicationLifetime lifetime, CancellationToken stoppingToken)
+    private static Task WaitForStartupOrCancellationAsync(
+        IHostApplicationLifetime lifetime,
+        CancellationToken stoppingToken,
+        out CancellationTokenRegistration registration)
     {
         var appStartedOrCancelled = new TaskCompletionSource();
         var startedOrCancelledToken = CancellationTokenSource.CreateLinkedTokenSource(lifetime.ApplicationStarted, stoppingToken).Token;
 
-        using var registration = startedOrCancelledToken.Register(() => appStartedOrCancelled.SetResult());
+        registration = startedOrCancelledToken.Register(() => appStartedOrCancelled.SetResult());
 
         return appStartedOrCancelled.Task;
     }

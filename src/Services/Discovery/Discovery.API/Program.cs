@@ -2,11 +2,7 @@ using Blog.Services.Discovery.API.Configs;
 using Blog.Services.Discovery.API.Grpc;
 using Blog.Services.Discovery.API.Infrastructure;
 using Blog.Services.Discovery.API.Integration.Consumers;
-using Blog.Services.Discovery.API.Models;
-using Discovery.API.Services;
 using MassTransit;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 var env = builder.Environment;
@@ -17,8 +13,8 @@ builder.Configuration.AddConfiguration(config);
 var services = builder.Services;
 
 services
+    .AddDiscoveryInfrastructure(config)
     .AddMassTransitRabbitMqBus(config)
-    .AddRedisServiceRegistry(config)
     .AddGrpc();
 
 var app = builder.Build();
@@ -49,6 +45,12 @@ internal static class ServiceCollectionExtensions
         {
             x.AddConsumersFromNamespaceContaining<ServiceInstanceStartedIntegrationEventConsumer>();
 
+            x.AddEntityFrameworkOutbox<DiscoveryDbContext>(cfg =>
+            {
+                cfg.UsePostgres();
+                cfg.UseBusOutbox();
+            });
+
             x.UsingRabbitMq((context, cfg) =>
             {
                 var rabbitMqConfig = config.GetRequiredSection(RabbitMqConfig.Section).Get<RabbitMqConfig>();
@@ -78,27 +80,6 @@ internal static class ServiceCollectionExtensions
             })
             .ValidateDataAnnotations()
             .ValidateOnStart();
-
-        return services;
-    }
-
-    public static IServiceCollection AddRedisServiceRegistry(this IServiceCollection services, IConfiguration config)
-    {
-        services.TryAddSingleton<IConnectionMultiplexer>(sp =>
-        {
-            var redis = ConnectionMultiplexer.Connect(config.GetConnectionString("Redis"));
-            redis.GetServer(redis.GetEndPoints().Single()).ConfigSet("notify-keyspace-events", "Ex");
-
-            return redis;
-        });
-
-        services.AddOptions<ServiceRegistryOptions>().Bind(config.GetSection(ServiceRegistryOptions.Section))
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
-
-        services.TryAddScoped<IServiceRegistry, RedisServiceRegistry>();
-
-        services.AddHostedService<RedisKeyExpiredEventHandler>();
 
         return services;
     }

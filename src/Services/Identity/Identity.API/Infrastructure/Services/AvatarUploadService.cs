@@ -31,15 +31,15 @@ public class AvatarUploadService : IAvatarUploadService
         if (codec is null || result is not SKCodecResult.Success)
             throw new InvalidDataException("Invalid image file.");
 
-        string type = codec.EncodedFormat.ToString().ToLowerInvariant();
+        string format = codec.EncodedFormat.ToString().ToLowerInvariant();
 
-        if (!_allowedFormats.Contains(type))
+        if (!_allowedFormats.Contains(format))
             throw new InvalidDataException($"Invalid image format. Supported formats: {string.Join(", ", _allowedFormats)}.");
 
         if (codec.Info.Height != RequiredHeight || codec.Info.Width != RequiredWidth)
             throw new InvalidDataException($"Invalid dimensions. Supported dimensions: ${RequiredWidth}x${RequiredHeight}.");
 
-        await _avatarManager.AddOrUpdateAvatarAsync(userId, stream.ToArray(), type, cancellationToken).ConfigureAwait(false);
+        await _avatarManager.AddOrUpdateAvatarAsync(userId, stream.ToArray(), format, cancellationToken).ConfigureAwait(false);
     }
     private static void ThrowTooBig() => throw new InvalidDataException($"Uploaded file is too big. Maximum allowed size is {MaxSizeBytes} bytes.");
 }

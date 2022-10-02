@@ -29,7 +29,7 @@ public class ServiceInstanceHeartbeatIntegrationEventConsumer : IConsumer<Servic
         if (string.IsNullOrWhiteSpace(serviceType))
             throw new InvalidDataException($"{nameof(context.Message.ServiceType)} must not be null or empty");
 
-        if (addresses is null || !addresses.Any())
+        if (!(addresses?.Any() ?? false))
             throw new InvalidDataException($"{nameof(context.Message.ServiceAddresses)} must not be null or empty");
 
         string addressesString = string.Join("; ", addresses);
@@ -51,9 +51,10 @@ public class ServiceInstanceHeartbeatIntegrationEventConsumer : IConsumer<Servic
                 _logger.LogInformation("----- Successfully registered {ServiceType} instance: {InstanceId} - {Addresses}", serviceType, instanceId, addressesString);
                 await context.Publish(new ServiceInstanceRegisteredIntegrationEvent(instanceId, serviceType, addresses)).ConfigureAwait(false);
             }
-
-            _logger.LogError("----- Error registering {ServiceType} instance: {InstanceId} - {Addresses}", serviceType, instanceId, addressesString);
+            else
+                _logger.LogError("----- Error registering {ServiceType} instance: {InstanceId} - {Addresses}", serviceType, instanceId, addressesString);
         }
-        _logger.LogWarning("----- The {ServiceType} instance already exists: {InstanceId} - {Addresses}", serviceType, instanceId, addressesString);
+        else
+            _logger.LogWarning("----- The {ServiceType} instance already exists: {InstanceId} - {Addresses}", serviceType, instanceId, addressesString);
     }
 }

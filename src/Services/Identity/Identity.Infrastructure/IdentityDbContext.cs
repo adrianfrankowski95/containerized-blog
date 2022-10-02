@@ -2,6 +2,7 @@ using System.Data;
 using Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 using Blog.Services.Identity.Domain.SeedWork;
 using Blog.Services.Identity.Infrastructure.EntityConfigurations;
+using MassTransit;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -33,11 +34,16 @@ public class IdentityDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
+
         modelBuilder.ApplyConfiguration(new UserEntityConfiguration());
         modelBuilder.ApplyConfiguration(new AvatarEntityConfiguration());
         modelBuilder.ApplyConfiguration(new IdentifiedRequestEntityConfiguration());
 
-        base.OnModelCreating(modelBuilder);
+        // Mass transit EF Core outbox configurations
+        modelBuilder.AddInboxStateEntity(x => x.ToTable("inbox_state", "outbox"));
+        modelBuilder.AddOutboxMessageEntity(x => x.ToTable("message", "outbox"));
+        modelBuilder.AddOutboxStateEntity(x => x.ToTable("outbox_state", "outbox"));
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

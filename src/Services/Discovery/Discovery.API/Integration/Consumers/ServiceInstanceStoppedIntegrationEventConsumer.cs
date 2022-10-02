@@ -29,7 +29,7 @@ public class ServiceInstanceStoppedIntegrationEventConsumer : IConsumer<ServiceI
         if (string.IsNullOrWhiteSpace(serviceType))
             throw new InvalidDataException($"{nameof(context.Message.ServiceType)} must not be null or empty");
 
-        if (addresses is null || !addresses.Any())
+        if (!(addresses?.Any() ?? false))
             throw new InvalidDataException($"{nameof(context.Message.ServiceAddresses)} must not be null or empty");
 
         string addressesString = string.Join("; ", addresses);
@@ -43,7 +43,7 @@ public class ServiceInstanceStoppedIntegrationEventConsumer : IConsumer<ServiceI
             _logger.LogInformation("----- Successfully unregistered {ServiceType} instance: {InstanceId} - {Addresses}", serviceType, instanceId, addressesString);
             await context.Publish(new ServiceInstanceUnregisteredIntegrationEvent(instanceId, serviceType)).ConfigureAwait(false);
         }
-
-        _logger.LogError("----- Error unregistering {ServiceType} instance: {InstanceId} - {Addresses}", serviceType, instanceId, addressesString);
+        else
+            _logger.LogError("----- Error unregistering {ServiceType} instance: {InstanceId} - {Addresses}", serviceType, instanceId, addressesString);
     }
 }

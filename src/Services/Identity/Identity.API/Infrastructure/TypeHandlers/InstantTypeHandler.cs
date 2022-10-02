@@ -2,7 +2,7 @@ using System.Data;
 using Dapper;
 using NodaTime;
 
-namespace Blog.Services.Blogging.API.Infrastructure.TypeHandlers;
+namespace Blog.Services.Identity.API.Infrastructure.TypeHandlers;
 
 public class InstantTypeHandler : SqlMapper.TypeHandler<Instant>
 {

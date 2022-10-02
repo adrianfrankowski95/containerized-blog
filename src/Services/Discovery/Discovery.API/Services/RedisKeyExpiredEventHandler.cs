@@ -2,7 +2,7 @@ using Blog.Integration.Events;
 using MassTransit;
 using StackExchange.Redis;
 
-namespace Discovery.API.Services;
+namespace Blog.Services.Discovery.API.Services;
 
 public class RedisKeyExpiredEventHandler : IHostedService
 {
@@ -41,10 +41,9 @@ public class RedisKeyExpiredEventHandler : IHostedService
         });
     }
 
-    public Task StopAsync(CancellationToken cancellationToken)
+    public async Task StopAsync(CancellationToken cancellationToken)
     {
+        await _redis.GetSubscriber(_redis.GetServer(_redis.GetEndPoints().Single())).UnsubscribeAsync("__keyevent@0__:expired").ConfigureAwait(false);
         cancellationToken.ThrowIfCancellationRequested();
-
-        return _redis.GetSubscriber(_redis.GetServer(_redis.GetEndPoints().Single())).UnsubscribeAsync("__keyevent@0__:expired");
     }
 }

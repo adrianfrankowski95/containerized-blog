@@ -3,6 +3,7 @@ using Blog.Services.Emailing.API.Factories;
 using Blog.Services.Emailing.API.Grpc;
 using Blog.Services.Emailing.API.Services;
 using Blog.Services.Emailing.API.Controllers;
+using Blog.Services.Emailing.API.Infrastructure;
 using FluentEmail.Core;
 using FluentEmail.MailKitSmtp;
 using MassTransit;
@@ -26,6 +27,7 @@ services.AddRazorPages(opts =>
 services
     .AddInstanceConfig()
     .AddControllers(env)
+    .AddEmailingInfrastructure(config)
     .AddMassTransitRabbitMqBus(config)
     .AddConfiguredFluentEmail(config)
     .AddGrpc();
@@ -78,6 +80,12 @@ internal static class ServiceCollectionExtensions
 
         services.AddMassTransit(x =>
         {
+            x.AddEntityFrameworkOutbox<EmailingDbContext>(cfg =>
+            {
+                cfg.UsePostgres();
+                cfg.UseBusOutbox();
+            });
+
             x.UsingRabbitMq((context, cfg) =>
             {
                 var rabbitMqConfig = config.GetRequiredSection(RabbitMqConfig.Section).Get<RabbitMqConfig>();

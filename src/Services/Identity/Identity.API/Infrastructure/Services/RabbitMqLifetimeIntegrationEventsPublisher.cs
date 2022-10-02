@@ -34,7 +34,8 @@ public class RabbitMqLifetimeIntegrationEventsPublisher : BackgroundService
         // We are waiting for an ApplicationStarted token trigger, because only then
         // IServer instance is available and can be resolved by a service provider
         // in order to obtain app's Addresses
-        await WaitForStartupOrCancellationAsync(_lifetime, stoppingToken).ConfigureAwait(false);
+        await WaitForStartupOrCancellationAsync(_lifetime, stoppingToken, out CancellationTokenRegistration tokenRegistration).ConfigureAwait(false);
+        await tokenRegistration.DisposeAsync().ConfigureAwait(false);
 
         var config = _config.Value;
         if (stoppingToken.IsCancellationRequested)
@@ -85,18 +86,21 @@ public class RabbitMqLifetimeIntegrationEventsPublisher : BackgroundService
     {
         var addressFeature = _server.Features.Get<IServerAddressesFeature>();
 
-        if (addressFeature is null || !addressFeature.Addresses.Any())
-            throw new InvalidOperationException($"Error getting {_config.Value.ServiceType} Addresses");
+        if (!(addressFeature?.Addresses?.Any() ?? false))
+            throw new InvalidOperationException($"Error getting {_config.Value.ServiceType} Addresses.");
 
         return addressFeature.Addresses.ToHashSet();
     }
 
-    private static Task WaitForStartupOrCancellationAsync(IHostApplicationLifetime lifetime, CancellationToken stoppingToken)
+    private static Task WaitForStartupOrCancellationAsync(
+        IHostApplicationLifetime lifetime,
+        CancellationToken stoppingToken,
+        out CancellationTokenRegistration registration)
     {
         var appStartedOrCancelled = new TaskCompletionSource();
         var startedOrCancelledToken = CancellationTokenSource.CreateLinkedTokenSource(lifetime.ApplicationStarted, stoppingToken).Token;
 
-        using var registration = startedOrCancelledToken.Register(() => appStartedOrCancelled.SetResult());
+        registration = startedOrCancelledToken.Register(() => appStartedOrCancelled.SetResult());
 
         return appStartedOrCancelled.Task;
     }

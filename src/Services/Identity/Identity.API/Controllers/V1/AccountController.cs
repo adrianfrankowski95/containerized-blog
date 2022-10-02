@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Net;
 using Blog.Services.Identity.API.Application.Commands;
+using Blog.Services.Identity.API.Application.Queries.AvatarQueries;
 using Blog.Services.Identity.API.Extensions;
 using Blog.Services.Identity.API.Infrastructure.Services;
 using Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
@@ -17,15 +18,34 @@ public class AccountController : ControllerBase
 {
     private readonly IMediator _mediator;
     private readonly IIdentityService _identityService;
+    private readonly IAvatarQueries _avatarQueries;
     private readonly ISysTime _sysTime;
     private readonly ILogger<AccountController> _logger;
 
-    public AccountController(ILogger<AccountController> logger, IMediator mediator, IIdentityService identityService, ISysTime sysTime)
+    public AccountController(
+        ILogger<AccountController> logger,
+        IMediator mediator,
+        IIdentityService identityService,
+        IAvatarQueries avatarQueries,
+        ISysTime sysTime)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
         _identityService = identityService ?? throw new ArgumentNullException(nameof(identityService));
+        _avatarQueries = avatarQueries ?? throw new ArgumentNullException(nameof(avatarQueries));
         _sysTime = sysTime ?? throw new ArgumentNullException(nameof(sysTime));
+    }
+
+    [HttpGet("avatar/{username:required}")]
+    [ProducesResponseType((int)HttpStatusCode.OK)]
+    [ProducesResponseType((int)HttpStatusCode.NotFound)]
+    public async Task<IActionResult> GetAvatarAsync([FromRoute, Required] string username)
+    {
+        var avatar = await _avatarQueries.GetAvatarByUsernameAsync(username).ConfigureAwait(false);
+
+        return avatar is null
+            ? NotFound()
+            : File(avatar.ImageData, "image/" + avatar.Format);
     }
 
     [HttpPost("avatar")]

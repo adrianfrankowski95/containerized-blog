@@ -1,5 +1,6 @@
 using Blog.Services.Comments.API.Configs;
 using Blog.Services.Comments.API.Controllers;
+using Blog.Services.Comments.API.Infrastructure;
 using Blog.Services.Comments.API.Services;
 using MassTransit;
 
@@ -72,6 +73,12 @@ internal static class ServiceCollectionExtensions
 
         services.AddMassTransit(x =>
         {
+            x.AddEntityFrameworkOutbox<CommentsDbContext>(cfg =>
+            {
+                cfg.UsePostgres();
+                cfg.UseBusOutbox();
+            });
+
             x.UsingRabbitMq((context, cfg) =>
             {
                 var rabbitMqConfig = config.GetRequiredSection(RabbitMqConfig.Section).Get<RabbitMqConfig>();
