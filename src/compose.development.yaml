@@ -1,7 +1,7 @@
 services:
   rabbitmq:
     image: rabbitmq:management-alpine
-    restart: always
+    restart: on-failure
     deploy:
       mode: global
     ports:
@@ -10,7 +10,7 @@ services:
 
   postgres:
     image: postgres:alpine
-    restart: always
+    restart: on-failure
     deploy:
       mode: global
     environment:
@@ -25,7 +25,7 @@ services:
 
   redis:
     image: redis:alpine
-    restart: always
+    restart: on-failure
     deploy:
       mode: global
     ports:
@@ -33,6 +33,7 @@ services:
 
   discovery-api:
     image: blog/discovery-api
+    restart: on-failure
     build:
       context: .
       dockerfile: Services/Discovery/Discovery.API/Dockerfile
@@ -49,6 +50,7 @@ services:
 
   emailing-api:
     image: blog/emailing-api
+    restart: on-failure
     build:
       context: .
       dockerfile: Services/Emailing/Emailing.API/Dockerfile
@@ -65,6 +67,7 @@ services:
 
   identity-api:
     image: blog/identity-api
+    restart: on-failure
     build:
       context: .
       dockerfile: Services/Identity/Identity.API/Dockerfile
@@ -83,6 +86,7 @@ services:
 
   blogging-api:
     image: blog/blogging-api
+    restart: on-failure
     build:
       context: .
       dockerfile: Services/Blogging/Blogging.API/Dockerfile
@@ -101,6 +105,7 @@ services:
 
   comments-api:
     image: blog/comments-api
+    restart: on-failure
     build:
       context: .
       dockerfile: Services/Comments/Comments.API/Dockerfile
@@ -119,6 +124,7 @@ services:
 
   webgateway-api:
     image: blog/webgateway-api
+    restart: on-failure
     build:
       context: .
       dockerfile: Gateways/WebGateway.API/Dockerfile
