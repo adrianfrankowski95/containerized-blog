@@ -16,7 +16,7 @@ public record UserPasswordResetDomainEvent : DomainEvent
         if (emailAddress is null)
             throw new ArgumentNullException(nameof(emailAddress));
 
-        if (passwordResetCode is null || passwordResetCode.IsEmpty())
+        if (passwordResetCode is null || passwordResetCode.IsEmpty)
             throw new ArgumentNullException(nameof(passwordResetCode));
 
         Username = username;

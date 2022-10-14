@@ -46,8 +46,8 @@ public class PasswordResetCode : ValueObject<PasswordResetCode>
         return new(new string(code), now);
     }
 
-    public bool IsEmpty() => string.IsNullOrWhiteSpace(_value);
-    private bool IsExpired(Instant now) => IsEmpty()
+    public bool IsEmpty => string.IsNullOrWhiteSpace(_value);
+    private bool IsExpired(Instant now) => IsEmpty
         ? throw new IdentityDomainException("Password must not be empty.")
         : now > ValidUntil;
 
@@ -57,7 +57,7 @@ public class PasswordResetCode : ValueObject<PasswordResetCode>
             throw new ArgumentNullException("Provided password reset code must not be null.");
 
         // Don't reveal that the password reset code has not been requested
-        if (IsEmpty())
+        if (IsEmpty)
             throw new IdentityDomainException("The password reset code is invalid.");
 
         if (IsExpired(now))

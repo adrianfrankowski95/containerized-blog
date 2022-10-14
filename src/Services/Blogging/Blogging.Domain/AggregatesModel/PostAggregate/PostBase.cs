@@ -1,5 +1,5 @@
-using Blog.Services.Blogging.Domain.SeedWork;
 using Blog.Services.Blogging.Domain.Exceptions;
+using Blog.Services.Blogging.Domain.SeedWork;
 using NodaTime;
 
 namespace Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate;
@@ -206,7 +206,7 @@ public abstract class PostBase : Entity<PostId>, IAggregateRoot, IValidatable
         if (Id is null)
             throw new BloggingDomainException($"{nameof(Id)} cannot be null");
 
-        if (Id.IsEmpty())
+        if (Id.IsEmpty)
             throw new BloggingDomainException($"{nameof(Id)} cannot be empty");
 
         if (Category is null)
@@ -215,7 +215,7 @@ public abstract class PostBase : Entity<PostId>, IAggregateRoot, IValidatable
         if (Author.Id is null)
             throw new BloggingDomainException($"{nameof(Author.Id)} cannot be null");
 
-        if (Author.Id.IsEmpty())
+        if (Author.Id.IsEmpty)
             throw new BloggingDomainException($"{nameof(Author.Id)} cannot be empty");
 
         if (CreatedAt == null)
@@ -269,7 +269,7 @@ public class PostId : ValueObject<PostId>
     public PostId() => Value = Guid.NewGuid();
     public PostId(Guid postId) => Value = postId;
 
-    public bool IsEmpty() => Value.Equals(Guid.Empty);
+    public bool IsEmpty => Value.Equals(Guid.Empty);
 
     protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {

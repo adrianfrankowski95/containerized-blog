@@ -26,7 +26,7 @@ public class User : Entity<UserId>, IAggregateRoot
 
     public bool IsSuspended(Instant now) => SuspendedUntil is not null && SuspendedUntil < now;
     public bool IsLockedOut(Instant now) => LockedOutUntil is not null && LockedOutUntil < now;
-    public bool HasActivePassword => PasswordHash is not null && PasswordResetCode.IsEmpty();
+    public bool HasActivePassword => PasswordHash is not null && PasswordResetCode.IsEmpty;
     public bool HasConfirmedEmailAddress => EmailAddress.IsConfirmed;
 
     private User(
@@ -116,7 +116,7 @@ public class User : Entity<UserId>, IAggregateRoot
     private void ClearFailedLoginAttempts() => FailedLoginAttemptsCount = FailedLoginAttemptsCount.None;
     private void ClearFailedLoginAttemptsIfExpired(Instant now)
     {
-        if (!FailedLoginAttemptsCount.IsEmpty() && FailedLoginAttemptsCount.IsExpired(now))
+        if (!FailedLoginAttemptsCount.IsEmpty && FailedLoginAttemptsCount.IsExpired(now))
             ClearFailedLoginAttempts();
     }
     private void SetSuccessfulLogin(Instant now) => LastLoggedInAt = now;

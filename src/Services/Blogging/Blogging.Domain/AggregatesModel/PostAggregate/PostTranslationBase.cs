@@ -50,7 +50,7 @@ public abstract class PostTranslationBase : ValueObject<PostTranslationBase>, IT
         if (postId is null)
             throw new BloggingDomainException($"{nameof(PostId)} cannot be null");
 
-        if (postId.IsEmpty())
+        if (postId.IsEmpty)
             throw new BloggingDomainException($"{nameof(PostId)} cannot be empty");
 
         var newTranslation = Copy();
@@ -73,7 +73,7 @@ public abstract class PostTranslationBase : ValueObject<PostTranslationBase>, IT
         if (PostId is null)
             throw new BloggingDomainException($"{nameof(PostId)} cannot be null");
 
-        if (PostId.IsEmpty())
+        if (PostId.IsEmpty)
             throw new BloggingDomainException($"{nameof(PostId)} cannot be empty");
 
         if (Language is null)

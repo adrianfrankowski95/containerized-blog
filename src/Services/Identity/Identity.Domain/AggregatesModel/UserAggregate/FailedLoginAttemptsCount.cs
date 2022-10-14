@@ -36,8 +36,8 @@ public class FailedLoginAttemptsCount : ValueObject<FailedLoginAttemptsCount>
 
         return new(_count + 1, now);
     }
-    public bool IsEmpty() => _count == 0;
-    public bool IsExpired(Instant now) => IsEmpty()
+    public bool IsEmpty => _count == 0;
+    public bool IsExpired(Instant now) => IsEmpty
         ? throw new IdentityDomainException("Failed login attempts count must not be empty.")
         : now > ValidUntil;
 

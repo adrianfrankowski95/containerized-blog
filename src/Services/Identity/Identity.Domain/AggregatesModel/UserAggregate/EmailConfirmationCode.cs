@@ -30,22 +30,22 @@ public class EmailConfirmationCode : ValueObject<EmailConfirmationCode>
 
     public static EmailConfirmationCode NewCode(Instant now) => new(Guid.NewGuid(), now);
 
-    public bool IsEmpty() => _value is null;
-    private bool IsExpired(Instant now) => IsEmpty()
+    public bool IsEmpty => _value is null;
+    private bool IsExpired(Instant now) => IsEmpty
         ? throw new IdentityDomainException("Email confirmation code must not be empty.")
         : now > ValidUntil;
 
     public void Verify(NonEmptyString providedCode, Instant now)
     {
         if (providedCode is null)
-            throw new IdentityDomainException("Provided email confirmation code must not be null.");
+            throw new IdentityDomainException("Provided email confirmation code must not be empty.");
 
         // Don't reveal that the email confirmation code has not been requested
-        if (IsEmpty())
+        if (IsEmpty)
             throw new IdentityDomainException("The email confirmation code is invalid.");
 
         if (IsExpired(now))
-            throw new IdentityDomainException("The email confirmation code has expired.");
+            throw new EmailConfirmationCodeExpiredException("The email confirmation code has expired.");
 
         if (!string.Equals(ToString(), providedCode, StringComparison.Ordinal))
             throw new IdentityDomainException("The email confirmation code is invalid.");
