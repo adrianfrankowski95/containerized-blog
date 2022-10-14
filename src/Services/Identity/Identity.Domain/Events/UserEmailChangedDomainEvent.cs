@@ -16,7 +16,7 @@ public record UserEmailChangedDomainEvent : DomainEvent
         if (emailAddress is null)
             throw new ArgumentNullException(nameof(emailAddress));
 
-        if (emailConfirmationCode is null || emailConfirmationCode.IsEmpty())
+        if (emailConfirmationCode is null || emailConfirmationCode.IsEmpty)
             throw new ArgumentNullException(nameof(emailConfirmationCode));
 
         Username = username;

@@ -19,21 +19,18 @@ public class AccountController : ControllerBase
     private readonly IMediator _mediator;
     private readonly IIdentityService _identityService;
     private readonly IAvatarQueries _avatarQueries;
-    private readonly ISysTime _sysTime;
     private readonly ILogger<AccountController> _logger;
 
     public AccountController(
         ILogger<AccountController> logger,
         IMediator mediator,
         IIdentityService identityService,
-        IAvatarQueries avatarQueries,
-        ISysTime sysTime)
+        IAvatarQueries avatarQueries)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
         _identityService = identityService ?? throw new ArgumentNullException(nameof(identityService));
         _avatarQueries = avatarQueries ?? throw new ArgumentNullException(nameof(avatarQueries));
-        _sysTime = sysTime ?? throw new ArgumentNullException(nameof(sysTime));
     }
 
     [HttpGet("avatar/{username:required}")]

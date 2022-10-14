@@ -1,5 +1,5 @@
-using Blog.Services.Blogging.Domain.SeedWork;
 using Blog.Services.Blogging.Domain.Exceptions;
+using Blog.Services.Blogging.Domain.SeedWork;
 
 namespace Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate;
 
@@ -36,7 +36,7 @@ public class UserId : ValueObject<UserId>
 
     public UserId(Guid userId) => Value = userId;
 
-    public bool IsEmpty() => Value.Equals(Guid.Empty);
+    public bool IsEmpty => Value.Equals(Guid.Empty);
 
     protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {

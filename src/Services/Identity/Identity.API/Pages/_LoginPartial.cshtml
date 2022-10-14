@@ -1,15 +1,13 @@
-@using Blog.Services.Identity.API.Core;
-@using Blog.Services.Identity.API.Models;
+@using Blog.Services.Identity.API.Infrastructure.Services
 
-@inject UserManager<User> UserManager
-@inject ISignInManager<User> SignInManager
+@inject IIdentityService IdentityService
 
 <ul class="navbar-nav">
-    @if (SignInManager.IsSignedIn(User))
+    @if (IdentityService.IsAuthenticated)
     {
         <li class="nav-item">
             <a id="manage" class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Manage/Index"
-            title="Manage">Hello @UserManager.GetUsername(User)!</a>
+            title="Manage">Hello @IdentityService.Username!</a>
         </li>
         <li class="nav-item">
             <form id="logoutForm" class="form-inline" asp-area="Identity" asp-page="/Account/Logout"

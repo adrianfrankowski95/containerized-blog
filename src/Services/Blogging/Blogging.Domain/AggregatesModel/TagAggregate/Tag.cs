@@ -56,7 +56,7 @@ public class TagId : ValueObject<TagId>
 
     public TagId(Guid tagId) => Value = tagId;
 
-    public bool IsEmpty() => Value.Equals(Guid.Empty);
+    public bool IsEmpty => Value.Equals(Guid.Empty);
 
     protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
