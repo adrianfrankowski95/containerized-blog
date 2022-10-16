@@ -1,12 +1,14 @@
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
 #nullable disable
 
 using System.ComponentModel.DataAnnotations;
 using System.Text;
+using Blog.Services.Identity.API.Application.Commands;
 using Blog.Services.Identity.API.Core;
+using Blog.Services.Identity.API.Extensions;
 using Blog.Services.Identity.API.Models;
 using Blog.Services.Identity.API.Services;
+using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
@@ -15,26 +17,18 @@ using NodaTime;
 
 namespace Blog.Services.Identity.API.Pages.Account;
 
+[AllowAnonymous]
 public class ForgotPasswordModel : PageModel
 {
-    private readonly UserManager<User> _userManager;
-    private readonly IOptionsMonitor<PasswordOptions> _passwordOptions;
-    private readonly IEmailingService _emailingService;
+    private readonly IMediator _mediator;
     private readonly ILogger<ForgotPasswordModel> _logger;
-    private readonly ISysTime _sysTime;
 
     public ForgotPasswordModel(
-        UserManager<User> userManager,
-        IOptionsMonitor<PasswordOptions> passwordOptions,
-        IEmailingService emailingService,
-        ILogger<ForgotPasswordModel> logger,
-        ISysTime sysTime)
+        IMediator mediator,
+        ILogger<ForgotPasswordModel> logger)
     {
-        _userManager = userManager;
-        _emailingService = emailingService;
-        _passwordOptions = passwordOptions;
+        _mediator = mediator;
         _logger = logger;
-        _sysTime = sysTime;
     }
 
     [TempData]
@@ -52,42 +46,49 @@ public class ForgotPasswordModel : PageModel
 
     public async Task<IActionResult> OnPostAsync()
     {
-        if (ModelState.IsValid)
+        if (!ModelState.IsValid)
+            return Page();
+
+        var command = new ResetPasswordCommand(Input.Email);
+        _logger.LogSendingCommand(command);
+
+        try
         {
-            var user = await _userManager.FindByEmailAsync(Input.Email);
-            if (user is null || _userManager.IsConfirmingEmail(user))
-            {
-                // Don't reveal that the user does not exist or is not confirmed
-                return RedirectToPage("./ForgotPasswordConfirmation");
-            }
+            await _mediator.Send(command);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "----- Error confirming email address, command: @Command", command);
 
-            var result = await _userManager.ResetPasswordAsync(user);
-
-            // Don't reveal any validation details
-            if (result.Succeeded)
-            {
-                var code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(user.PasswordResetCode));
-                var callbackUrl = Url.Page(
-                    "/Account/ResetPassword",
-                    pageHandler: null,
-                    values: new { code },
-                    protocol: Request.Scheme);
-
-                var isSuccess = await _emailingService.SendPasswordResetEmailAsync(
-                    user.FullName,
-                    user.EmailAddress,
-                    callbackUrl,
-                    _sysTime.Now.Plus(Duration.FromTimeSpan(_passwordOptions.CurrentValue.PasswordResetCodeValidityPeriod)));
-
-                if (!isSuccess)
-                {
-                    StatusMessage = "Error sending an email. Please try again later.";
-                    return RedirectToPage();
-                }
-            }
-            return RedirectToPage("./ForgotPasswordConfirmation");
         }
 
-        return Page();
+        // Don't reveal that the user does not exist or is not confirmed
+        return RedirectToPage("./ForgotPasswordConfirmation");
+
+        var callbackUrl = Url.Page(
+                "/Account/ResetPassword",
+                pageHandler: null,
+                values: new { code },
+                protocol: Request.Scheme);
+
+        // Don't reveal any validation details
+        if (result.Succeeded)
+        {
+            var code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(user.PasswordResetCode));
+
+
+            var isSuccess = await _emailingService.SendPasswordResetEmailAsync(
+                user.FullName,
+                user.EmailAddress,
+                callbackUrl,
+                _sysTime.Now.Plus(Duration.FromTimeSpan(_passwordOptions.CurrentValue.PasswordResetCodeValidityPeriod)));
+
+            if (!isSuccess)
+            {
+                StatusMessage = "Error sending an email. Please try again later.";
+                return RedirectToPage();
+            }
+        }
+        return RedirectToPage("./ForgotPasswordConfirmation");
     }
 }

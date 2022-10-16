@@ -29,6 +29,6 @@ public class EmailAddress : ValueObject<EmailAddress>
 
     public override string ToString() => _value;
 
-    public static implicit operator EmailAddress(string value) => new(value);
+    public static implicit operator EmailAddress(NonEmptyString value) => new(value);
     public static implicit operator string(EmailAddress value) => value._value;
 }

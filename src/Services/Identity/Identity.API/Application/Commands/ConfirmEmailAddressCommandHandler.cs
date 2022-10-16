@@ -19,7 +19,7 @@ public class ConfirmEmailAddressCommandHandler : IRequestHandler<ConfirmEmailAdd
 
     public async Task<Unit> Handle(ConfirmEmailAddressCommand request, CancellationToken cancellationToken)
     {
-        var user = await _userRepository.FindByEmailAsync(request.EmailAddress).ConfigureAwait(false);
+        var user = await _userRepository.FindByUsernameAsync(request.Username).ConfigureAwait(false);
         if (user is null)
             throw new IdentityDomainException("Error confirming an email address.");
 

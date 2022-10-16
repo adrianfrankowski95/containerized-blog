@@ -3,4 +3,4 @@ using MediatR;
 
 namespace Blog.Services.Identity.API.Application.Commands;
 
-public record ConfirmEmailAddressCommand(EmailAddress EmailAddress, NonEmptyString EmailConfirmationCode) : IRequest<Unit>;
+public record ConfirmEmailAddressCommand(NonEmptyString Username, NonEmptyString EmailConfirmationCode) : IRequest<Unit>;
