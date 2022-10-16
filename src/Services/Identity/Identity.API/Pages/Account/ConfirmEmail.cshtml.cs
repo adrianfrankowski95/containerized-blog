@@ -4,11 +4,13 @@ using Blog.Services.Identity.API.Application.Commands;
 using Blog.Services.Identity.API.Extensions;
 using Blog.Services.Identity.Domain.Exceptions;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace Blog.Services.Identity.API.Pages.Account;
 
+[AllowAnonymous]
 public class ConfirmEmailModel : PageModel
 {
     private readonly IMediator _mediator;
@@ -33,6 +35,8 @@ public class ConfirmEmailModel : PageModel
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "----- Error confirming email address, command: @Command", command);
+
             if (ex is EmailConfirmationCodeExpiredException)
                 return RedirectToPage("./EmailConfirmationExpiration");
 

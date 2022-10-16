@@ -1,6 +1,7 @@
 using Blog.Services.Discovery.API.Grpc;
-using Blog.Services.Identity.API.Controllers;
+using Blog.Services.Identity.API.Application;
 using Blog.Services.Identity.API.Configs;
+using Blog.Services.Identity.API.Controllers;
 using Blog.Services.Identity.API.Extensions;
 using Blog.Services.Identity.API.Infrastructure.Services;
 using Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
@@ -8,7 +9,6 @@ using Blog.Services.Identity.Infrastructure;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using NodaTime;
-using Blog.Services.Identity.API.Application;
 
 var builder = WebApplication.CreateBuilder(args);
 

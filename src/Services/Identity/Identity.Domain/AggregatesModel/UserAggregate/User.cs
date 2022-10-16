@@ -12,7 +12,7 @@ public class User : Entity<UserId>, IAggregateRoot
     public FullName FullName { get; private set; }
     public Gender Gender { get; private set; }
     public EmailAddress EmailAddress { get; private set; }
-    public bool ReceiveAdditionalEmails { get; }
+    public bool ReceiveAdditionalEmails { get; private set; }
     public UserRole Role { get; private set; }
     public PasswordHasher.PasswordHash? PasswordHash { get; private set; }
     public Instant CreatedAt { get; }
@@ -176,19 +176,19 @@ public class User : Entity<UserId>, IAggregateRoot
         AddDomainEvent(new UserEmailChangedDomainEvent(Username, EmailAddress, EmailConfirmationCode));
     }
 
-    public bool UpdatePersonalData(Username? username, FullName? fullName)
+    public bool UpdatePersonalData(FullName? fullName, bool? receiveAdditionalEmails)
     {
         bool isUpdated = false;
-
-        if (username is not null && !Username.Equals(username))
-        {
-            Username = username;
-            isUpdated = true;
-        }
 
         if (fullName is not null && !FullName.Equals(fullName))
         {
             FullName = fullName;
+            isUpdated = true;
+        }
+
+        if (receiveAdditionalEmails is not null && !ReceiveAdditionalEmails.Equals(receiveAdditionalEmails))
+        {
+            ReceiveAdditionalEmails = receiveAdditionalEmails.Value;
             isUpdated = true;
         }
 
