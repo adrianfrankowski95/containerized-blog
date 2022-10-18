@@ -11,7 +11,7 @@ public class PasswordResetCode : ValueObject<PasswordResetCode>
     private const int Length = 6;
     private readonly string? _value;
     public Instant? IssuedAt { get; }
-    private Instant? ValidUntil => IssuedAt?.Plus(Duration.FromHours(1));
+    public Instant? ValidUntil => IssuedAt?.Plus(Duration.FromHours(1));
     private readonly static PasswordResetCode _empty = new();
     public static PasswordResetCode Empty => _empty;
 
@@ -61,16 +61,16 @@ public class PasswordResetCode : ValueObject<PasswordResetCode>
             throw new IdentityDomainException("The password reset code is invalid.");
 
         if (IsExpired(now))
-            throw new IdentityDomainException("The password reset code has expired.");
+            throw new PasswordResetCodeExpirationException("The password reset code has expired.");
 
         if (!string.Equals(ToString(), providedCode, StringComparison.Ordinal))
             throw new IdentityDomainException("The password reset code is invalid.");
     }
-
-    public override string ToString() => _value ?? "";
-
     protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {
         yield return _value;
     }
+
+    public static implicit operator string(PasswordResetCode value) =>
+        value._value ?? throw new IdentityDomainException("Password reset code must not be null.");
 }

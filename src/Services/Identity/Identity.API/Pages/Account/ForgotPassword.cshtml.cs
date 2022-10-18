@@ -1,19 +1,15 @@
 #nullable disable
 
 using System.ComponentModel.DataAnnotations;
-using System.Text;
 using Blog.Services.Identity.API.Application.Commands;
-using Blog.Services.Identity.API.Core;
 using Blog.Services.Identity.API.Extensions;
-using Blog.Services.Identity.API.Models;
-using Blog.Services.Identity.API.Services;
+using Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
+using Blog.Services.Identity.Domain.Exceptions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.Extensions.Options;
-using NodaTime;
+
 
 namespace Blog.Services.Identity.API.Pages.Account;
 
@@ -42,6 +38,14 @@ public class ForgotPasswordModel : PageModel
         [Required]
         [EmailAddress]
         public string Email { get; set; }
+
+        [Required]
+        public Guid RequestId { get; set; }
+    }
+
+    public void OnGet()
+    {
+        Input.RequestId = Guid.NewGuid();
     }
 
     public async Task<IActionResult> OnPostAsync()
@@ -49,7 +53,7 @@ public class ForgotPasswordModel : PageModel
         if (!ModelState.IsValid)
             return Page();
 
-        var command = new ResetPasswordCommand(Input.Email);
+        var command = new IdentifiedCommand<ResetPasswordCommand>(Input.RequestId, new ResetPasswordCommand(Input.Email));
         _logger.LogSendingCommand(command);
 
         try
@@ -58,37 +62,16 @@ public class ForgotPasswordModel : PageModel
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "----- Error confirming email address, command: @Command", command);
+            _logger.LogError(ex, "----- Error resetting a password, command: @Command", command);
 
-        }
-
-        // Don't reveal that the user does not exist or is not confirmed
-        return RedirectToPage("./ForgotPasswordConfirmation");
-
-        var callbackUrl = Url.Page(
-                "/Account/ResetPassword",
-                pageHandler: null,
-                values: new { code },
-                protocol: Request.Scheme);
-
-        // Don't reveal any validation details
-        if (result.Succeeded)
-        {
-            var code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(user.PasswordResetCode));
-
-
-            var isSuccess = await _emailingService.SendPasswordResetEmailAsync(
-                user.FullName,
-                user.EmailAddress,
-                callbackUrl,
-                _sysTime.Now.Plus(Duration.FromTimeSpan(_passwordOptions.CurrentValue.PasswordResetCodeValidityPeriod)));
-
-            if (!isSuccess)
+            if (ex is EmailingServiceException)
             {
                 StatusMessage = "Error sending an email. Please try again later.";
                 return RedirectToPage();
             }
         }
+
+        // Don't reveal that the user does not exist or is not confirmed
         return RedirectToPage("./ForgotPasswordConfirmation");
     }
 }

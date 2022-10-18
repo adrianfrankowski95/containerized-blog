@@ -43,7 +43,6 @@ public class IdentityService : IIdentityService
         }
     }
 
-
     public NonEmptyString? Username
     {
         get

@@ -32,4 +32,5 @@ public class Username : ValueObject<Username>
     {
         yield return _value;
     }
+    public static implicit operator string(Username value) => value._value;
 }

@@ -164,6 +164,9 @@ internal static class ServiceCollectionExtensions
             .AddHttpContextAccessor()
             .TryAddTransient<IIdentityService, IdentityService>();
 
+        services
+            .TryAddScoped<ICallbackUrlGenerator, RazorPagesCallbackUrlGenerator>();
+
         return services;
     }
 
