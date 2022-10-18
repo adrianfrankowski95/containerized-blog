@@ -3,20 +3,20 @@ namespace Blog.Services.Identity.API.Extensions;
 public static class HttpContextExtensions
 {
     private static readonly List<string> _forwardedHeaders = new() { "X-Forwarded-Proto", "X-Forwarded-Host", "X-Forwarded-Prefix" };
-    public static string GetOriginalRoute(this HttpContext httpContext)
-    {
-        var missingHeaders = new List<string>();
-        var forwardedValues = _forwardedHeaders.Select(h =>
-        {
-            var headerValue = httpContext.Request.Headers[h].ToString();
-            if (string.IsNullOrWhiteSpace(headerValue))
-                missingHeaders.Add(h);
 
-            return headerValue;
-        });
+    public static string GetOriginalProtocol(this HttpContext httpContext) =>
+        httpContext.Request.Headers?[_forwardedHeaders[0]].ToString()
+        ?? throw new InvalidDataException($"Forwarded request is missing {_forwardedHeaders[0]} header.");
 
-        return missingHeaders.Any()
-            ? throw new InvalidDataException($"Forwarded request is missing the following headers: {string.Join(", ", missingHeaders)}.")
-            : forwardedValues.ElementAt(0) + "://" + forwardedValues.ElementAt(1) + forwardedValues.ElementAt(2);
-    }
+    public static string GetOriginalHost(this HttpContext httpContext) =>
+        httpContext.Request.Headers?[_forwardedHeaders[1]].ToString()
+        ?? throw new InvalidDataException($"Forwarded request is missing {_forwardedHeaders[1]} header.");
+
+    public static string GetOriginalPrefix(this HttpContext httpContext) =>
+        httpContext.Request.Headers?[_forwardedHeaders[2]].ToString()
+        ?? throw new InvalidDataException($"Forwarded request is missing {_forwardedHeaders[2]} header.");
+
+    public static string GetOriginalBaseRoute(this HttpContext httpContext) => GetOriginalProtocol(httpContext) + "://" + GetOriginalHost(httpContext);
+
+    public static string GetOriginalRoute(this HttpContext httpContext) => GetOriginalBaseRoute(httpContext) + GetOriginalPrefix(httpContext);
 }

@@ -37,7 +37,7 @@ public class ConfirmEmailModel : PageModel
         {
             _logger.LogError(ex, "----- Error confirming email address, command: @Command", command);
 
-            if (ex is EmailConfirmationCodeExpiredException)
+            if (ex is EmailConfirmationCodeExpirationException)
                 return RedirectToPage("./EmailConfirmationExpiration");
 
             ModelState.AddModelError(string.Empty, ex.Message);

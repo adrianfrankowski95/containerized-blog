@@ -45,7 +45,7 @@ public class EmailConfirmationCode : ValueObject<EmailConfirmationCode>
             throw new IdentityDomainException("The email confirmation code is invalid.");
 
         if (IsExpired(now))
-            throw new EmailConfirmationCodeExpiredException("The email confirmation code has expired.");
+            throw new EmailConfirmationCodeExpirationException("The email confirmation code has expired.");
 
         if (!string.Equals(ToString(), providedCode, StringComparison.Ordinal))
             throw new IdentityDomainException("The email confirmation code is invalid.");
