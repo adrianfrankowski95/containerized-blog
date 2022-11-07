@@ -40,6 +40,12 @@ public class IdentityDbContext : DbContext
         modelBuilder.ApplyConfiguration(new AvatarEntityConfiguration());
         modelBuilder.ApplyConfiguration(new IdentifiedRequestEntityConfiguration());
 
+        // OpenIddict entities configurations
+        modelBuilder.ApplyConfiguration(new OpenIddictEntityFrameworkCoreApplicationConfiguration());
+        modelBuilder.ApplyConfiguration(new OpenIddictEntityFrameworkCoreAuthorizationConfiguration());
+        modelBuilder.ApplyConfiguration(new OpenIddictEntityFrameworkCoreScopeConfiguration());
+        modelBuilder.ApplyConfiguration(new OpenIddictEntityFrameworkCoreTokenConfiguration());
+
         // Mass transit EF Core outbox configurations
         modelBuilder.AddInboxStateEntity(x => x.ToTable("inbox_state", "outbox"));
         modelBuilder.AddOutboxMessageEntity(x => x.ToTable("message", "outbox"));

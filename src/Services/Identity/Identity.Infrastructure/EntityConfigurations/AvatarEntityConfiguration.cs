@@ -11,7 +11,7 @@ public class AvatarEntityConfiguration : IEntityTypeConfiguration<AvatarModel>
     public void Configure(EntityTypeBuilder<AvatarModel> builder)
     {
         builder
-        .ToTable("avatars", IdentityDbContext.DefaultSchema);
+            .ToTable("avatars", IdentityDbContext.DefaultSchema);
 
         builder
             .HasOne<User>()
@@ -19,7 +19,7 @@ public class AvatarEntityConfiguration : IEntityTypeConfiguration<AvatarModel>
             .HasForeignKey<AvatarModel>(x => x.UserId)
             .OnDelete(DeleteBehavior.Cascade)
             .IsRequired();
-        
+
         builder.HasKey(x => x.UserId);
 
         // To make sure that byte arrays are compared referentially and not by iterating each value

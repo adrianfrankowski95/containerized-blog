@@ -4,11 +4,13 @@ using Blog.Services.Identity.API.Configs;
 using Blog.Services.Identity.API.Controllers;
 using Blog.Services.Identity.API.Extensions;
 using Blog.Services.Identity.API.Infrastructure.Services;
+using Blog.Services.Identity.API.Models;
 using Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 using Blog.Services.Identity.Infrastructure;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using NodaTime;
+using Quartz;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,7 +33,8 @@ services
     .AddIdentityInfrastructure(config)
     .AddMassTransitRabbitMqBus(config)
     .AddGrpcDiscoveryService(config)
-    .AddGrpcEmailingService();
+    .AddGrpcEmailingService()
+    .AddConfiguredQuartz();
 
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -185,8 +188,53 @@ internal static class ServiceCollectionExtensions
         return services;
     }
 
-    public static IServiceCollection AddOpenIddict(this IServiceCollection services)
+    public static IServiceCollection AddConfiguredQuartz(this IServiceCollection services)
     {
+        services.AddQuartz(opts =>
+        {
+            opts.UseMicrosoftDependencyInjectionJobFactory();
+            opts.UseSimpleTypeLoader();
+            opts.UseInMemoryStore();
+        });
+
+        services.AddQuartzHostedService(opts => opts.WaitForJobsToComplete = true);
+
+        return services;
+    }
+
+    public static IServiceCollection AddConfiguredOpenIddict(this IServiceCollection services)
+    {
+        services
+            .AddOpenIddict()
+            .AddCore(opts =>
+            {
+                opts
+                    .UseEntityFrameworkCore()
+                    .UseDbContext<IdentityDbContext>()
+                    .ReplaceDefaultEntities<Guid>();
+
+                opts.UseQuartz();
+            })
+            .AddServer(opts =>
+            {
+                opts
+                    .UseAspNetCore()
+                    .EnableAuthorizationEndpointPassthrough()
+                    .EnableTokenEndpointPassthrough()
+                    .EnableLogoutEndpointPassthrough()
+                    .EnableUserinfoEndpointPassthrough();
+
+                opts
+                    .AllowAuthorizationCodeFlow()
+                    .RequireProofKeyForCodeExchange()
+                    .SetTokenEndpointUris("/connect/token")
+                    .SetAuthorizationEndpointUris("/connect/authorize")
+                    .SetLogoutEndpointUris("/connect/logout")
+                    .SetUserinfoEndpointUris("/connect/userinfo")
+                    .SetConfigurationEndpointUris("/.well-known/openid-configuration")
+                    .SetCryptographyEndpointUris("/.well-known/openid-configuration/jwks")
+                    .RegisterClaims(IdentityConstants.UserClaimTypes.List());
+            });
 
         return services;
     }
