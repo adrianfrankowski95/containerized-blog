@@ -14,6 +14,9 @@ public class LoginService
         if (user is null)
             throw new ArgumentNullException(nameof(user));
 
+        if (passwordHasher is null)
+            throw new ArgumentNullException(nameof(passwordHasher));
+
         if (user.IsLockedOut(now))
             return LoginResult.Fail(LoginErrorCode.AccountLockedOut);
 

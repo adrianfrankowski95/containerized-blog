@@ -24,7 +24,7 @@ public class RequestManager : IRequestManager
         bool exists = await ExistsAsync<TRequest>(requestId).ConfigureAwait(false);
 
         var request = exists
-            ? throw new BloggingDomainException($"Request of type {typeof(TRequest).Name} with ID {requestId} already exists.")
+            ? throw new IdempotencyException($"Request of type {typeof(TRequest).Name} with ID {requestId} already exists.")
             : new IdentifiedRequest(requestId, typeof(TRequest).Name, _sysTime.Now);
 
         _ctx.Add(request);

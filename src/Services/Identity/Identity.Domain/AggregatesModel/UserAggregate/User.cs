@@ -110,7 +110,6 @@ public class User : Entity<UserId>, IAggregateRoot
     private void ClearEmailConfirmationCode() => EmailConfirmationCode = EmailConfirmationCode.Empty;
     private void SetNewPasswordResetCode(Instant now) => PasswordResetCode = PasswordResetCode.NewCode(now);
     private void ClearPasswordResetCode() => PasswordResetCode = PasswordResetCode.Empty;
-    private void ClearPasswordHash() => PasswordHash = null;
     private void UpdatePasswordHash(PasswordHasher.PasswordHash passwordHash) => PasswordHash = passwordHash;
     private void AddFailedLoginAttempt(Instant now) => FailedLoginAttemptsCount = FailedLoginAttemptsCount.Increment(now);
     private void ClearFailedLoginAttempts() => FailedLoginAttemptsCount = FailedLoginAttemptsCount.None;
@@ -146,18 +145,20 @@ public class User : Entity<UserId>, IAggregateRoot
         AddDomainEvent(new EmailAddressConfirmedDomainEvent(Username, EmailAddress));
     }
 
-    public void ResetPassword(Instant now)
+    public void RequestPasswordReset(Instant now)
     {
         SetNewPasswordResetCode(now);
-        ClearPasswordHash();
-        RefreshSecurityStamp();
-
-        AddDomainEvent(new PasswordResetDomainEvent(Username, EmailAddress, PasswordResetCode));
+        AddDomainEvent(new PasswordResetRequestedDomainEvent(Username, EmailAddress, PasswordResetCode));
     }
 
-    public void SetPassword(PasswordHasher.PasswordHash passwordHash, NonEmptyString providedCode, Instant now)
+    public void ResetPassword(PasswordHasher passwordHasher, NonEmptyString newPassword, NonEmptyString providedCode, Instant now)
     {
         PasswordResetCode.Verify(providedCode, now);
+
+        if (passwordHasher.VerifyPasswordHash(newPassword, PasswordHash))
+            throw new IdentityDomainException("The new password must be different than the old one.");
+
+        var passwordHash = passwordHasher.HashPassword(newPassword);
         UpdatePasswordHash(passwordHash);
         ClearPasswordResetCode();
         RefreshSecurityStamp();

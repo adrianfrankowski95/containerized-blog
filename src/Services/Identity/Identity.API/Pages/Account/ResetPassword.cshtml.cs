@@ -1,32 +1,36 @@
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
 #nullable disable
-
 
 using System.ComponentModel.DataAnnotations;
 using System.Text;
-using Blog.Services.Identity.API.Core;
-using Blog.Services.Identity.API.Models;
+using Blog.Services.Identity.API.Application.Commands;
+using Blog.Services.Identity.API.Extensions;
+using Blog.Services.Identity.Domain.Exceptions;
+using MassTransit.Mediator;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 namespace Blog.Services.Identity.API.Pages.Account;
 
+[AllowAnonymous]
 public class ResetPasswordModel : PageModel
 {
-    private readonly UserManager<User> _userManager;
+    private readonly IMediator _mediator;
     private readonly ILogger<ResetPasswordModel> _logger;
 
-    public ResetPasswordModel(UserManager<User> userManager, ILogger<ResetPasswordModel> logger)
+    public ResetPasswordModel(
+        IMediator mediator,
+        ILogger<ResetPasswordModel> logger)
     {
-        _userManager = userManager;
+        _mediator = mediator;
         _logger = logger;
     }
 
+    [TempData]
+    public string StatusMessage { get; set; }
 
     [BindProperty]
     public InputModel Input { get; set; }
-
 
     public class InputModel
     {
@@ -42,25 +46,14 @@ public class ResetPasswordModel : PageModel
 
         [DataType(DataType.Password)]
         [Display(Name = "Confirm password")]
-        [Compare("Password", ErrorMessage = "The Password and Confirmation Password do not match.")]
+        [Compare("Password", ErrorMessage = "The password and Password Confirmation do not match.")]
         public string ConfirmPassword { get; set; }
 
         [Required]
         public string Code { get; set; }
-    }
 
-    private void SaveEmail(User user)
-    {
-        TempData["Email"] = user.EmailAddress;
-    }
-
-    private void LoadInput(string code)
-    {
-        Input = new InputModel
-        {
-            Email = (string)TempData["Email"],
-            Code = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(code))
-        };
+        [Required]
+        public Guid RequestId { get; set; }
     }
 
     public IActionResult OnGet(string code)
@@ -70,64 +63,31 @@ public class ResetPasswordModel : PageModel
             return BadRequest("A code must be supplied for password reset.");
         }
 
-        LoadInput(code);
+        Input.RequestId = Guid.NewGuid();
         return Page();
     }
 
     public async Task<IActionResult> OnPostAsync()
     {
         if (!ModelState.IsValid)
-        {
             return Page();
-        }
 
-        var user = await _userManager.FindByEmailAsync(Input.Email);
-        if (user is null || _userManager.IsConfirmingEmail(user))
+        var command = new IdentifiedCommand<ResetPasswordCommand>(Input.RequestId, new ResetPasswordCommand(Input.Email, Input.NewPassword, Input.Code));
+        _logger.LogSendingCommand(command);
+
+        try
         {
-            // Don't reveal that the user does not exist
-            return RedirectToPage("./ResetPasswordConfirmation");
+            await _mediator.Send(command);
         }
-
-        var result = await _userManager.ResetPasswordAsync(user, Input.NewPassword, Input.Code);
-
-        if (!result.Succeeded)
+        catch (Exception ex)
         {
-            if (result.Errors.Single().Equals(PasswordResetError.ExpiredPasswordResetCode))
-            {
+            _logger.LogError(ex, "----- Error resetting a password, command: @Command", command);
+
+            if (ex is PasswordResetCodeExpirationException)
                 return RedirectToPage("./ResetPasswordExpiration");
-            }
-            else if (result.Errors.Single() is PasswordResetError)
-            {
-                ModelState.AddModelError(string.Empty, result.Errors.Single().ErrorDescription);
-                return Page();
-            }
-            else if (result.Errors.Any(x => x is PasswordValidationError))
-            {
-                foreach (var error in result.Errors.Where(x => x is PasswordValidationError))
-                {
-                    ModelState.AddModelError(null, error.ErrorDescription);
-                }
-                return Page();
-            }
-            else if (result.Errors.All(x => x is UsernameValidationError or EmailValidationError))
-            {
-                SaveEmail(user);
-                object returnRoute = new { returnUrl = Url.Page("./ResetPassword.cshtml", new { code = Input.Code }) };
 
-                if (result.Errors.Any(x => x is UsernameValidationError))
-                {
-                    _logger.LogWarning("User username does not meet validation requirements anymore.");
-                    return RedirectToPage("./UpdateUsername", returnRoute);
-                }
-                else if (result.Errors.Any(x => x is EmailValidationError))
-                {
-                    _logger.LogWarning("User email does not meet validation requirements anymore.");
-                    return RedirectToPage("./UpdateEmail", returnRoute);
-                }
-            }
-
-            ModelState.AddModelError(string.Empty, "Invalid password reset attempt.");
-            return Page();
+            ModelState.AddModelError(string.Empty, ex.Message);
+            StatusMessage = "Error resetting your password.";
         }
 
         return RedirectToPage("./ResetPasswordConfirmation");
