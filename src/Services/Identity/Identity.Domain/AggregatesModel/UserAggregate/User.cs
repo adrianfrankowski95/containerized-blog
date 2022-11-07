@@ -26,7 +26,7 @@ public class User : Entity<UserId>, IAggregateRoot
 
     public bool IsSuspended(Instant now) => SuspendedUntil is not null && SuspendedUntil < now;
     public bool IsLockedOut(Instant now) => LockedOutUntil is not null && LockedOutUntil < now;
-    public bool HasActivePassword => PasswordHash is not null && PasswordResetCode.IsEmpty;
+    public bool HasActivePassword => !string.IsNullOrWhiteSpace(PasswordHash!);
     public bool HasConfirmedEmailAddress => EmailAddress.IsConfirmed;
 
     private User(
@@ -82,7 +82,6 @@ public class User : Entity<UserId>, IAggregateRoot
     {
         var user = new User(username, fullName, gender, emailAddress, receiveAdditionalEmails, now, passwordHash);
         user.SetNewEmailConfirmationCode(now);
-
         user.AddDomainEvent(new UserRegisteredDomainEvent(user.Username, user.EmailAddress, user.EmailConfirmationCode));
 
         return user;
@@ -98,7 +97,6 @@ public class User : Entity<UserId>, IAggregateRoot
     {
         var user = new User(username, fullName, gender, emailAddress, false, now, null, role);
         user.SetNewPasswordResetCode(now);
-
         user.AddDomainEvent(new UserCreatedDomainEvent(user.Username, user.EmailAddress, user.PasswordResetCode));
 
         return user;

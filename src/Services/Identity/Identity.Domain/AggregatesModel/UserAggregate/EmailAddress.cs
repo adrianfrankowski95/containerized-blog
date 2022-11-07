@@ -30,5 +30,6 @@ public class EmailAddress : ValueObject<EmailAddress>
     public override string ToString() => _value;
 
     public static implicit operator EmailAddress(NonEmptyString value) => new(value);
-    public static implicit operator string(EmailAddress value) => value._value;
+    public static implicit operator string(EmailAddress value)
+        => value?._value ?? throw new IdentityDomainException("Email address must not be null.");
 }

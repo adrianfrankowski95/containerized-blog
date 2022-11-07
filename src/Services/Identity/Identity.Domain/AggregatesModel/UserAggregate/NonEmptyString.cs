@@ -1,3 +1,4 @@
+using Blog.Services.Identity.Domain.Exceptions;
 using Blog.Services.Identity.Domain.SeedWork;
 
 namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
@@ -30,5 +31,8 @@ public class NonEmptyString : ValueObject<NonEmptyString>
     }
 
     public static implicit operator NonEmptyString(string value) => new(value);
-    public static implicit operator string(NonEmptyString value) => value._value;
+    public static implicit operator string(NonEmptyString value) =>
+        string.IsNullOrWhiteSpace(value?._value)
+            ? throw new ArgumentNullException(nameof(value))
+            : value._value;
 }

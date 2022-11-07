@@ -71,6 +71,5 @@ public class PasswordResetCode : ValueObject<PasswordResetCode>
         yield return _value;
     }
 
-    public static implicit operator string(PasswordResetCode value) =>
-        value._value ?? throw new IdentityDomainException("Password reset code must not be null.");
+    public static implicit operator string(PasswordResetCode value) => value?._value ?? throw new IdentityDomainException("Password reset code must not be null");
 }
