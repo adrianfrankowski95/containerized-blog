@@ -31,8 +31,9 @@
                         </label>
                     </div>
                 </div>
+                <input asp-for="Input.RequestId" type="hidden" />
                 <div>
-                    <button id="login-submit" type="submit" class="w-100 btn btn-lg btn-primary">Log in</button>
+                    <button id="login-submit" type="submit" class="w-100 btn btn-lg btn-primary" asp-route-returnUrl="@Model.ReturnUrl">Log in</button>
                 </div>
                 <div>
                     <p>

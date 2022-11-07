@@ -8,18 +8,18 @@ public class SecurityStamp : ValueObject<SecurityStamp>
     private readonly Guid _value;
     public Instant IssuedAt { get; }
 
-    private SecurityStamp(Guid value)
+    private SecurityStamp(Guid value, Instant now)
     {
-        if(value.Equals(Guid.Empty))
+        if (value.Equals(Guid.Empty))
             throw new ArgumentException("Security stamp must not be empty.");
-            
+
         _value = value;
-        IssuedAt = SystemClock.Instance.GetCurrentInstant();
+        IssuedAt = now;
     }
 
-    //public Guid ToGuid() => _value;
+    public override string ToString() => _value.ToString();
 
-    public static SecurityStamp NewStamp() => new(Guid.NewGuid());
+    public static SecurityStamp NewStamp(Instant now) => new(Guid.NewGuid(), now);
 
     protected override IEnumerable<object?> GetEqualityCheckAttributes()
     {

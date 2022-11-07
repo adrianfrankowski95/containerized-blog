@@ -5,12 +5,12 @@ using Microsoft.AspNetCore.WebUtilities;
 
 namespace Blog.Services.Identity.API.Infrastructure.Services;
 
-public class RazorPagesCallbackUrlGenerator : ICallbackUrlGenerator
+public class CallbackUrlGenerator : ICallbackUrlGenerator
 {
     private readonly IUrlHelper _urlHelper;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public RazorPagesCallbackUrlGenerator(IUrlHelper urlHelper, IHttpContextAccessor httpContextAccessor)
+    public CallbackUrlGenerator(IUrlHelper urlHelper, IHttpContextAccessor httpContextAccessor)
     {
         _urlHelper = urlHelper ?? throw new ArgumentNullException(nameof(urlHelper));
         _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));

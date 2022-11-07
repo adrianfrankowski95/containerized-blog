@@ -9,4 +9,7 @@ public interface IIdentityService
     public NonEmptyString? Username { get; }
     public UserRole? UserRole { get; }
     public bool IsInRole(UserRole role);
+    public Task SignInAsync(User user, bool isPersistent);
+    public Task RefreshSignInAsync(User user);
+    public Task SignOutAsync();
 }

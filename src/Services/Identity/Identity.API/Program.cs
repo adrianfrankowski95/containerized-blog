@@ -162,10 +162,10 @@ internal static class ServiceCollectionExtensions
     {
         services
             .AddHttpContextAccessor()
-            .TryAddTransient<IIdentityService, IdentityService>();
+            .TryAddScoped<IIdentityService, IdentityService>();
 
         services
-            .TryAddScoped<ICallbackUrlGenerator, RazorPagesCallbackUrlGenerator>();
+            .TryAddScoped<ICallbackUrlGenerator, CallbackUrlGenerator>();
 
         return services;
     }
@@ -181,6 +181,12 @@ internal static class ServiceCollectionExtensions
         services.TryAddTransient<ISysTime, SysTime>();
         services.TryAddTransient<LoginService>();
         services.TryAddTransient<PasswordHasher, BcryptPasswordHasher>();
+
+        return services;
+    }
+
+    public static IServiceCollection AddOpenIddict(this IServiceCollection services)
+    {
 
         return services;
     }

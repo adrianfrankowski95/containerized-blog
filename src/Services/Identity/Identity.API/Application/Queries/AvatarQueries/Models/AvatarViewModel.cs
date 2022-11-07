@@ -1,4 +1,4 @@
-namespace Blog.Services.Identity.API.Application.Queries.TagQueries.Models;
+namespace Blog.Services.Identity.API.Application.Queries.AvatarQueries.Models;
 
 public record AvatarViewModel
 {
