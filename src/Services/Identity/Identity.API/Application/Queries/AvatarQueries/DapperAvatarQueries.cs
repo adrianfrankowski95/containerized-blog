@@ -1,5 +1,5 @@
 using System.Data.Common;
-using Blog.Services.Blogging.API.Application.Queries.TagQueries.Models;
+using Blog.Services.Identity.API.Application.Queries.AvatarQueries.Models;
 using Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 using Blog.Services.Identity.Infrastructure;
 using Dapper;

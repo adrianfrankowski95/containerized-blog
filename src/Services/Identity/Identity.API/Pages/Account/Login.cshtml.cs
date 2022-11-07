@@ -1,12 +1,11 @@
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
 #nullable disable
 
 
 using System.ComponentModel.DataAnnotations;
-using Blog.Services.Identity.API.Core;
-using Blog.Services.Identity.API.Models;
-using Blog.Services.Identity.API.Services;
+using Blog.Services.Identity.API.Application.Commands;
+using Blog.Services.Identity.API.Extensions;
+using Blog.Services.Identity.API.Infrastructure.Services;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -16,14 +15,14 @@ namespace Blog.Services.Identity.API.Pages.Account;
 [AllowAnonymous]
 public class LoginModel : PageModel
 {
-    private readonly ISignInManager<User> _signInManager;
-    private readonly ILoginService _loginService;
+    private readonly IIdentityService _identityService;
+    private readonly IMediator _mediator;
     private readonly ILogger<LoginModel> _logger;
 
-    public LoginModel(ISignInManager<User> signInManager, ILoginService loginService, ILogger<LoginModel> logger)
+    public LoginModel(IIdentityService identityService, IMediator mediator, ILogger<LoginModel> logger)
     {
-        _signInManager = signInManager;
-        _loginService = loginService;
+        _identityService = identityService;
+        _mediator = mediator;
         _logger = logger;
     }
 
@@ -48,102 +47,42 @@ public class LoginModel : PageModel
 
         [Display(Name = "Remember me?")]
         public bool RememberMe { get; set; }
+
+        [Required]
+        public Guid RequestId { get; set; }
     }
 
-    private void LoadInput()
-    {
-        Input = new InputModel
-        {
-            Email = (string)TempData["Email"],
-            RememberMe = (bool?)TempData["RememberMe"] ?? false
-        };
-    }
-
-    private void SaveInput()
-    {
-        TempData["Email"] = Input.Email;
-        TempData["RememberMe"] = Input.RememberMe;
-    }
-
-    public async Task<IActionResult> OnGetAsync(string returnUrl = null)
+    public IActionResult OnGet(string returnUrl = null)
     {
         if (!string.IsNullOrEmpty(ErrorMessage))
             ModelState.AddModelError(string.Empty, ErrorMessage);
 
         ReturnUrl = returnUrl ?? Url.Content("~/");
+        Input.RequestId = Guid.NewGuid();
 
-        await _signInManager.SignOutAsync();
-
-        LoadInput();
-        return Page();
+        return _identityService.IsAuthenticated ? LocalRedirect(ReturnUrl) : Page();
     }
 
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> OnPostAsync(string returnUrl = null)
     {
         returnUrl ??= Url.Content("~/");
 
-        if (ModelState.IsValid)
+        if (!ModelState.IsValid)
+            return Page();
+
+        var command = new IdentifiedCommand<LogInCommand>(Input.RequestId, new LogInCommand(Input.Email, Input.Password, Input.RememberMe));
+        _logger.LogSendingCommand(command);
+
+        try
         {
-            (IdentityResult result, User user) = await _loginService.LoginAsync(Input.Email, Input.Password);
-            if (!result.Succeeded)
-            {
-                if (result.Errors.Single().Equals(CredentialsError.InvalidCredentials))
-                {
-                    ModelState.AddModelError(string.Empty, result.Errors.Single().ErrorDescription);
-                    return Page();
-                }
-                else if (result.Errors.Single().Equals(UserStateValidationError.AccountLockedOut))
-                {
-                    _logger.LogWarning("User account locked out.");
-                    return RedirectToPage("./Lockout");
-                }
-                else if (result.Errors.Single().Equals(UserStateValidationError.AccountSuspended))
-                {
-                    _logger.LogWarning("User account suspended.");
-                    return RedirectToPage("./Suspension", new { suspendedUntil = user.SuspendedUntil.Value });
-                }
-                else if (result.Errors.Single().Equals(UserStateValidationError.EmailUnconfirmed))
-                {
-                    _logger.LogWarning("User email address has not been confirmed.");
-                    return RedirectToPage("./UnconfirmedEmail");
-                }
-                else if (result.Errors.Single().Equals(UserStateValidationError.ResettingPassword))
-                {
-                    _logger.LogWarning("User password has not been confirmed.");
-                    return RedirectToPage("./UnconfirmedPassword");
-                }
-                else if (result.Errors.All(x => x is UsernameValidationError or EmailValidationError or PasswordValidationError))
-                {
-                    SaveInput();
-                    object returnRoute = new { returntUrl = Url.Page("./Login", new { returnUrl }) };
-
-                    if (result.Errors.Any(x => x is UsernameValidationError))
-                    {
-                        _logger.LogWarning("User username does not meet validation requirements anymore.");
-                        return RedirectToPage("./UpdateUsername", returnRoute);
-                    }
-                    else if (result.Errors.Any(x => x is EmailValidationError))
-                    {
-                        _logger.LogWarning("User email does not meet validation requirements anymore.");
-                        return RedirectToPage("./UpdateEmail", returnRoute);
-                    }
-                    else if (result.Errors.Any(x => x is PasswordValidationError))
-                    {
-                        _logger.LogWarning("User password does not meet validation requirements anymore.");
-                        return RedirectToPage("./UpdatePassword", returnRoute);
-                    }
-                }
-
-                ModelState.AddModelError(string.Empty, "Invalid login attempt.");
-                return Page();
-            }
-
-            _logger.LogInformation("User logged in.");
-            await _signInManager.SignInAsync(user, Input.RememberMe);
+            await _mediator.Send(command);
             return LocalRedirect(returnUrl);
         }
-
-        // If we got this far, something failed, redisplay form
-        return Page();
+        catch (Exception ex)
+        {
+            ModelState.AddModelError(string.Empty, ex.Message);
+            return Page();
+        }
     }
 }

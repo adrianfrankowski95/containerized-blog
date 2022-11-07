@@ -3,4 +3,4 @@ using MediatR;
 
 namespace Blog.Services.Identity.API.Application.Commands;
 
-public record LogInCommand(EmailAddress EmailAddress, NonEmptyString Password) : IRequest<Unit>;
+public record LogInCommand(NonEmptyString EmailAddress, NonEmptyString Password, bool IsPersistent) : IRequest<Unit>;

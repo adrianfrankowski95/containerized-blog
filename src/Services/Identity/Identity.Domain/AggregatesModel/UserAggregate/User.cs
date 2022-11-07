@@ -68,7 +68,7 @@ public class User : Entity<UserId>, IAggregateRoot
 
         PasswordResetCode = PasswordResetCode.Empty;
         EmailConfirmationCode = EmailConfirmationCode.Empty;
-        SecurityStamp = SecurityStamp.NewStamp();
+        SecurityStamp = SecurityStamp.NewStamp(now);
     }
 
     public static User Register(
@@ -124,11 +124,11 @@ public class User : Entity<UserId>, IAggregateRoot
         LockedOutUntil = until;
         ClearFailedLoginAttempts();
     }
-    private void RefreshSecurityStamp() => SecurityStamp = SecurityStamp.NewStamp();
-    public void SuspendUntil(NonPastInstant until)
+    private void RefreshSecurityStamp(Instant now) => SecurityStamp = SecurityStamp.NewStamp(now);
+    public void SuspendUntil(NonPastInstant until, Instant now)
     {
         SuspendedUntil = until;
-        RefreshSecurityStamp();
+        RefreshSecurityStamp(now);
     }
 
     public void Restore() => SuspendedUntil = null;
@@ -161,7 +161,7 @@ public class User : Entity<UserId>, IAggregateRoot
         var passwordHash = passwordHasher.HashPassword(newPassword);
         UpdatePasswordHash(passwordHash);
         ClearPasswordResetCode();
-        RefreshSecurityStamp();
+        RefreshSecurityStamp(now);
 
         AddDomainEvent(new PasswordChangedDomainEvent(Username, EmailAddress));
     }

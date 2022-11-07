@@ -35,21 +35,22 @@ public class LogInCommandHandler : IRequestHandler<LogInCommand>
         var user = await _userRepository.FindByEmailAsync(request.EmailAddress).ConfigureAwait(false);
 
         if (user is null)
-            throw new IdentityDomainException("Invalid email adress and/or password.");
+            throw new IdentityDomainException("Invalid email address and/or password.");
 
         var result = user.LogIn(_loginService, request.EmailAddress, request.Password, _passwordHasher, _sysTime.Now);
-
         await _userRepository.UnitOfWork.CommitChangesAsync(cancellationToken).ConfigureAwait(false);
 
         if (!result.IsSuccess)
             throw new IdentityDomainException(GetErrorMessage(result, user));
 
+        await _identityService.SignInAsync(user, request.IsPersistent).ConfigureAwait(false);
+
         return Unit.Value;
     }
 
-    private string GetErrorMessage(LoginResult result, User user) => result switch
+    private string GetErrorMessage(LoginResult result, User? user) => result switch
     {
-        LoginResult { ErrorCode: LoginErrorCode.InvalidEmail or LoginErrorCode.InvalidPassword }
+        LoginResult { ErrorCode: LoginErrorCode.InvalidEmail or LoginErrorCode.InvalidPassword or LoginErrorCode.InactivePassword }
             => "Invalid email address and/or password.",
         LoginResult { ErrorCode: LoginErrorCode.AccountLockedOut }
             => "Account has temporarily been locked out. Please try again later.",
@@ -57,8 +58,6 @@ public class LogInCommandHandler : IRequestHandler<LogInCommand>
             => $"Account has been suspended until {user?.SuspendedUntil}.",
         LoginResult { ErrorCode: LoginErrorCode.UnconfirmedEmail }
             => "Email address has not yet been confirmed.",
-        LoginResult { ErrorCode: LoginErrorCode.InactivePassword }
-            => "Password has not yet been reset.",
         _ => throw new NotSupportedException($"Unhandled {nameof(LoginResult)} error: {result.ErrorCode}.")
     };
 }
