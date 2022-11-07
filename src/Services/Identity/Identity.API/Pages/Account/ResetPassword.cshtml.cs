@@ -1,15 +1,14 @@
 #nullable disable
 
 using System.ComponentModel.DataAnnotations;
-using System.Text;
 using Blog.Services.Identity.API.Application.Commands;
 using Blog.Services.Identity.API.Extensions;
+using Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 using Blog.Services.Identity.Domain.Exceptions;
-using MassTransit.Mediator;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.WebUtilities;
 namespace Blog.Services.Identity.API.Pages.Account;
 
 [AllowAnonymous]
@@ -39,7 +38,7 @@ public class ResetPasswordModel : PageModel
         public string Email { get; set; }
 
         [Required]
-        [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 8)]
+        [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = Password.MinLength)]
         [DataType(DataType.Password)]
         [Display(Name = "New password")]
         public string NewPassword { get; set; }

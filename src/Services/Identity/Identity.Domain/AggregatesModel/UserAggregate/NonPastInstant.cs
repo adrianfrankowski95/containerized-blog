@@ -19,5 +19,5 @@ public class NonPastInstant : ValueObject<NonPastInstant>
     {
         yield return _value;
     }
-    public static implicit operator Instant(NonPastInstant value) => value._value;
+    public static implicit operator Instant(NonPastInstant value) => value?._value ?? throw new ArgumentNullException(nameof(value));
 }

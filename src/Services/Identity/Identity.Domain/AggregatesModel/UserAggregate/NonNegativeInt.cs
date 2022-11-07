@@ -20,7 +20,7 @@ public class NonNegativeInt : ValueObject<NonNegativeInt>
     }
 
     public static implicit operator NonNegativeInt(int value) => new(value);
-    public static implicit operator int(NonNegativeInt value) => value._value;
+    public static implicit operator int(NonNegativeInt value) => value?._value ?? throw new ArgumentNullException(nameof(value));
     public static NonNegativeInt operator ++(NonNegativeInt a) => new(a._value + 1);
     public static bool operator >=(NonNegativeInt a, int b) => a._value >= b;
     public static bool operator <=(NonNegativeInt a, int b) => a._value <= b;
