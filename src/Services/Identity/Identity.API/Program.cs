@@ -34,7 +34,8 @@ services
     .AddMassTransitRabbitMqBus(config)
     .AddGrpcDiscoveryService(config)
     .AddGrpcEmailingService()
-    .AddConfiguredQuartz();
+    .AddConfiguredQuartz()
+    .AddConfiguredOpenIddict();
 
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
