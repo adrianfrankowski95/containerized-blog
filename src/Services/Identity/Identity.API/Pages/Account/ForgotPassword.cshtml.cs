@@ -5,6 +5,7 @@ using Blog.Services.Identity.API.Application.Commands;
 using Blog.Services.Identity.API.Extensions;
 using Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 using Blog.Services.Identity.Domain.Exceptions;
+using Blog.Services.Identity.Infrastructure.Idempotency;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -53,7 +54,7 @@ public class ForgotPasswordModel : PageModel
         if (!ModelState.IsValid)
             return Page();
 
-        var command = new IdentifiedCommand<ResetPasswordCommand>(Input.RequestId, new ResetPasswordCommand(Input.Email));
+        var command = new IdentifiedCommand<RequestPasswordResetCommand>(Input.RequestId, new RequestPasswordResetCommand(Input.Email));
         _logger.LogSendingCommand(command);
 
         try
@@ -62,7 +63,7 @@ public class ForgotPasswordModel : PageModel
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "----- Error resetting a password, command: @Command", command);
+            _logger.LogError(ex, "----- Error requesting a password reset, command: @Command", command);
 
             if (ex is EmailingServiceException)
             {

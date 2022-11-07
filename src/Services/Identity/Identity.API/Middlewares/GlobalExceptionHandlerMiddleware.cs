@@ -2,6 +2,7 @@ using System.Data;
 using System.Net;
 using System.Text.Json;
 using Blog.Services.Identity.Domain.Exceptions;
+using Blog.Services.Identity.Infrastructure.Idempotency;
 using Microsoft.EntityFrameworkCore;
 
 namespace Blog.Services.Identity.API.Middlewares;
@@ -24,7 +25,7 @@ public class GlobalExceptionHandlerMiddleware
         }
         catch (Exception ex)
         {
-            var statusCode = ResolveHttpStatusCode(ex);
+            var statusCode = GetHttpCode(ex);
             var response = context.Response;
             response.ContentType = "application/json";
             response.StatusCode = (int)statusCode;
@@ -34,13 +35,16 @@ public class GlobalExceptionHandlerMiddleware
         }
     }
 
-    private static HttpStatusCode ResolveHttpStatusCode(Exception ex) => ex switch
+    private static HttpStatusCode GetHttpCode(Exception ex) => ex switch
     {
         IdentityDomainException
             => HttpStatusCode.BadRequest,
 
         KeyNotFoundException
             => HttpStatusCode.NotFound,
+
+        IdempotencyException
+            => HttpStatusCode.BadRequest,
 
         DbUpdateConcurrencyException or DBConcurrencyException
             => HttpStatusCode.Conflict,

@@ -3,6 +3,7 @@ using System.Net;
 using System.Text.Json;
 using Blog.Services.Blogging.API.Exceptions;
 using Blog.Services.Blogging.Domain.Exceptions;
+using Blog.Services.Blogging.Infrastructure.Idempotency;
 using Microsoft.EntityFrameworkCore;
 
 namespace Blog.Services.Blogging.API.Middlewares;
@@ -25,7 +26,7 @@ public class GlobalExceptionHandlerMiddleware
         }
         catch (Exception ex)
         {
-            var statusCode = ResolveHttpStatusCode(ex);
+            var statusCode = GetHttpCode(ex);
 
             var response = context.Response;
 
@@ -38,13 +39,16 @@ public class GlobalExceptionHandlerMiddleware
         }
     }
 
-    private static HttpStatusCode ResolveHttpStatusCode(Exception ex) => ex switch
+    private static HttpStatusCode GetHttpCode(Exception ex) => ex switch
     {
         BloggingDomainException
             => HttpStatusCode.BadRequest,
 
         KeyNotFoundException
             => HttpStatusCode.NotFound,
+
+        IdempotencyException
+            => HttpStatusCode.BadRequest,
 
         DbUpdateConcurrencyException or DBConcurrencyException
             => HttpStatusCode.Conflict,

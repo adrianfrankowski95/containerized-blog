@@ -5,6 +5,7 @@
 
 using System.ComponentModel.DataAnnotations;
 using Blog.Services.Identity.API.Core;
+using Blog.Services.Identity.API.Infrastructure.Attributes;
 using Blog.Services.Identity.API.Infrastructure.Validation;
 using Blog.Services.Identity.API.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -53,7 +54,7 @@ public class ChangePasswordModel : PageModel
 
         [DataType(DataType.Password)]
         [Display(Name = "Confirm new password")]
-        [Compare("NewPassword", ErrorMessage = "The New Password and Confirmation Password do not match.")]
+        [Compare("NewPassword", ErrorMessage = "The Password and Password Confirmation do not match.")]
         public string ConfirmPassword { get; set; }
     }
 

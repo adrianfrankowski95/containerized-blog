@@ -3,12 +3,12 @@ using Blog.Services.Identity.Domain.SeedWork;
 
 namespace Blog.Services.Identity.Domain.Events;
 
-public record PasswordResetDomainEvent : DomainEvent
+public record PasswordResetRequestedDomainEvent : DomainEvent
 {
     public Username Username { get; }
     public EmailAddress EmailAddress { get; }
     public PasswordResetCode PasswordResetCode { get; }
-    public PasswordResetDomainEvent(Username username, EmailAddress emailAddress, PasswordResetCode passwordResetCode)
+    public PasswordResetRequestedDomainEvent(Username username, EmailAddress emailAddress, PasswordResetCode passwordResetCode)
     {
         if (username is null)
             throw new ArgumentNullException(nameof(username));

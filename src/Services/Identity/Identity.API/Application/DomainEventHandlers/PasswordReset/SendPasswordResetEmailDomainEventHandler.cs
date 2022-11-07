@@ -5,7 +5,7 @@ using MediatR;
 
 namespace Blog.Services.Identity.API.Application.DomainEventHandlers.PasswordReset;
 
-public class SendPasswordResetEmailDomainEventHandler : INotificationHandler<PasswordResetDomainEvent>
+public class SendPasswordResetEmailDomainEventHandler : INotificationHandler<PasswordResetRequestedDomainEvent>
 {
     private readonly IEmailingService _emailingService;
     private readonly ICallbackUrlGenerator _callbackUrlGenerator;
@@ -21,7 +21,7 @@ public class SendPasswordResetEmailDomainEventHandler : INotificationHandler<Pas
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task Handle(PasswordResetDomainEvent notification, CancellationToken cancellationToken)
+    public async Task Handle(PasswordResetRequestedDomainEvent notification, CancellationToken cancellationToken)
     {
         var passwordResetCode = (notification.PasswordResetCode?.IsEmpty ?? true)
             ? throw new ArgumentException("Password reset code must not be empty.")
