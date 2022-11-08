@@ -5,9 +5,9 @@ public class ServiceInstance
     public string Key => "services:" + ServiceType + ":" + InstanceId;
     public Guid InstanceId { get; }
     public string ServiceType { get; }
-    public HashSet<string> Addresses { get; }
+    public IReadOnlySet<string> Addresses { get; }
 
-    public ServiceInstance(Guid instanceId, string serviceType, HashSet<string> serviceAddresses)
+    public ServiceInstance(Guid instanceId, string serviceType, IReadOnlySet<string> serviceAddresses)
     {
         if (string.IsNullOrWhiteSpace(serviceType))
             throw new ArgumentNullException(nameof(serviceType));
