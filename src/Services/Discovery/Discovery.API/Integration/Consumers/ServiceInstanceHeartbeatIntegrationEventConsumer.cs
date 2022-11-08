@@ -21,7 +21,7 @@ public class ServiceInstanceHeartbeatIntegrationEventConsumer : IConsumer<Servic
     {
         Guid instanceId = context.Message.InstanceId;
         string serviceType = context.Message.ServiceType;
-        HashSet<string> addresses = context.Message.ServiceAddresses;
+        IReadOnlySet<string> addresses = context.Message.ServiceAddresses;
 
         if (instanceId.Equals(Guid.Empty))
             throw new InvalidDataException($"{nameof(context.Message.InstanceId)} must not be empty");
@@ -55,6 +55,6 @@ public class ServiceInstanceHeartbeatIntegrationEventConsumer : IConsumer<Servic
                 _logger.LogError("----- Error registering {ServiceType} instance: {InstanceId} - {Addresses}", serviceType, instanceId, addressesString);
         }
         else
-            _logger.LogWarning("----- The {ServiceType} instance already exists: {InstanceId} - {Addresses}", serviceType, instanceId, addressesString);
+            _logger.LogInformation("----- The {ServiceType} instance already exists: {InstanceId} - {Addresses}", serviceType, instanceId, addressesString);
     }
 }

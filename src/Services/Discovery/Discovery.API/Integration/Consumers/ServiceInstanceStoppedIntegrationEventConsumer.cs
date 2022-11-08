@@ -21,7 +21,7 @@ public class ServiceInstanceStoppedIntegrationEventConsumer : IConsumer<ServiceI
     {
         Guid instanceId = context.Message.InstanceId;
         string serviceType = context.Message.ServiceType;
-        HashSet<string> addresses = context.Message.ServiceAddresses;
+        IReadOnlySet<string> addresses = context.Message.ServiceAddresses;
 
         if (instanceId.Equals(Guid.Empty))
             throw new InvalidDataException($"{nameof(context.Message.InstanceId)} must not be empty");
