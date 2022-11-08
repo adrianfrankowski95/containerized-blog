@@ -6,7 +6,7 @@ public interface IIdentityService
 {
     public bool IsAuthenticated { get; }
     public UserId? UserId { get; }
-    public NonEmptyString? Username { get; }
+    public string? Username { get; }
     public UserRole? UserRole { get; }
     public bool IsInRole(UserRole role);
     public Task SignInAsync(User user, bool isPersistent);

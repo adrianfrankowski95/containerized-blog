@@ -12,38 +12,36 @@ public class IdentityService : IIdentityService
     private ClaimsPrincipal User
     {
         get => _httpContextAccessor?.HttpContext is null
-            ? throw new InvalidOperationException("Could not retrieve user data from an Http context.")
-            : _httpContextAccessor.HttpContext.User;
+                ? throw new InvalidOperationException("Could not retrieve user data from an Http context.")
+                : _httpContextAccessor.HttpContext.User;
     }
 
     public bool IsAuthenticated
     {
-        get => User.Identity is null
+        get => User?.Identity is null
                 ? throw new InvalidOperationException("Could not retrieve a user identity from an Http context.")
                 : User.Identity.IsAuthenticated;
     }
 
     public UserId? UserId
     {
-        get
-        {
-            var id = Guid.TryParse(User.FindFirstValue(IdentityConstants.UserClaimTypes.Id), out Guid userId) ? UserId.FromGuid(userId) : null;
-
-            return IsAuthenticated && id is null
-                ? throw new InvalidOperationException("Could not retrieve an ID of an authenticated user.")
-                : id;
-        }
+        get => IsAuthenticated
+                ? (Guid.TryParse(User.FindFirstValue(IdentityConstants.UserClaimTypes.Id), out Guid userId)
+                    ? UserId.FromGuid(userId)
+                    : throw new InvalidOperationException("Could not retrieve ID of an authenticated user."))
+                : null;
     }
 
-    public NonEmptyString? Username
+    public string? Username
     {
         get
         {
             var username = User.FindFirstValue(IdentityConstants.UserClaimTypes.Username);
-
-            return IsAuthenticated && string.IsNullOrWhiteSpace(username)
-                ? throw new InvalidOperationException("Could not retrieve a username of an authenticated user.")
-                : username;
+            return IsAuthenticated
+                ? (string.IsNullOrWhiteSpace(username)
+                    ? throw new InvalidOperationException("Could not retrieve a username of an authenticated user.")
+                    : username)
+                : null;
         }
     }
 
@@ -53,14 +51,14 @@ public class IdentityService : IIdentityService
         {
             string role = User.FindFirstValue(IdentityConstants.UserClaimTypes.Role);
             return IsAuthenticated
-                ? (string.IsNullOrWhiteSpace(User.FindFirstValue(IdentityConstants.UserClaimTypes.Role))
+                ? (string.IsNullOrWhiteSpace(role)
                     ? throw new InvalidOperationException("Could not retrieve role of an authenticated user.")
                     : UserRole.FromName(role))
                 : null;
         }
     }
 
-    public bool IsInRole(UserRole role) => User.IsInRole(role.Name);
+    public bool IsInRole(UserRole role) => IsAuthenticated && User.IsInRole(role.Name);
 
     private ClaimsIdentity CreateUserIdentity(User user)
         => new ClaimsIdentity(

@@ -9,9 +9,10 @@ public class PasswordResetCode : ValueObject<PasswordResetCode>
     // Without I,l for better legibility
     private const string AllowedCharacters = "ABCDEFGHJKLMNOPQRSTUVWXYZ1234567890!@$?_-/\\=abcdefghijkmnopqrstuvwxyz";
     private const int Length = 6;
+    private readonly static Duration _validityDuration = Duration.FromHours(1);
     private readonly string? _value;
     public Instant? IssuedAt { get; }
-    public Instant? ValidUntil => IssuedAt?.Plus(Duration.FromHours(1));
+    public Instant? ValidUntil => IssuedAt?.Plus(_validityDuration);
     private readonly static PasswordResetCode _empty = new();
     public static PasswordResetCode Empty => _empty;
 
