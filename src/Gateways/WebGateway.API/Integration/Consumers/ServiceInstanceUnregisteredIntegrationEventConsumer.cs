@@ -1,5 +1,4 @@
-//namespace of the event must be the same in Producers and in Consumers
-//in order to make it work through the MassTransit
+// Namespace of the event must be the same in Producers and in Consumers to make it work through MassTransit
 
 using Blog.Gateways.WebGateway.API.Services;
 using Blog.Integration.Events;
