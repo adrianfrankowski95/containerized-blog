@@ -32,9 +32,6 @@ public sealed class RecipeDifficulty : Enumeration
 
     public static RecipeDifficulty FromValue(int value)
     {
-        if (value == null)
-            throw new BloggingDomainException($"{nameof(Value)} cannot be null");
-
         var difficulty = List()
             .SingleOrDefault(d => d.Value == value);
 

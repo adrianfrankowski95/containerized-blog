@@ -9,11 +9,11 @@ public class RecipePostTranslation : PostTranslationBase
     public string DishName { get; private set; }
     public string Cuisine { get; private set; }
 
-    //this has to remain as a List as this is the only type support for text[] column in Postgres
+    // This has to remain as a List, this is the only type that could be converted to text[] column in Postgres
     private readonly List<string> _ingredients;
     public IReadOnlyList<string> Ingredients => _ingredients;
 
-    //ef core
+    // EF Core
     private RecipePostTranslation()
     {
 

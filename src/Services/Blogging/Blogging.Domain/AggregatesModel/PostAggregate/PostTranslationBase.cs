@@ -7,7 +7,7 @@ namespace Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate;
 
 public abstract class PostTranslationBase : ValueObject<PostTranslationBase>, ITranslated, IValidatable
 {
-    public PostId PostId { get; private set; }
+    public PostId? PostId { get; private set; }
     public Language Language { get; private set; }
     public string Title { get; private set; }
     public string Content { get; private set; }
@@ -18,7 +18,7 @@ public abstract class PostTranslationBase : ValueObject<PostTranslationBase>, IT
 
 
 
-    //ef core
+    // EF Core
     protected PostTranslationBase()
     {
 

@@ -31,9 +31,6 @@ public class Language : Enumeration
 
     public static Language FromValue(int value)
     {
-        if (value == null)
-            throw new BloggingDomainException($"{nameof(Value)} cannot be null");
-
         var language = List()
             .SingleOrDefault(c => c.Value == value);
 

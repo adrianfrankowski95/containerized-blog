@@ -50,9 +50,6 @@ public sealed class FoodType : Enumeration
 
     public static FoodType FromValue(int value)
     {
-        if (value == null)
-            throw new BloggingDomainException($"{nameof(Value)} cannot be null");
-
         var type = List()
             .SingleOrDefault(t => t.Value == value);
 

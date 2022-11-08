@@ -20,25 +20,30 @@ public abstract class PostBase : Entity<PostId>, IAggregateRoot, IValidatable
     public Comments Comments { get; }
     public string HeaderImgUrl { get; private set; }
 
-    //ef core
+    // EF Core
     protected PostBase() { }
 
     protected PostBase(
         User author,
+        PostCategory category,
+        PostType type,
         IEnumerable<PostTranslationBase> translations,
         string headerImgUrl)
     {
         if (!author.Role.Equals(UserRole.Author) && !author.Role.Equals(UserRole.Administrator))
             throw new BloggingDomainException($"Only {nameof(UserRole.Author)} and {nameof(UserRole.Administrator)} can create Post");
 
-        if (EditedAt != null)
+        if (EditedAt is not null)
             throw new BloggingDomainException($"New Post cannot be edited before");
 
-        if (Editor != null)
+        if (Editor is not null)
             throw new BloggingDomainException($"New Post cannot have an editor yet");
 
-        if (Category != null)
-            throw new BloggingDomainException($"{nameof(Category)} must be set in derived post types");
+        if (category is null)
+            throw new BloggingDomainException($"{nameof(Category)} must not be null");
+
+        if (type is null)
+            throw new BloggingDomainException($"{nameof(Type)} must not be null");
 
         if (translations is null)
             throw new BloggingDomainException($"{nameof(Translations)} cannot be null");
@@ -49,6 +54,8 @@ public abstract class PostBase : Entity<PostId>, IAggregateRoot, IValidatable
         Id = new();
 
         Author = author;
+        Category = category;
+        Type = type;
         Status = PostStatus.Draft;
         CreatedAt = SysTime.Now;
         HeaderImgUrl = headerImgUrl;
@@ -157,9 +164,6 @@ public abstract class PostBase : Entity<PostId>, IAggregateRoot, IValidatable
 
         Validate();
 
-        //var title = NonEmptyString.Create(this.Title);
-        //this.Post = PublishedPost.Create(title);
-
         Status = PostStatus.Submitted;
 
         //TODO: new PostStatusChangedToAwaitingApprovalEvent - CorrelationId
@@ -217,9 +221,6 @@ public abstract class PostBase : Entity<PostId>, IAggregateRoot, IValidatable
 
         if (Author.Id.IsEmpty)
             throw new BloggingDomainException($"{nameof(Author.Id)} cannot be empty");
-
-        if (CreatedAt == null)
-            throw new BloggingDomainException($"{nameof(CreatedAt)} cannot be null");
 
         if (CreatedAt == default)
             throw new BloggingDomainException($"{nameof(CreatedAt)} cannot be default");

@@ -6,7 +6,7 @@ public class ProductReviewPost : ReviewPostBase
 {
     public Product Product { get; private set; }
 
-    //ef core
+    // EF Core
     private ProductReviewPost() { }
 
     public ProductReviewPost(
@@ -15,9 +15,8 @@ public class ProductReviewPost : ReviewPostBase
         Product product,
         Rating rating,
         string headerImgUrl)
-        : base(author, translations, rating, headerImgUrl)
+        : base(author, PostType.ProductReview, translations, rating, headerImgUrl)
     {
-        Type = PostType.ProductReview;
         Product = product;
     }
 

@@ -1,22 +1,16 @@
-using Blog.Services.Blogging.Domain.AggregatesModel.Shared;
-using Blog.Services.Blogging.Domain.AggregatesModel.TagAggregate;
-
 namespace Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate.LifestylePostAggregate;
 
 public class LifestylePost : PostBase
 {
-    //ef core
+    // EF Core
     private LifestylePost() { }
 
     public LifestylePost(
         User author,
         IEnumerable<LifestylePostTranslation> translations,
         string headerImgUrl)
-        : base(author, translations, headerImgUrl)
-    {
-        Type = PostType.Lifestyle;
-        Category = PostCategory.Lifestyle;
-    }
+        : base(author, PostCategory.Lifestyle, PostType.Lifestyle, translations, headerImgUrl)
+    { }
 
     public bool UpdateBy(User editor, IEnumerable<LifestylePostTranslation> newTranslations, string newHeaderImgUrl)
     {

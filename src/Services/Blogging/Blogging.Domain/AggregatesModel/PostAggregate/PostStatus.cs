@@ -38,9 +38,6 @@ public sealed class PostStatus : Enumeration
 
     public static PostStatus FromValue(int value)
     {
-        if (value == null)
-            throw new BloggingDomainException($"{nameof(Value)} cannot be null");
-
         var status = List()
             .SingleOrDefault(s => s.Value == value);
 

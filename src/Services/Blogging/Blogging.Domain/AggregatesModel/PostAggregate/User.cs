@@ -8,12 +8,12 @@ public sealed class User : Entity<UserId>
     public UserRole Role { get; }
     public string Name { get; }
 
-    //ef core
+    // EF Core
     private User() { }
 
     public User(UserId id, string name, string roleName)
     {
-        if (id == null)
+        if (id is null)
             throw new BloggingDomainException($"{nameof(Id)} cannot be null");
 
         if (id.Value == Guid.Empty)

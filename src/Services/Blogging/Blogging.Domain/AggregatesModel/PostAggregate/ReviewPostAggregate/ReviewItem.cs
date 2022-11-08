@@ -7,7 +7,7 @@ public abstract class ReviewItem : ValueObject<ReviewItem>, IValidatable
     public string Name { get; }
     public string WebsiteUrl { get; }
 
-    //ef core
+    // EF Core
     protected ReviewItem() { }
 
     protected ReviewItem(string name, string websiteUrl)

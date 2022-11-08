@@ -30,9 +30,6 @@ public class ReviewItemType : Enumeration
 
     public static ReviewItemType FromValue(int value)
     {
-        if (value == null)
-            throw new BloggingDomainException($"{nameof(Value)} cannot be null");
-
         var itemType = List()
             .SingleOrDefault(t => t.Value == value);
 

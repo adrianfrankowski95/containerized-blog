@@ -6,7 +6,7 @@ public sealed class Rating : ValueObject<Rating>, IComparable<Rating>, IValidata
 {
     public int Value { get; }
 
-    //ef core
+    // EF Core
     public Rating()
     {
         Value = 0;
@@ -14,9 +14,6 @@ public sealed class Rating : ValueObject<Rating>, IComparable<Rating>, IValidata
 
     public Rating(int value)
     {
-        if (value == null)
-            throw new BloggingDomainException($"{nameof(Value)} cannot be null");
-
         if (value < 0)
             throw new BloggingDomainException($"{nameof(Value)} cannot be lower than 0");
 
@@ -42,9 +39,6 @@ public sealed class Rating : ValueObject<Rating>, IComparable<Rating>, IValidata
 
     public void Validate()
     {
-        if (Value == null)
-            throw new BloggingDomainException($"{nameof(Value)} cannot be null");
-
         if (Value < 0)
             throw new BloggingDomainException($"{nameof(Value)} cannot be lower than 0");
 

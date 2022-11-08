@@ -9,7 +9,7 @@ public sealed class RecipeTime : ValueObject<RecipeTime>
     public TimeSpan CookingTime { get; }
     public TimeSpan TotalTime => PreparationTime + CookingTime;
 
-    //efcore
+    // EF Core
     private RecipeTime() { }
     public RecipeTime(TimeSpan preparationTime, TimeSpan cookingTime)
     {

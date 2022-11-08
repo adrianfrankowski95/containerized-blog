@@ -11,7 +11,7 @@ public sealed class Address : ValueObject<Address>, IValidatable
     public string City { get; }
     public string Street { get; }
 
-    //ef core
+    // EF Core
     private Address() { }
 
     public Address(string country, string zipCode, string city, string street)

@@ -216,7 +216,7 @@ internal static class ServiceCollectionExtensions
                 opts.Events = new()
                 {
 
-                }
+                };
             });
 
         return services;

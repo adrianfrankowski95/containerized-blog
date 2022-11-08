@@ -37,9 +37,6 @@ public sealed class PreparationMethod : Enumeration
 
     public static PreparationMethod FromValue(int value)
     {
-        if (value == null)
-            throw new BloggingDomainException($"{nameof(Value)} cannot be null");
-
         var method = List()
             .SingleOrDefault(l => l.Value == value);
 

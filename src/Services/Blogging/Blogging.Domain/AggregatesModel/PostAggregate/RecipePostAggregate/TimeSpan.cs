@@ -47,10 +47,10 @@ public sealed class TimeSpan : ValueObject<TimeSpan>, IComparable<TimeSpan>
         yield return Minutes;
     }
 
-    public int CompareTo(TimeSpan other)
+    public int CompareTo(TimeSpan? other)
     {
-        int minutesDifference = Minutes.CompareTo(other.Minutes);
-        int hoursDifference = Hours.ToMinutes().CompareTo(other.Hours.ToMinutes());
+        int minutesDifference = Minutes.CompareTo(other?.Minutes ?? 0.Minutes());
+        int hoursDifference = Hours.ToMinutes().CompareTo(other?.Hours?.ToMinutes() ?? 0.Minutes());
 
         return minutesDifference + hoursDifference;
     }

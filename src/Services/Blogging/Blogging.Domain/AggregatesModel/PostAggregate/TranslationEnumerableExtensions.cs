@@ -1,4 +1,5 @@
 using Blog.Services.Blogging.Domain.AggregatesModel.Shared;
+using Blog.Services.Blogging.Domain.Exceptions;
 
 namespace Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate;
 
@@ -22,14 +23,8 @@ public static class TranslationEnumerableExtensions
         return @this.Any(x => x.Language.Equals(Language.GetDefault()));
     }
 
-    public static bool IsCompatibleWith<T, U>(this IEnumerable<T> @this, IEnumerable<U> other)
-        where T : ITranslated where U : ITranslated
-    {
-        return @this.GetLanguages().SequenceEqual(other.GetLanguages());
-    }
-
     public static bool MatchPostId<T>(this IEnumerable<T> @this, PostId postId) where T : PostTranslationBase
     {
-        return !@this.Any(x => !x.PostId.Equals(postId));
+        return !@this.Any(x => x?.PostId?.Equals(postId) ?? throw new BloggingDomainException("Post must not have a null ID"));
     }
 }
