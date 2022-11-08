@@ -2,16 +2,16 @@ namespace Blog.Gateways.WebGateway.API.Models;
 
 public class ServiceInstance
 {
-    public ServiceInstance(Guid instanceId, HashSet<string> serviceAddresses)
+    public ServiceInstance(Guid instanceId, IReadOnlySet<string> serviceAddresses)
     {
-        if (serviceAddresses is null || !serviceAddresses.Any())
+        if (!(serviceAddresses?.Any() ?? false))
             throw new ArgumentNullException(nameof(serviceAddresses));
 
         InstanceId = instanceId;
         Addresses = serviceAddresses;
     }
     public Guid InstanceId { get; }
-    public HashSet<string> Addresses { get; }
+    public IReadOnlySet<string> Addresses { get; }
 
     public override bool Equals(object? obj)
     {
