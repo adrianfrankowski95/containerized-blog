@@ -18,14 +18,14 @@ public class ServiceInstance
         if (obj is null)
             return false;
 
-        if (obj is not ServiceInstance serviceInstanceInfo)
+        if (obj is not ServiceInstance serviceInstance)
             return false;
 
-        if (ReferenceEquals(this, serviceInstanceInfo))
+        if (ReferenceEquals(this, serviceInstance))
             return true;
 
-        bool equalIds = InstanceId.Equals(serviceInstanceInfo.InstanceId);
-        bool equalAddresses = Addresses.SetEquals(serviceInstanceInfo.Addresses);
+        bool equalIds = InstanceId.Equals(serviceInstance.InstanceId);
+        bool equalAddresses = Addresses.SetEquals(serviceInstance.Addresses);
 
         return equalIds && equalAddresses;
     }

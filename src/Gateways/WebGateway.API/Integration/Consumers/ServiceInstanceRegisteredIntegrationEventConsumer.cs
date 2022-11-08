@@ -1,5 +1,4 @@
-//namespace of the event must be the same in Producers and in Consumers
-//in order to make it work through the MassTransit
+// Namespace of the event must be the same in Producers and in Consumers to make it work through MassTransit
 
 using Blog.Gateways.WebGateway.API.Configs;
 using Blog.Gateways.WebGateway.API.Models;
@@ -28,7 +27,7 @@ public class ServiceInstanceRegisteredIntegrationEventConsumer : IConsumer<Servi
 
         Guid instanceId = context.Message.InstanceId;
         string serviceType = context.Message.ServiceType;
-        HashSet<string> addresses = context.Message.ServiceAddresses;
+        IReadOnlySet<string> addresses = context.Message.ServiceAddresses;
 
         if (instanceId.Equals(Guid.Empty))
             throw new InvalidDataException($"{nameof(context.Message.InstanceId)} must not be empty.");
