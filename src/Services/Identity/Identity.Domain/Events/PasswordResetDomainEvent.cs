@@ -7,6 +7,7 @@ public record PasswordResetDomainEvent : DomainEvent
 {
     public Username Username { get; }
     public EmailAddress EmailAddress { get; }
+
     public PasswordResetDomainEvent(Username username, EmailAddress emailAddress)
     {
         if (username is null)
