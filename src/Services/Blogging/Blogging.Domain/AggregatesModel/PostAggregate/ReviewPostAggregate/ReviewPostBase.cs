@@ -6,18 +6,18 @@ public abstract class ReviewPostBase : PostBase
 {
     public Rating Rating { get; private set; }
 
-    //ef core
+    // EF Core
     protected ReviewPostBase() { }
 
     protected ReviewPostBase(
         User author,
+        PostType type,
         IEnumerable<ReviewPostTranslationBase> translations,
         Rating rating,
         string headerImgUrl)
-        : base(author, translations, headerImgUrl)
+        : base(author, PostCategory.Review, type, translations, headerImgUrl)
     {
         Rating = rating;
-        Category = PostCategory.Review;
     }
 
     protected virtual bool UpdateBy(

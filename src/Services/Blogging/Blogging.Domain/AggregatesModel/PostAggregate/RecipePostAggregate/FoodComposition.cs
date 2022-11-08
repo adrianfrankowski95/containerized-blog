@@ -36,9 +36,6 @@ public sealed class FoodComposition : Enumeration
 
     public static FoodComposition FromValue(int value)
     {
-        if (value == null)
-            throw new BloggingDomainException($"{nameof(Value)} cannot be null");
-
         var composition = List()
             .SingleOrDefault(c => c.Value == value);
 

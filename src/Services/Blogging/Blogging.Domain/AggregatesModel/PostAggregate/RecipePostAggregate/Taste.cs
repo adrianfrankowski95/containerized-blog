@@ -41,9 +41,6 @@ public sealed class Taste : Enumeration
 
     public static Taste FromValue(int value)
     {
-        if (value == null)
-            throw new BloggingDomainException($"{nameof(Value)} cannot be null");
-
         var taste = List()
             .SingleOrDefault(t => t.Value == value);
 

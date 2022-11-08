@@ -34,9 +34,6 @@ public sealed class UserRole : Enumeration
 
     public static UserRole FromValue(int value)
     {
-        if (value == null)
-            throw new BloggingDomainException($"{nameof(Value)} cannot be null");
-
         var role = List()
             .SingleOrDefault(r => r.Value == value);
 

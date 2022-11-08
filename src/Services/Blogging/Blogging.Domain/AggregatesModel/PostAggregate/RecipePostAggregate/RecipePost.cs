@@ -8,22 +8,20 @@ public class RecipePost : PostBase
     public RecipeDifficulty Difficulty { get; private set; }
     public RecipeTime Time { get; private set; }
     public Servings Servings { get; private set; }
-    //public NutritionalValue NutritionalValue { get; private set; }
     public FoodComposition FoodComposition { get; private set; }
 
-    //this has to remain as a List as this is the only type that could be converted to text[] column in Postgres
+    // This has to remain as a List, this is the only type that could be converted to text[] column in Postgres
     private readonly List<Taste> _tastes;
     public IReadOnlyList<Taste> Tastes => _tastes;
 
-    //this has to remain as a List as this is the only type that could be converted to text[] column in Postgres
+    // This has to remain as a List, this is the only type that could be converted to text[] column in Postgres
     private readonly List<PreparationMethod> _preparationMethods;
     public IReadOnlyList<PreparationMethod> PreparationMethods => _preparationMethods;
 
     public string SongUrl { get; private set; }
 
-    //ef core
+    // EF Core
     private RecipePost() { }
-
 
     public RecipePost(
         User author,
@@ -32,21 +30,17 @@ public class RecipePost : PostBase
         RecipeDifficulty difficulty,
         RecipeTime time,
         Servings servings,
-        //NutritionalValue nutritionalValue,
         FoodComposition composition,
         IEnumerable<Taste> tastes,
         IEnumerable<PreparationMethod> preparationMethods,
         string songUrl,
         string headerImgUrl)
-        : base(author, translations, headerImgUrl)
+        : base(author, PostCategory.Recipe, PostType.Recipe, translations, headerImgUrl)
     {
-        Type = PostType.Recipe;
-        Category = PostCategory.Recipe;
         Meal = meal;
         Difficulty = difficulty;
         Time = time;
         Servings = servings;
-        //NutritionalValue = nutritionalValue;
         FoodComposition = composition;
         SongUrl = songUrl;
 
@@ -84,7 +78,6 @@ public class RecipePost : PostBase
         RecipeDifficulty newDifficulty,
         RecipeTime newTime,
         Servings newServings,
-        //NutritionalValue nutritionalValue,
         FoodComposition newComposition,
         IEnumerable<Taste> newTastes,
         IEnumerable<PreparationMethod> newPreparationMethods,
@@ -122,11 +115,6 @@ public class RecipePost : PostBase
             SongUrl = newSongUrl;
             isChanged = true;
         }
-        // if (!NutritionalValue.Equals(nutritionalValue))
-        // {
-        //     NutritionalValue = nutritionalValue;
-        //     isChanged = true;
-        // }
 
         if (!FoodComposition.Equals(newComposition))
         {
@@ -174,14 +162,8 @@ public class RecipePost : PostBase
         if (Servings is null)
             throw new BloggingDomainException($"{nameof(Servings)} cannot be null");
 
-        if (Servings.Count == null)
-            throw new BloggingDomainException($"{nameof(Servings.Count)} cannot be null");
-
         if (Servings.Count <= 0)
             throw new BloggingDomainException($"{nameof(Servings.Count)} cannot be negative or zero");
-
-        //if (NutritionalValue == null)
-        //throw new BloggingDomainException($"{nameof(NutritionalValue)} cannot be null");
 
         if (FoodComposition is null)
             throw new BloggingDomainException($"{nameof(FoodComposition)} cannot be null");

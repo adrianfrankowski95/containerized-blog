@@ -43,9 +43,6 @@ public sealed class Meal : Enumeration
 
     public static Meal FromValue(int value)
     {
-        if (value == null)
-            throw new BloggingDomainException($"{nameof(Value)} cannot be null");
-
         var meal = List()
             .SingleOrDefault(m => m.Value == value);
 

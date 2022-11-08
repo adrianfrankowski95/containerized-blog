@@ -6,7 +6,7 @@ public class RestaurantReviewPost : ReviewPostBase
 {
     public Restaurant Restaurant { get; private set; }
 
-    //ef core
+    // EF Core
     private RestaurantReviewPost() { }
 
     public RestaurantReviewPost(
@@ -15,9 +15,8 @@ public class RestaurantReviewPost : ReviewPostBase
         Restaurant restaurant,
         Rating rating,
         string headerImgUrl)
-        : base(author, translations, rating, headerImgUrl)
+        : base(author, PostType.RestaurantReview, translations, rating, headerImgUrl)
     {
-        Type = PostType.RestaurantReview;
         Restaurant = restaurant;
     }
 

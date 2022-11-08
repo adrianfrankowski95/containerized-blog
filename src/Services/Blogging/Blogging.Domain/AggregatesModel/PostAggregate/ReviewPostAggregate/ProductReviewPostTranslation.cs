@@ -6,7 +6,7 @@ namespace Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate.ReviewPost
 
 public class ProductReviewPostTranslation : ReviewPostTranslationBase
 {
-    //ef core
+    // EF Core
     private ProductReviewPostTranslation() { }
 
     public ProductReviewPostTranslation(

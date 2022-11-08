@@ -35,9 +35,6 @@ public sealed class PostType : Enumeration
 
     public static PostType FromValue(int value)
     {
-        if (value == null)
-            throw new BloggingDomainException($"{nameof(Value)} cannot be null");
-
         var type = List()
             .SingleOrDefault(c => c.Value == value);
 

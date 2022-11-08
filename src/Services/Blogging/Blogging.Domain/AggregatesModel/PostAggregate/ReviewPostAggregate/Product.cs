@@ -2,7 +2,7 @@ namespace Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate.ReviewPost
 
 public class Product : ReviewItem
 {
-    //ef core
+    // EF Core
     private Product() { }
     public Product(string name, string websiteUrl) : base(name, websiteUrl) { }
 

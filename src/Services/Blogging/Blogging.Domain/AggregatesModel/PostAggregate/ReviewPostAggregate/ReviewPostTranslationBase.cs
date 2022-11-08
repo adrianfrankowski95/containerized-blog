@@ -1,13 +1,12 @@
 using Blog.Services.Blogging.Domain.AggregatesModel.Shared;
 using Blog.Services.Blogging.Domain.AggregatesModel.TagAggregate;
-using Blog.Services.Blogging.Domain.Exceptions;
 
 namespace Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate.ReviewPostAggregate;
 
 public abstract class ReviewPostTranslationBase : PostTranslationBase
 {
 
-    //ef core
+    // EF Core
     protected ReviewPostTranslationBase() { }
 
     public ReviewPostTranslationBase(

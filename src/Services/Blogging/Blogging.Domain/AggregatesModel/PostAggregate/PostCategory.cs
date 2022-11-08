@@ -32,9 +32,6 @@ public sealed class PostCategory : Enumeration
 
     public static PostCategory FromValue(int value)
     {
-        if (value == null)
-            throw new BloggingDomainException($"{nameof(Value)} cannot be null");
-
         var category = List()
             .SingleOrDefault(c => c.Value == value);
 
