@@ -25,8 +25,8 @@ public class CallbackUrlGenerator : ICallbackUrlGenerator
                 "/Account/ResetPassword",
                 pageHandler: null,
                 values: new { encodedCode },
-                protocol: httpContext.GetOriginalProtocol(),
-                host: httpContext.GetOriginalHost())
+                protocol: httpContext.Request.Scheme,
+                host: httpContext.Request.Host.ToString())
             ?? throw new InvalidDataException("Could not generate a password reset callback URL.");
     }
 }

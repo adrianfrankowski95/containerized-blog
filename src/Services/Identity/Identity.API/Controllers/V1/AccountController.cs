@@ -62,7 +62,7 @@ public class AccountController : ControllerBase
 
         await _mediator.Send(request);
 
-        return Created(HttpContext.GetOriginalRoute() + '/' + _identityService?.Username?.ToString() ?? "", null);
+        return Created(HttpContext.GetBaseRequestUri() + '/' + _identityService?.Username?.ToString() ?? "", null);
     }
 
     [HttpPost("avatar/{username:required}")]
@@ -83,6 +83,6 @@ public class AccountController : ControllerBase
 
         await _mediator.Send(request);
 
-        return Created(HttpContext.GetOriginalRoute(), null);
+        return Created(HttpContext.GetBaseRequestUri(), null);
     }
 }

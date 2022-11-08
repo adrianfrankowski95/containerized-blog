@@ -34,6 +34,7 @@ services
 
 var app = builder.Build();
 
+app.UseForwardedHeaders(); //transforms x-forwarded- headers from reverse proxy to request's headers
 app.UseStaticFiles(); //html, css, images, js in wwwroot folder
 
 app.UseRouting();

@@ -37,7 +37,6 @@ services
     .AddConfiguredQuartz()
     .AddConfiguredOpenIddict();
 
-
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 services.AddEndpointsApiExplorer();
 services.AddSwaggerGen();
@@ -54,6 +53,7 @@ if (env.IsDevelopment())
 app.UseGlobalExceptionHandler();
 
 app.UseHttpsRedirection();
+app.UseForwardedHeaders(); //transforms x-forwarded- headers from reverse proxy to request's headers
 app.UseStaticFiles(); //html, css, images, js in wwwroot folder
 
 app.UseAuthentication();
@@ -176,7 +176,7 @@ internal static class ServiceCollectionExtensions
 
     public static IServiceCollection AddNodaTime(this IServiceCollection services)
     {
-        services.TryAddSingleton<IClock>(c => SystemClock.Instance);
+        services.TryAddSingleton<IClock>(c => NodaTime.SystemClock.Instance);
         return services;
     }
 
@@ -185,6 +185,39 @@ internal static class ServiceCollectionExtensions
         services.TryAddTransient<ISysTime, SysTime>();
         services.TryAddTransient<LoginService>();
         services.TryAddTransient<PasswordHasher, BcryptPasswordHasher>();
+
+        return services;
+    }
+
+    public static IServiceCollection AddConfiguredAuthentication(this IServiceCollection services, IWebHostEnvironment env)
+    {
+        services
+            .AddAuthentication(IdentityConstants.AuthenticationSchemes.IdentityService)
+            .AddJwtBearer(opts =>
+            {
+                opts.SaveToken = true;
+                opts.RequireHttpsMetadata = !env.IsDevelopment();
+
+                // Prevents changing claims names by the middleware
+                opts.MapInboundClaims = false;
+
+                opts.TokenValidationParameters = new()
+                {
+                    ValidateIssuerSigningKey = true,
+                    ValidateLifetime = true,
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+
+                    // Enables using in-built IsInRole() or [Authorize(Roles = ...)]
+                    RoleClaimType = IdentityConstants.UserClaimTypes.Role,
+                    NameClaimType = IdentityConstants.UserClaimTypes.Username,
+                };
+
+                opts.Events = new()
+                {
+
+                }
+            });
 
         return services;
     }

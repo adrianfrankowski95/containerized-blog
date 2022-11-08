@@ -146,11 +146,15 @@ public class User : Entity<UserId>, IAggregateRoot
     public void RequestPasswordReset(Instant now)
     {
         SetNewPasswordResetCode(now);
+
         AddDomainEvent(new PasswordResetRequestedDomainEvent(Username, EmailAddress, PasswordResetCode));
     }
 
     public void ResetPassword(PasswordHasher passwordHasher, NonEmptyString newPassword, NonEmptyString providedCode, Instant now)
     {
+        if (passwordHasher is null)
+            throw new IdentityDomainException("Password hash must not be null when resetting a password.");
+
         PasswordResetCode.Verify(providedCode, now);
 
         if (passwordHasher.VerifyPasswordHash(newPassword, PasswordHash))
@@ -159,6 +163,24 @@ public class User : Entity<UserId>, IAggregateRoot
         var passwordHash = passwordHasher.HashPassword(newPassword);
         UpdatePasswordHash(passwordHash);
         ClearPasswordResetCode();
+        RefreshSecurityStamp(now);
+
+        AddDomainEvent(new PasswordResetDomainEvent(Username, EmailAddress));
+    }
+
+    public void SetPassword(PasswordHasher passwordHasher, NonEmptyString newPassword, NonEmptyString oldPassword, Instant now)
+    {
+        if (passwordHasher is null)
+            throw new IdentityDomainException("Password hash must not be null when setting a password.");
+
+        if (!passwordHasher.VerifyPasswordHash(oldPassword, PasswordHash))
+            throw new IdentityDomainException("Invalid password.");
+
+        if (passwordHasher.VerifyPasswordHash(newPassword, PasswordHash))
+            throw new IdentityDomainException("The new password must be different than the old one.");
+
+        var passwordHash = passwordHasher.HashPassword(newPassword);
+        UpdatePasswordHash(passwordHash);
         RefreshSecurityStamp(now);
 
         AddDomainEvent(new PasswordChangedDomainEvent(Username, EmailAddress));
@@ -228,6 +250,16 @@ public class User : Entity<UserId>, IAggregateRoot
     {
         ClearFailedLoginAttempts();
         SetSuccessfulLogin(now);
+    }
+
+    public SecurityStampValidationResult ValidateSecurityStamp(NonEmptyString otherStamp, Instant now)
+    {
+        var result = SecurityStamp.Validate(otherStamp, now);
+
+        if (result is SecurityStampValidationResult.Valid)
+            SecurityStamp = SecurityStamp.ExtendExpiration(now);
+
+        return result;
     }
 }
 

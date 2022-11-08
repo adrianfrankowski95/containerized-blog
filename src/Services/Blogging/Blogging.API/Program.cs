@@ -50,6 +50,7 @@ if (env.IsDevelopment())
 app.UseGlobalExceptionHandler();
 
 app.UseHttpsRedirection();
+app.UseForwardedHeaders(); //transforms x-forwarded- headers from reverse proxy to request's headers
 
 app.UseAuthentication();
 app.UseAuthorization();

@@ -5,8 +5,21 @@ namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 
 public class SecurityStamp : ValueObject<SecurityStamp>
 {
+    private readonly static Duration _validationInterval = Duration.FromMinutes(30);
     private readonly Guid _value;
     public Instant IssuedAt { get; }
+
+    public SecurityStampValidationResult Validate(NonEmptyString otherStamp, Instant now)
+    {
+        if (IssuedAt.Plus(_validationInterval) < now)
+            return SecurityStampValidationResult.NoValidationNeeded;
+
+        return string.Equals(_value.ToString(), otherStamp, StringComparison.Ordinal)
+            ? SecurityStampValidationResult.Valid
+            : SecurityStampValidationResult.Invalid;
+    }
+
+    public SecurityStamp ExtendExpiration(Instant now) => new(_value, now.Plus(_validationInterval));
 
     private SecurityStamp(Guid value, Instant now)
     {
