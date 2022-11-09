@@ -1,6 +1,6 @@
 namespace Blog.Services.Discovery.API.Models;
 
-public struct ServiceInstanceKey
+public readonly struct ServiceInstanceKey
 {
     public const string Prefix = "services";
     public string ServiceType { get; }
