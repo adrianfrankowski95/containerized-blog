@@ -22,7 +22,10 @@ public class RedisServiceRegistry : IServiceRegistry
         if (serviceInstance is null)
             throw new ArgumentNullException(nameof(serviceInstance));
 
-        return _redisDb.StringSetAsync(serviceInstance.Key.ToString(), string.Join(';', serviceInstance.Addresses), _options.CurrentValue.Expiry);
+        return _redisDb.StringSetAsync(
+            key: serviceInstance.Key.ToString(),
+            value: string.Join(';', serviceInstance.Addresses),
+            expiry: _options.CurrentValue.Expiry);
     }
 
     public Task<bool> UnregisterServiceInstance(ServiceInstance serviceInstance)
@@ -35,7 +38,8 @@ public class RedisServiceRegistry : IServiceRegistry
 
     public async Task<IList<ServiceInstance>> GetAllServiceInstances()
     {
-        var keys = _redis.GetServer(_redis.GetEndPoints().Single()).Keys(pattern: ServiceInstanceKey.Prefix);
+        var keys = _redis.GetServer(_redis.GetEndPoints().Single()).Keys(
+            pattern: ServiceInstanceKey.GetAllInstancesKeyPattern());
 
         if (!(keys?.Any() ?? false))
             return Array.Empty<ServiceInstance>();
@@ -65,7 +69,8 @@ public class RedisServiceRegistry : IServiceRegistry
         if (string.IsNullOrWhiteSpace(serviceType))
             throw new ArgumentNullException(nameof(serviceType));
 
-        var keys = _redis.GetServer(_redis.GetEndPoints().Single()).Keys(pattern: ServiceInstanceKey.Prefix + ":" + serviceType + "*");
+        var keys = _redis.GetServer(_redis.GetEndPoints().Single()).Keys(
+            pattern: ServiceInstanceKey.GetServiceTypeKeyPattern(serviceType));
 
         if (!(keys?.Any() ?? false))
             return Array.Empty<ServiceInstance>();
