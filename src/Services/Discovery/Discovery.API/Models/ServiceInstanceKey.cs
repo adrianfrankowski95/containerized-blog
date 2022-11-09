@@ -26,9 +26,6 @@ readonly public struct ServiceInstanceKey
         if (obj is not ServiceInstanceKey key)
             return false;
 
-        if (ReferenceEquals(this, key))
-            return true;
-
         return string.Equals(ServiceType, key.ServiceType, StringComparison.Ordinal) && InstanceId.Equals(key.InstanceId);
     }
 
