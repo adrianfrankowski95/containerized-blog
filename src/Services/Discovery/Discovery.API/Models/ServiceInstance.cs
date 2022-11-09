@@ -3,8 +3,8 @@ namespace Blog.Services.Discovery.API.Models;
 public class ServiceInstance
 {
     public ServiceInstanceKey Key { get; }
-    public Guid InstanceId { get => Key.InstanceId; }
-    public string ServiceType { get => Key.ServiceType; }
+    public Guid InstanceId => Key.InstanceId;
+    public string ServiceType => Key.ServiceType;
     public IReadOnlySet<string> Addresses { get; }
 
     public ServiceInstance(in ServiceInstanceKey key, IReadOnlySet<string> serviceAddresses)
