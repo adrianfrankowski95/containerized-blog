@@ -3,8 +3,8 @@ namespace Blog.Services.Discovery.API.Models;
 public class ServiceInstance
 {
     public ServiceInstanceKey Key { get; }
-    public Guid InstanceId { get; }
-    public string ServiceType { get; }
+    public Guid InstanceId { get => Key.InstanceId; }
+    public string ServiceType { get => Key.ServiceType; }
     public IReadOnlySet<string> Addresses { get; }
 
     public ServiceInstance(in ServiceInstanceKey key, IReadOnlySet<string> serviceAddresses)
@@ -22,8 +22,6 @@ public class ServiceInstance
             throw new ArgumentNullException(nameof(serviceAddresses));
 
         Key = new(serviceType, instanceId);
-        InstanceId = instanceId;
-        ServiceType = serviceType;
         Addresses = serviceAddresses;
     }
 

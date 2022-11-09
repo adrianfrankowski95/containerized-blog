@@ -2,7 +2,7 @@ namespace Blog.Services.Discovery.API.Models;
 
 readonly public struct ServiceInstanceKey
 {
-    public const string Prefix = "services";
+    private const string Prefix = "services";
     public string ServiceType { get; }
     public Guid InstanceId { get; }
 
@@ -58,4 +58,14 @@ readonly public struct ServiceInstanceKey
 
         return new ServiceInstanceKey(serviceType, instanceId);
     }
+
+    public static string GetServiceTypeKeyPattern(string serviceType)
+    {
+        if (string.IsNullOrWhiteSpace(serviceType))
+            throw new ArgumentNullException(nameof(serviceType));
+
+        return Prefix + ":" + serviceType + ":*";
+    }
+
+    public static string GetAllInstancesKeyPattern() => Prefix;
 }
