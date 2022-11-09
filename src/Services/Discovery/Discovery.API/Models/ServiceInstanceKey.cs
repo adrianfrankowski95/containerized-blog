@@ -32,11 +32,12 @@ public readonly struct ServiceInstanceKey
         return string.Equals(ServiceType, key.ServiceType, StringComparison.Ordinal) && InstanceId.Equals(key.InstanceId);
     }
 
+    public bool IsEmpty() => string.IsNullOrWhiteSpace(ServiceType) || InstanceId.Equals(Guid.Empty);
+
     public override int GetHashCode() => ServiceType.GetHashCode();
 
-    public override string ToString() =>
-        string.IsNullOrWhiteSpace(ServiceType) || InstanceId.Equals(Guid.Empty)
-            ? throw new InvalidDataException("Service instance key must not be null or empty.")
+    public override string ToString() => IsEmpty()
+            ? throw new InvalidDataException("Service instance key must not be empty.")
             : Prefix + ":" + ServiceType + ":" + InstanceId;
 
     public static ServiceInstanceKey FromString(string key)
