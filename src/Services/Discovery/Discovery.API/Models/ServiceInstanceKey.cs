@@ -67,5 +67,5 @@ readonly public struct ServiceInstanceKey
         return Prefix + ":" + serviceType + ":*";
     }
 
-    public static string GetAllInstancesKeyPattern() => Prefix;
+    public static string GetAllInstancesKeyPattern() => Prefix + ":*";
 }
