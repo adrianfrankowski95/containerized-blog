@@ -7,7 +7,7 @@ public class ServiceInstance
     public string ServiceType { get; }
     public IReadOnlySet<string> Addresses { get; }
 
-    public ServiceInstance(ServiceInstanceKey key, IReadOnlySet<string> serviceAddresses)
+    public ServiceInstance(in ServiceInstanceKey key, IReadOnlySet<string> serviceAddresses)
         : this(key.InstanceId, key.ServiceType, serviceAddresses)
     {
 

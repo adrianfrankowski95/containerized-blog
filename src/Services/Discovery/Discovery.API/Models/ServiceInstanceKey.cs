@@ -1,6 +1,6 @@
 namespace Blog.Services.Discovery.API.Models;
 
-public readonly struct ServiceInstanceKey
+readonly public struct ServiceInstanceKey
 {
     public const string Prefix = "services";
     public string ServiceType { get; }
@@ -34,7 +34,7 @@ public readonly struct ServiceInstanceKey
 
     public bool IsEmpty() => string.IsNullOrWhiteSpace(ServiceType) || InstanceId.Equals(Guid.Empty);
 
-    public override int GetHashCode() => ServiceType.GetHashCode();
+    public override int GetHashCode() => InstanceId.GetHashCode();
 
     public override string ToString() => IsEmpty()
             ? throw new InvalidDataException("Service instance key must not be empty.")
