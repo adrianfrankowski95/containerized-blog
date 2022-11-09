@@ -1,4 +1,5 @@
 using Blog.Integration.Events;
+using Blog.Services.Discovery.API.Models;
 using MassTransit;
 using StackExchange.Redis;
 
@@ -25,19 +26,13 @@ public class RedisKeyExpiredEventHandler : IHostedService
         {
             _logger.LogInformation("----- Received key expired event from Redis, channel: {Channel}, message: {Message}.", channel, message);
 
-            var key = message.ToString();
+            var key = ServiceInstanceKey.FromString(message.ToString());
 
             _logger.LogInformation("----- Extracted following key: {Key}.", key);
-
-            //key pattern: services:servicetype:instanceid     
-            var keySplit = key.Split(':');
-            var serviceType = keySplit[1];
-            var instanceId = Guid.Parse(keySplit[2]);
-
             _logger.LogInformation("----- Publishing service instance unregistered event, instance ID: {InstanceId}, service type: {ServiceType}.",
-                instanceId, serviceType);
+                key.InstanceId, key.ServiceType);
 
-            await _bus.Publish(new ServiceInstanceUnregisteredIntegrationEvent(instanceId, serviceType)).ConfigureAwait(false);
+            await _bus.Publish(new ServiceInstanceUnregisteredIntegrationEvent(key.InstanceId, key.ServiceType)).ConfigureAwait(false);
         });
     }
 

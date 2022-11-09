@@ -24,13 +24,13 @@ public class ServiceInstanceHeartbeatIntegrationEventConsumer : IConsumer<Servic
         IReadOnlySet<string> addresses = context.Message.ServiceAddresses;
 
         if (instanceId.Equals(Guid.Empty))
-            throw new InvalidDataException($"{nameof(context.Message.InstanceId)} must not be empty");
+            throw new InvalidDataException($"{nameof(context.Message.InstanceId)} must not be empty.");
 
         if (string.IsNullOrWhiteSpace(serviceType))
-            throw new InvalidDataException($"{nameof(context.Message.ServiceType)} must not be null or empty");
+            throw new InvalidDataException($"{nameof(context.Message.ServiceType)} must not be null or empty.");
 
         if (!(addresses?.Any() ?? false))
-            throw new InvalidDataException($"{nameof(context.Message.ServiceAddresses)} must not be null or empty");
+            throw new InvalidDataException($"{nameof(context.Message.ServiceAddresses)} must not be null or empty.");
 
         string addressesString = string.Join("; ", addresses);
 

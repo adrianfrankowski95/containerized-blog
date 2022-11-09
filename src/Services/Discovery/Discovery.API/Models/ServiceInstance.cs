@@ -2,19 +2,26 @@ namespace Blog.Services.Discovery.API.Models;
 
 public class ServiceInstance
 {
-    public string Key => "services:" + ServiceType + ":" + InstanceId;
+    public ServiceInstanceKey Key { get; }
     public Guid InstanceId { get; }
     public string ServiceType { get; }
     public IReadOnlySet<string> Addresses { get; }
+
+    public ServiceInstance(ServiceInstanceKey key, IReadOnlySet<string> serviceAddresses)
+        : this(key.InstanceId, key.ServiceType, serviceAddresses)
+    {
+
+    }
 
     public ServiceInstance(Guid instanceId, string serviceType, IReadOnlySet<string> serviceAddresses)
     {
         if (string.IsNullOrWhiteSpace(serviceType))
             throw new ArgumentNullException(nameof(serviceType));
 
-        if (serviceAddresses is null || !serviceAddresses.Any())
+        if (!(serviceAddresses?.Any() ?? false))
             throw new ArgumentNullException(nameof(serviceAddresses));
 
+        Key = new(serviceType, instanceId);
         InstanceId = instanceId;
         ServiceType = serviceType;
         Addresses = serviceAddresses;
