@@ -92,7 +92,7 @@ public class ChangePasswordModel : PageModel
             var result = await _userManager.UpdatePasswordAsync(user, Input.OldPassword, Input.NewPassword);
             if (!result.Succeeded)
             {
-                if (result.Errors.Single().Equals(CredentialsError.InvalidCredentials))
+                if (result.Errors.Single().Equals(CredentialsError.InvalidCredentias))
                 {
                     ModelState.AddModelError(string.Empty, "The Old password is invalid.");
                     return Page();
