@@ -36,6 +36,7 @@ Blogging platform based on containerized microservices in ASP.NET Core
 #### Identity Service
 - Implement authorization and authentication middleware
   - Skip verifying integrity, read user data
+- Refactor and style Razor Pages
 - Finish adding OpenIddict as IdP
   - Think about user id in JWT
   - Add Rest endpoints (authorize, signout, userinfo, token, etc.)
