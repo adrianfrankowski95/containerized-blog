@@ -49,12 +49,15 @@ if (env.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+else
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseGlobalExceptionHandler();
 
-app.UseHttpsRedirection();
-app.UseForwardedHeaders(); //transforms x-forwarded- headers from reverse proxy to request's headers
-app.UseStaticFiles(); //html, css, images, js in wwwroot folder
+app.UseForwardedHeaders(); // Transforms x-forwarded- headers from reverse proxy to request's headers
+app.UseStaticFiles(); // Html, css, images, js in wwwroot folder
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -62,7 +65,6 @@ app.UseAuthorization();
 app.MapRazorPages();
 
 app.Run();
-
 
 static IConfiguration GetConfiguration(IWebHostEnvironment env)
     => new ConfigurationBuilder()

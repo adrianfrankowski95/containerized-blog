@@ -7,8 +7,6 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Yarp.ReverseProxy.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
-
-
 var env = builder.Environment;
 var config = GetConfiguration(env);
 
@@ -17,7 +15,6 @@ builder.Configuration.AddConfiguration(config);
 var services = builder.Services;
 
 services.AddSwaggerGen();
-
 services
     .AddGrpcDiscoveryService(config)
     .AddYarp();
@@ -26,21 +23,23 @@ services
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (env.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+else
+{
+    app.UseHttpsRedirection();
+}
 
-app.UseHttpsRedirection();
-app.UseCors();
+// app.UseCors();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapReverseProxy(); //Yarp
+app.MapReverseProxy(); // Yarp
 
 app.Run();
 

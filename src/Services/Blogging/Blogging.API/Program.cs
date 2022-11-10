@@ -15,7 +15,6 @@ using NodaTime;
 using SysTime = Blog.Services.Blogging.API.Infrastructure.Services.SysTime;
 
 var builder = WebApplication.CreateBuilder(args);
-
 var env = builder.Environment;
 var config = GetConfiguration(env);
 
@@ -34,22 +33,23 @@ services
     .AddMassTransitRabbitMqBus(config)
     .AddCustomJwtAuthentication(config);
 
-//services.AddEndpointsApiExplorer();
-
+services.AddEndpointsApiExplorer();
 services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (env.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+else
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseGlobalExceptionHandler();
 
-app.UseHttpsRedirection();
 app.UseForwardedHeaders(); //transforms x-forwarded- headers from reverse proxy to request's headers
 
 app.UseAuthentication();

@@ -18,7 +18,7 @@ services:
       POSTGRES_PASSWORD: admin
       PGPASSWORD: SuperStrongPassword
     ports:
-      - "5432:5432"
+      - '5432:5432'
     # specify separate db schemas for Identity service, Blogging service, Comments service and EventStore
     #volumes:
     #- /initdb:/docker-entrypoint-initdb.d
@@ -29,7 +29,7 @@ services:
     deploy:
       mode: global
     ports:
-      - "6379:6379"
+      - '6379:6379'
 
   discovery-api:
     image: blog/discovery-api
@@ -46,7 +46,7 @@ services:
       - redis
       # - eventstore-api
     ports:
-      - "7001:7001"
+      - '7001:7001'
 
   emailing-api:
     image: blog/emailing-api
@@ -63,7 +63,7 @@ services:
       - rabbitmq
       - discovery-api
     ports:
-      - "7017-7021:80"
+      - '7017-7021:80'
 
   identity-api:
     image: blog/identity-api
@@ -82,7 +82,7 @@ services:
       - discovery-api
       - emailing-api
     ports:
-      - "7002-7006:80"
+      - '7002-7006:80'
 
   blogging-api:
     image: blog/blogging-api
@@ -101,7 +101,7 @@ services:
       - discovery-api
       - emailing-api
     ports:
-      - "7007-7011:80"
+      - '7007-7011:80'
 
   comments-api:
     image: blog/comments-api
@@ -120,7 +120,7 @@ services:
       - discovery-api
       - emailing-api
     ports:
-      - "7012-7016:80"
+      - '7012-7016:80'
 
   webgateway-api:
     image: blog/webgateway-api
@@ -140,7 +140,7 @@ services:
       - comments-api
       - emailing-api
     ports:
-      - "7000:7000"
+      - '7000:7000'
   # eventstore-api:
   #   image: blog/eventstore-api
   #   build:

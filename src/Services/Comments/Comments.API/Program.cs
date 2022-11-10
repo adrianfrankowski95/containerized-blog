@@ -6,8 +6,8 @@ using MassTransit;
 
 var builder = WebApplication.CreateBuilder(args);
 var env = builder.Environment;
-
 var config = GetConfiguration(env);
+
 builder.Configuration.AddConfiguration(config);
 
 var services = builder.Services;
@@ -17,27 +17,26 @@ services
     .AddControllers(env)
     .AddMassTransitRabbitMqBus(config);
 
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 services.AddEndpointsApiExplorer();
 services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (env.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
-app.UseHttpsRedirection();
+else
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseAuthorization();
 
 app.MapControllers();
 
 app.Run();
-
 
 static IConfiguration GetConfiguration(IWebHostEnvironment env)
     => new ConfigurationBuilder()

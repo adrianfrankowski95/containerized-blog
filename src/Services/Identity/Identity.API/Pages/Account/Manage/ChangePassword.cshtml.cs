@@ -15,7 +15,7 @@ namespace Blog.Services.Identity.API.Pages.Account.Manage;
 
 public class ChangePasswordModel : PageModel
 {
-    private readonly UserManager<User> _userManager;
+    private readonly UserManager<Usr> _userManager;
     private readonly ISignInManager<User> _signInManager;
     private readonly ILogger<ChangePasswordModel> _logger;
 
@@ -92,7 +92,7 @@ public class ChangePasswordModel : PageModel
             var result = await _userManager.UpdatePasswordAsync(user, Input.OldPassword, Input.NewPassword);
             if (!result.Succeeded)
             {
-                if (result.Errors.Single().Equals(CredentialsError.InvalidCredentials))
+                if (result.Errors.Single().Equals(CredentialsError.InvalidCredentias))
                 {
                     ModelState.AddModelError(string.Empty, "The Old password is invalid.");
                     return Page();
