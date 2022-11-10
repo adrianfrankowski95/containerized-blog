@@ -31,6 +31,7 @@ Blogging platform based on containerized microservices in ASP.NET Core
 - Check if gRPC is a good fit for inter-services communication or go for events solution
 - Expose Rest endpoint for sending custom emails by administrators to the users
 - Read hostname and port from env variables
+- Add health checks
 
 #### Identity Service
 - Implement authorization and authentication middleware
@@ -39,6 +40,7 @@ Blogging platform based on containerized microservices in ASP.NET Core
   - Think about user id in JWT
   - Add Rest endpoints (authorize, signout, userinfo, token, etc.)
 - Read hostname and port from env variables
+- Add health checks
   
 #### Frontend
 - Start working on it... ;)
