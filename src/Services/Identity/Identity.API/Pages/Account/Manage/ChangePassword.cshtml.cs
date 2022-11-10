@@ -15,7 +15,7 @@ namespace Blog.Services.Identity.API.Pages.Account.Manage;
 
 public class ChangePasswordModel : PageModel
 {
-    private readonly UserManager<User> _userManager;
+    private readonly UserManager<Usr> _userManager;
     private readonly ISignInManager<User> _signInManager;
     private readonly ILogger<ChangePasswordModel> _logger;
 
