@@ -3,50 +3,42 @@ services:
     image: rabbitmq:management-alpine
     restart: on-failure
     deploy:
-      mode: global
+      mode: replicated
+      replicas: 5
+    links:
+      - "rabbitmq:${RABBITMQ_HOSTNAME}"
     ports:
-      - 5672:5672
-      - 15672:15672
+      - ${RABBITMQ_PORT}
 
-  postgres:
-    image: postgres:alpine
-    restart: on-failure
-    deploy:
-      mode: global
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: admin
-      PGPASSWORD: SuperStrongPassword
-    ports:
-      - '5432:5432'
-    # specify separate db schemas for Identity service, Blogging service, Comments service and EventStore
-    #volumes:
-    #- /initdb:/docker-entrypoint-initdb.d
-
-  redis:
+  discovery-register:
     image: redis:alpine
     restart: on-failure
     deploy:
       mode: global
+    links:
+      - "discovery-register:${DISCOVERY_REGISTER_HOSTNAME}"
     ports:
-      - '6379:6379'
-
+      - '${DISCOVERY_REGISTER_PORT}:${DISCOVERY_REGISTER_PORT}'
   discovery-api:
     image: blog/discovery-api
     restart: on-failure
     build:
       context: .
       dockerfile: Services/Discovery/Discovery.API/Dockerfile
+    links:
+      - "discovery-api:${DISCOVERY_API_HOSTNAME}"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HOSTNAME: ${DISCOVERY_API_HOSTNAME}
+      ASPNETCORE_PORT: ${DISCOVERY_API_PORT}
     deploy:
-      mode: global
+      mode: replicated
+      replicas: 5
     depends_on:
       - rabbitmq
-      - redis
-      # - eventstore-api
+      - discovery-register
     ports:
-      - '7001:7001'
+      - ${DISCOVERY_API_PORT}
 
   emailing-api:
     image: blog/emailing-api
@@ -54,8 +46,12 @@ services:
     build:
       context: .
       dockerfile: Services/Emailing/Emailing.API/Dockerfile
+    links:
+      - "emailing-api:${EMAILING_API_HOSTNAME}"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HOSTNAME: ${EMAILING_API_HOSTNAME}
+      ASPNETCORE_PORT: ${EMAILING_API_PORT}
     deploy:
       mode: replicated
       replicas: 5
@@ -63,7 +59,21 @@ services:
       - rabbitmq
       - discovery-api
     ports:
-      - '7017-7021:80'
+      - ${EMAILING_API_PORT}
+
+  identity-db:
+    image: postgres:alpine
+    restart: on-failure
+    deploy:
+      mode: global
+    links:
+      - "identity-db:${IDENTITY_DB_HOSTNAME}"
+    environment:
+      POSTGRES_USER: "${IDENTITY_DB_POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${IDENTITY_DB_POSTGRES_PASSWORD}"
+      PGPASSWORD: "${IDENTITY_DB_PGPASSWORD}"
+    ports:
+      - ${IDENTITY_DB_PORT}:${IDENTITY_DB_PORT}
 
   identity-api:
     image: blog/identity-api
@@ -71,18 +81,36 @@ services:
     build:
       context: .
       dockerfile: Services/Identity/Identity.API/Dockerfile
+    links:
+      - "identity-api:${IDENTITY_API_HOSTNAME}"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HOSTNAME: ${IDENTITY_API_HOSTNAME}
+      ASPNETCORE_PORT: ${IDENTITY_API_PORT}
     deploy:
       mode: replicated
       replicas: 5
     depends_on:
       - rabbitmq
-      - postgres
+      - identity-db
       - discovery-api
       - emailing-api
     ports:
-      - '7002-7006:80'
+      - ${IDENTITY_API_PORT}
+
+  blogging-db:
+    image: postgres:alpine
+    restart: on-failure
+    deploy:
+      mode: global
+    links:
+      - "blogging-db:${BLOGGING_DB_HOSTNAME}"
+    environment:
+      POSTGRES_USER: "${BLOGGING_DB_POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${BLOGGING_DB_POSTGRES_PASSWORD}"
+      PGPASSWORD: "${BLOGGING_DB_PGPASSWORD}"
+    ports:
+      - ${BLOGGING_DB_PORT}:${BLOGGING_DB_PORT}
 
   blogging-api:
     image: blog/blogging-api
@@ -90,18 +118,36 @@ services:
     build:
       context: .
       dockerfile: Services/Blogging/Blogging.API/Dockerfile
+    links:
+      - "blogging-api:${BLOGGING_API_HOSTNAME}"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HOSTNAME: ${BLOGGING_API_HOSTNAME}
+      ASPNETCORE_PORT: ${BLOGGING_API_PORT}
     deploy:
       mode: replicated
       replicas: 5
     depends_on:
       - rabbitmq
-      - postgres
+      - blogging-db
       - discovery-api
       - emailing-api
     ports:
-      - '7007-7011:80'
+      - ${BLOGGING_API_PORT}
+
+  comments-db:
+    image: postgres:alpine
+    restart: on-failure
+    deploy:
+      mode: global
+    links:
+      - "comments-db:${COMMENTS_DB_HOSTNAME}"
+    environment:
+      POSTGRES_USER: "${COMMENTS_DB_POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${COMMENTS_DB_POSTGRES_PASSWORD}"
+      PGPASSWORD: "${COMMENTS_DB_PGPASSWORD}"
+    ports:
+      - ${COMMENTS_DB_PORT}:${COMMENTS_DB_PORT}
 
   comments-api:
     image: blog/comments-api
@@ -111,16 +157,19 @@ services:
       dockerfile: Services/Comments/Comments.API/Dockerfile
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_HOSTNAME: ${COMMENTS_API_HOSTNAME}
+      ASPNETCORE_PORT: ${COMMENTS_API_PORT}
     deploy:
       mode: replicated
       replicas: 5
     depends_on:
       - rabbitmq
-      - postgres
+      - comments-db
       - discovery-api
       - emailing-api
+      - blogging-api
     ports:
-      - '7012-7016:80'
+      - ${COMMENTS_API_PORT}
 
   webgateway-api:
     image: blog/webgateway-api
@@ -128,6 +177,8 @@ services:
     build:
       context: .
       dockerfile: Gateways/WebGateway.API/Dockerfile
+    links:
+      - "webgateway-api:${WEBGATEWAY_API_HOSTNAME}"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
     deploy:
@@ -140,14 +191,4 @@ services:
       - comments-api
       - emailing-api
     ports:
-      - '7000:7000'
-  # eventstore-api:
-  #   image: blog/eventstore-api
-  #   build:
-  #     context: .
-  #     dockerfile: ./Services/EventStore/EventStore.API/Dockerfile
-  #   environment:
-  #    ASPNETCORE_ENVIRONMENT: Development
-  #   depends_on:
-  #     - rabbitmq
-  #     - postgres
+      - ${WEBGATEWAY_API_PORT}:${WEBGATEWAY_API_PORT}
