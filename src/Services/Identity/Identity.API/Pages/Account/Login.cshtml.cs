@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 namespace Blog.Services.Identity.API.Pages.Account;
 
 [AllowAnonymous]
+[ValidateAntiForgeryToken]
 public class LoginModel : PageModel
 {
     private readonly IIdentityService _identityService;
@@ -26,10 +27,8 @@ public class LoginModel : PageModel
         _logger = logger;
     }
 
-
     [BindProperty]
     public InputModel Input { get; set; }
-
     public string ReturnUrl { get; set; }
 
     [TempData]
@@ -63,7 +62,6 @@ public class LoginModel : PageModel
         return _identityService.IsAuthenticated ? LocalRedirect(ReturnUrl) : Page();
     }
 
-    [ValidateAntiForgeryToken]
     public async Task<IActionResult> OnPostAsync(string returnUrl = null)
     {
         returnUrl ??= Url.Content("~/");
