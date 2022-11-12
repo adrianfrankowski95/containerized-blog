@@ -9,19 +9,13 @@ public class RecipePost : PostBase
     public RecipeTime Time { get; private set; }
     public Servings Servings { get; private set; }
     public FoodComposition FoodComposition { get; private set; }
-
     // This has to remain as a List, this is the only type that could be converted to text[] column in Postgres
     private readonly List<Taste> _tastes;
     public IReadOnlyList<Taste> Tastes => _tastes;
-
     // This has to remain as a List, this is the only type that could be converted to text[] column in Postgres
     private readonly List<PreparationMethod> _preparationMethods;
     public IReadOnlyList<PreparationMethod> PreparationMethods => _preparationMethods;
-
     public string SongUrl { get; private set; }
-
-    // EF Core
-    private RecipePost() { }
 
     public RecipePost(
         User author,

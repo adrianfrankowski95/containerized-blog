@@ -1,3 +1,5 @@
+#nullable disable
+
 using NodaTime;
 
 namespace Blog.Services.Blogging.API.Application.Queries.PostQueries.Models;

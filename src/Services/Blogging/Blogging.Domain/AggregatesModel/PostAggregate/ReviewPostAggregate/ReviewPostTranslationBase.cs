@@ -5,10 +5,6 @@ namespace Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate.ReviewPost
 
 public abstract class ReviewPostTranslationBase : PostTranslationBase
 {
-
-    // EF Core
-    protected ReviewPostTranslationBase() { }
-
     public ReviewPostTranslationBase(
         Language language,
         string title,

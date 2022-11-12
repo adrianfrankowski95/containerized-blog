@@ -6,9 +6,6 @@ public abstract class ReviewPostBase : PostBase
 {
     public Rating Rating { get; private set; }
 
-    // EF Core
-    protected ReviewPostBase() { }
-
     protected ReviewPostBase(
         User author,
         PostType type,

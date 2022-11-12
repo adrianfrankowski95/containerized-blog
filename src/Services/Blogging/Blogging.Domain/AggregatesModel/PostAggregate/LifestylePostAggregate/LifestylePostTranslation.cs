@@ -5,9 +5,6 @@ namespace Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate.LifestyleP
 
 public class LifestylePostTranslation : PostTranslationBase
 {
-    // EF Core
-    private LifestylePostTranslation() { }
-
     public LifestylePostTranslation(
         Language language,
         string title,

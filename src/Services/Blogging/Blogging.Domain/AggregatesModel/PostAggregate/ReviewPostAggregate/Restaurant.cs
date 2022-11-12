@@ -2,8 +2,6 @@ namespace Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate.ReviewPost
 
 public class Restaurant : ReviewItem
 {
-    // EF Core
-    private Restaurant() { }
     public Restaurant(
         string name,
         string websiteUrl)

@@ -2,8 +2,6 @@ namespace Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate.ReviewPost
 
 public class Product : ReviewItem
 {
-    // EF Core
-    private Product() { }
     public Product(string name, string websiteUrl) : base(name, websiteUrl) { }
 
     protected override IEnumerable<object?> GetEqualityCheckAttributes()

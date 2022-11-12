@@ -1,3 +1,5 @@
+#nullable disable
+
 namespace Blog.Services.Blogging.API.Application.Queries.TagQueries.Models;
 
 public record TagViewModel

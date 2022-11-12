@@ -107,59 +107,59 @@ public static class BloggingDbContextSeed
             //         )
             //         };
             //        translations.Add(translation);
-                }
+        }
 
-                PostBase post = null;
+        //PostBase? post = null;
 
-                // switch (i % 4)
-                // {
-                //     case 0:
-                //         post = new RecipePost(
-                //             new User(new UserId(Guid.NewGuid()), "Adrian " + i.ToString(), userRole),
-                //             translations.Cast<RecipePostTranslation>(),
-                //             Meal.FromValue(i % 7),
-                //             RecipeDifficulty.FromValue(i % 3),
-                //             new RecipeTime(
-                //                 new TimeSpan((i % 2).Hours(), ((i % 60) + 1).Minutes()),
-                //                 new TimeSpan((i % 3).Hours(), (i % 34).Minutes())
-                //             ),
-                //             new Servings(i % 6),
-                //             FoodComposition.FromValue(i % 6),
-                //             new[] { Taste.FromValue(random.Next(0, 2)), Taste.FromValue(random.Next(2, 5)) },
-                //             new[] { PreparationMethod.FromValue(random.Next(0, 2)), PreparationMethod.FromValue(random.Next(3, 5)) },
-                //             "www.wp.pl",
-                //             "www header pl");
-                //         break;
+        // switch (i % 4)
+        // {
+        //     case 0:
+        //         post = new RecipePost(
+        //             new User(new UserId(Guid.NewGuid()), "Adrian " + i.ToString(), userRole),
+        //             translations.Cast<RecipePostTranslation>(),
+        //             Meal.FromValue(i % 7),
+        //             RecipeDifficulty.FromValue(i % 3),
+        //             new RecipeTime(
+        //                 new TimeSpan((i % 2).Hours(), ((i % 60) + 1).Minutes()),
+        //                 new TimeSpan((i % 3).Hours(), (i % 34).Minutes())
+        //             ),
+        //             new Servings(i % 6),
+        //             FoodComposition.FromValue(i % 6),
+        //             new[] { Taste.FromValue(random.Next(0, 2)), Taste.FromValue(random.Next(2, 5)) },
+        //             new[] { PreparationMethod.FromValue(random.Next(0, 2)), PreparationMethod.FromValue(random.Next(3, 5)) },
+        //             "www.wp.pl",
+        //             "www header pl");
+        //         break;
 
-                //     case 1:
-                //         post = new RestaurantReviewPost(
-                //             new User(new UserId(Guid.NewGuid()), "Adrian " + i.ToString(), userRole),
-                //             translations.Cast<RestaurantReviewPostTranslation>(),
-                //             new Restaurant("restaurant for post " + i.ToString()),
-                //             new Rating(random.Next(1, 6)),
-                //             "header kropka pl");
-                //         break;
+        //     case 1:
+        //         post = new RestaurantReviewPost(
+        //             new User(new UserId(Guid.NewGuid()), "Adrian " + i.ToString(), userRole),
+        //             translations.Cast<RestaurantReviewPostTranslation>(),
+        //             new Restaurant("restaurant for post " + i.ToString()),
+        //             new Rating(random.Next(1, 6)),
+        //             "header kropka pl");
+        //         break;
 
-                //     case 2:
-                //         post = new ProductReviewPost(
-                //             new User(new UserId(Guid.NewGuid()), "Adrian " + i.ToString(), userRole),
-                //             translations.Cast<ProductReviewPostTranslation>(),
-                //             new Product("product for post " + i.ToString()),
-                //             new Rating(random.Next(1, 6)),
-                //             "header kropka pl");
-                //         break;
+        //     case 2:
+        //         post = new ProductReviewPost(
+        //             new User(new UserId(Guid.NewGuid()), "Adrian " + i.ToString(), userRole),
+        //             translations.Cast<ProductReviewPostTranslation>(),
+        //             new Product("product for post " + i.ToString()),
+        //             new Rating(random.Next(1, 6)),
+        //             "header kropka pl");
+        //         break;
 
-                //     case 3:
-                //         post = new LifestylePost(
-                //             new User(new UserId(Guid.NewGuid()), "Adrian " + i.ToString(), userRole),
-                //             translations.Cast<LifestylePostTranslation>(),
-                //             "header kropka pl");
-                //         break;
-                // };
+        //     case 3:
+        //         post = new LifestylePost(
+        //             new User(new UserId(Guid.NewGuid()), "Adrian " + i.ToString(), userRole),
+        //             translations.Cast<LifestylePostTranslation>(),
+        //             "header kropka pl");
+        //         break;
+        // };
 
-                //context.Add(post);
-            }
-            //await context.SaveChangesAsync();
-        };
-    //}
+        //context.Add(post);
+    }
+    //await context.SaveChangesAsync();
+};
+//}
 //}

@@ -20,9 +20,6 @@ public abstract class PostBase : Entity<PostId>, IAggregateRoot, IValidatable
     public Comments Comments { get; }
     public string HeaderImgUrl { get; private set; }
 
-    // EF Core
-    protected PostBase() { }
-
     protected PostBase(
         User author,
         PostCategory category,

@@ -6,12 +6,6 @@ public sealed class Rating : ValueObject<Rating>, IComparable<Rating>, IValidata
 {
     public int Value { get; }
 
-    // EF Core
-    public Rating()
-    {
-        Value = 0;
-    }
-
     public Rating(int value)
     {
         if (value < 0)

@@ -10,9 +10,6 @@ public class Tag : Entity<TagId>, ITranslated, IAggregateRoot
     public Language Language { get; private set; }
     public string Value { get; }
 
-    // EF Core
-    private Tag() { }
-
     public Tag(string tag, Language language)
     {
         string trimmedTag = tag.Trim().ToLowerInvariant();

@@ -1,3 +1,5 @@
+#nullable disable
+
 using System.Data;
 using Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate;
 using Blog.Services.Blogging.Domain.AggregatesModel.TagAggregate;
