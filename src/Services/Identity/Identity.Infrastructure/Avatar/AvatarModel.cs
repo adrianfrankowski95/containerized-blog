@@ -1,3 +1,5 @@
+#nullable disable
+
 using NodaTime;
 
 namespace Blog.Services.Identity.Infrastructure.Avatar;

@@ -11,7 +11,7 @@ public class BcryptPasswordHasher : PasswordHasher
         if (password is null)
             throw new ArgumentNullException(nameof(password));
 
-        return _newHash(BCrypt.Net.BCrypt.EnhancedHashPassword(password, HashType));
+        return NewHash(BCrypt.Net.BCrypt.EnhancedHashPassword(password, HashType));
     }
 
     public override bool VerifyPasswordHash(NonEmptyString password, PasswordHash? passwordHash)

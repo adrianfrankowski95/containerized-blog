@@ -1,3 +1,5 @@
+#pragma warning disable CS8618
+
 using Blog.Services.Identity.Domain.Exceptions;
 using Blog.Services.Identity.Domain.SeedWork;
 
@@ -5,7 +7,9 @@ namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 
 public abstract class PasswordHasher
 {
-    protected static Func<NonEmptyString, PasswordHash> _newHash;
+
+    // NewHash is assigned in static constructor at the very beginning, therefore it will never be null
+    protected static Func<NonEmptyString, PasswordHash> NewHash { get; private set; }
     public abstract PasswordHash HashPassword(Password password);
     public abstract bool VerifyPasswordHash(NonEmptyString password, PasswordHash? passwordHash);
 
@@ -15,7 +19,7 @@ public abstract class PasswordHasher
 
         static PasswordHash()
         {
-            _newHash = value => new PasswordHash(value);
+            NewHash = value => new PasswordHash(value);
         }
 
         private PasswordHash(NonEmptyString value)
