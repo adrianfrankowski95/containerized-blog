@@ -2,11 +2,7 @@ namespace Blog.Services.Identity.API.Models;
 
 public static class IdentityConstants
 {
-    public static class AuthenticationSchemes
-    {
-        public const string IdentityServiceJwt = "Blog.Identity.Jwt";
-        public const string IdentityServiceCookie = "Blog.Identity.Cookie";
-    }
+    public const string AuthenticationScheme = "Blog.IdentityService";
 
     public static class UserClaimTypes
     {

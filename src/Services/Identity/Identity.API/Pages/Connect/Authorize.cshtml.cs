@@ -63,7 +63,7 @@ public class AuthorizeModel : PageModel
         parameters.Add(KeyValuePair.Create(Parameters.Prompt, new StringValues(prompt)));
 
         return Challenge(
-            authenticationSchemes: IdentityConstants.AuthenticationSchemes.IdentityServiceCookie,
+            authenticationSchemes: IdentityConstants.AuthenticationScheme,
             properties: new AuthenticationProperties
             {
                 RedirectUri = Request.PathBase + Request.Path + QueryString.Create(parameters)
@@ -81,7 +81,7 @@ public class AuthorizeModel : PageModel
         //  - If the user principal can't be extracted or the cookie is too old.
         //  - If prompt=login was specified by the client application.
         //  - If a max_age parameter was provided and the authentication cookie is not considered "fresh" enough.
-        var result = await HttpContext.AuthenticateAsync(IdentityConstants.AuthenticationSchemes.IdentityServiceCookie);
+        var result = await HttpContext.AuthenticateAsync(IdentityConstants.AuthenticationScheme);
         if (result is null || !result.Succeeded || request.HasPrompt(Prompts.Login) ||
            (request.MaxAge is not null && result.Properties?.IssuedUtc is not null &&
             DateTimeOffset.UtcNow - result.Properties.IssuedUtc > TimeSpan.FromSeconds(request.MaxAge.Value)))

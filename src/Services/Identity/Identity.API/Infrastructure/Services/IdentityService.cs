@@ -61,7 +61,7 @@ public class IdentityService : IIdentityService
     public bool IsInRole(UserRole role) => IsAuthenticated && User.IsInRole(role.Name);
 
     private static ClaimsIdentity CreateUserIdentity(User user)
-        => new ClaimsIdentity(
+        => new(
                 new[] {
                     new Claim(IdentityConstants.UserClaimTypes.Subject, user.Id.ToString()),
                     new Claim(IdentityConstants.UserClaimTypes.Username, user.Username),
@@ -70,7 +70,7 @@ public class IdentityService : IIdentityService
                     new Claim(IdentityConstants.UserClaimTypes.Email, user.EmailAddress),
                     new Claim(IdentityConstants.UserClaimTypes.Role, user.Role.ToString()),
                     new Claim(IdentityConstants.UserClaimTypes.SecurityStamp, user.SecurityStamp.ToString())},
-                IdentityConstants.AuthenticationSchemes.IdentityServiceJwt,
+                IdentityConstants.AuthenticationScheme,
                 IdentityConstants.UserClaimTypes.Username,
                 IdentityConstants.UserClaimTypes.Role);
 
@@ -83,7 +83,7 @@ public class IdentityService : IIdentityService
             throw new InvalidOperationException("Could not retrieve an Http context.");
 
         return _httpContextAccessor.HttpContext.SignInAsync(
-            IdentityConstants.AuthenticationSchemes.IdentityServiceCookie,
+            IdentityConstants.AuthenticationScheme,
             new ClaimsPrincipal(CreateUserIdentity(user)),
             new AuthenticationProperties
             {
