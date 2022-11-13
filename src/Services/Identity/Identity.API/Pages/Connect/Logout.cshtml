@@ -14,7 +14,7 @@
     @{
         if (IdentityService.IsAuthenticated)
         {
-            <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/")" method="post">
+            <form class="form-inline" asp-page="/Connect/Logout" asp-route-returnUrl="@Url.Page("/")" method="post">
                 <button type="submit" class="nav-link btn btn-link text-dark">Click here to Logout</button>
             </form>
         }

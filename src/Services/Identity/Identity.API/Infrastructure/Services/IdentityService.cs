@@ -26,7 +26,7 @@ public class IdentityService : IIdentityService
     public UserId? UserId
     {
         get => IsAuthenticated
-                ? (Guid.TryParse(User.FindFirstValue(IdentityConstants.UserClaimTypes.Id), out Guid userId)
+                ? (Guid.TryParse(User.FindFirstValue(IdentityConstants.UserClaimTypes.Subject), out Guid userId)
                     ? UserId.FromGuid(userId)
                     : throw new InvalidOperationException("Could not retrieve ID of an authenticated user."))
                 : null;
@@ -60,17 +60,17 @@ public class IdentityService : IIdentityService
 
     public bool IsInRole(UserRole role) => IsAuthenticated && User.IsInRole(role.Name);
 
-    private ClaimsIdentity CreateUserIdentity(User user)
+    private static ClaimsIdentity CreateUserIdentity(User user)
         => new ClaimsIdentity(
                 new[] {
-                    new Claim(IdentityConstants.UserClaimTypes.Id, user.Id.ToString()),
+                    new Claim(IdentityConstants.UserClaimTypes.Subject, user.Id.ToString()),
                     new Claim(IdentityConstants.UserClaimTypes.Username, user.Username),
                     new Claim(IdentityConstants.UserClaimTypes.FirstName, user.FullName.FirstName),
                     new Claim(IdentityConstants.UserClaimTypes.LastName, user.FullName.LastName),
                     new Claim(IdentityConstants.UserClaimTypes.Email, user.EmailAddress),
                     new Claim(IdentityConstants.UserClaimTypes.Role, user.Role.ToString()),
                     new Claim(IdentityConstants.UserClaimTypes.SecurityStamp, user.SecurityStamp.ToString())},
-                IdentityConstants.AuthenticationSchemes.IdentityService,
+                IdentityConstants.AuthenticationSchemes.IdentityServiceJwt,
                 IdentityConstants.UserClaimTypes.Username,
                 IdentityConstants.UserClaimTypes.Role);
 
@@ -83,11 +83,12 @@ public class IdentityService : IIdentityService
             throw new InvalidOperationException("Could not retrieve an Http context.");
 
         return _httpContextAccessor.HttpContext.SignInAsync(
+            IdentityConstants.AuthenticationSchemes.IdentityServiceCookie,
             new ClaimsPrincipal(CreateUserIdentity(user)),
             new AuthenticationProperties
             {
                 IsPersistent = isPersistent,
-                AllowRefresh = true
+                AllowRefresh = true,
             });
     }
 
@@ -99,7 +100,7 @@ public class IdentityService : IIdentityService
         if (!IsAuthenticated)
             throw new InvalidOperationException("Cannot refresh unauthenticated user data.");
 
-        var auth = await _httpContextAccessor.HttpContext.AuthenticateAsync().ConfigureAwait(false);
+        var auth = await _httpContextAccessor.HttpContext.AuthenticateAsync();
 
         await _httpContextAccessor.HttpContext.SignInAsync(new ClaimsPrincipal(CreateUserIdentity(user)), auth.Properties);
     }

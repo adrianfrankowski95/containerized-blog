@@ -5,12 +5,10 @@ using Blog.Services.Identity.API.Application.Commands;
 using Blog.Services.Identity.API.Extensions;
 using Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 using Blog.Services.Identity.Domain.Exceptions;
-using Blog.Services.Identity.Infrastructure.Idempotency;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-
 
 namespace Blog.Services.Identity.API.Pages.Account;
 

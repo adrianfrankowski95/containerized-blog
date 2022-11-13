@@ -62,11 +62,14 @@ public class AccountController : ControllerBase
 
         await _mediator.Send(request);
 
-        return Created(HttpContext.GetBaseRequestUri() + '/' + _identityService?.Username?.ToString() ?? "", null);
+        var requestUri = HttpContext.GetBaseRequestUri();
+        _logger.LogInformation("---- Extracted following base request Uri: {RequestUri}", requestUri);
+
+        return Created(requestUri + '/' + _identityService?.Username?.ToString() ?? "", null);
     }
 
     [HttpPost("avatar/{username:required}")]
-    [Authorize(Roles = $"{nameof(UserRole.Administrator)},{nameof(UserRole.Moderator.Name)}")]
+    [Authorize(Roles = $"{nameof(UserRole.Administrator)},{nameof(UserRole.Moderator)}")]
     [ProducesResponseType((int)HttpStatusCode.Created)]
     [ProducesResponseType((int)HttpStatusCode.BadRequest)]
     public async Task<IActionResult> SetOtherAvatarAsync(
@@ -83,6 +86,9 @@ public class AccountController : ControllerBase
 
         await _mediator.Send(request);
 
-        return Created(HttpContext.GetBaseRequestUri(), null);
+        var requestUri = HttpContext.GetBaseRequestUri();
+        _logger.LogInformation("---- Extracted following base request Uri: {RequestUri}", requestUri);
+
+        return Created(requestUri, null);
     }
 }

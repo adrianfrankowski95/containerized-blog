@@ -194,8 +194,14 @@ internal static class ServiceCollectionExtensions
     public static IServiceCollection AddConfiguredAuthentication(this IServiceCollection services, IWebHostEnvironment env)
     {
         services
-            .AddAuthentication(IdentityConstants.AuthenticationSchemes.IdentityService)
-            .AddJwtBearer(opts =>
+            .AddAuthentication()
+            .AddCookie(IdentityConstants.AuthenticationSchemes.IdentityServiceCookie, opts =>
+            {
+                opts.LoginPath = new PathString("/account/login");
+                opts.Cookie.IsEssential = true;
+                opts.Cookie.HttpOnly = true;
+            })
+            .AddJwtBearer(IdentityConstants.AuthenticationSchemes.IdentityServiceJwt, opts =>
             {
                 opts.SaveToken = true;
                 opts.RequireHttpsMetadata = !env.IsDevelopment();
@@ -238,7 +244,7 @@ internal static class ServiceCollectionExtensions
         return services;
     }
 
-    public static IServiceCollection AddConfiguredOpenIddict(this IServiceCollection services)
+    public static IServiceCollection AddConfiguredOpenIddict(this IServiceCollection services, IWebHostEnvironment env)
     {
         services
             .AddOpenIddict()
@@ -270,6 +276,14 @@ internal static class ServiceCollectionExtensions
                     .SetConfigurationEndpointUris("/.well-known/openid-configuration")
                     .SetCryptographyEndpointUris("/.well-known/openid-configuration/jwks")
                     .RegisterClaims(IdentityConstants.UserClaimTypes.List());
+
+                if (env.IsDevelopment())
+                {
+                    opts.AddEphemeralEncryptionKey()
+                        .AddEphemeralSigningKey();
+                }
+                else
+                    throw new NotSupportedException("Please configure certificates for production environment.");
             });
 
         return services;

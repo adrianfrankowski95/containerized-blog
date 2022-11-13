@@ -1,0 +1,21 @@
+@using Microsoft.Extensions.Primitives
+@model AuthorizeModel
+
+<div class="jumbotron">
+    <h1>Authorization</h1>
+
+    <p class="lead text-left">Do you want to grant <strong>@Model.ApplicationName</strong> access to your data? (scopes
+        requested: @Model.Scope)</p>
+
+    <form method="post">
+        @* Flow the request parameters so they can be received by the Accept/Reject actions: *@
+        @foreach (var parameter in Context.Request.HasFormContentType ?
+        (IEnumerable<KeyValuePair<string, StringValues>>)Context.Request.Form : Context.Request.Query)
+        {
+            <input type="hidden" name="@parameter.Key" value="@parameter.Value" />
+        }
+
+        <input class="btn btn-lg btn-success" type="submit" value="Yes" asp-page-handler="accept" />
+        <input class="btn btn-lg btn-danger" type="submit" value="No" asp-page-handler="deny" />
+    </form>
+</div>
