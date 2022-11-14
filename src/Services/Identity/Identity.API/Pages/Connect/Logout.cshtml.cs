@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using OpenIddict.Server.AspNetCore;
 
-namespace Blog.Services.Identity.API.Pages.Account;
+namespace Blog.Services.Identity.API.Pages.Connect;
 
 [ValidateAntiForgeryToken]
 public class LogoutModel : PageModel

@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Blog.Services.Identity.API.Extensions;
 using Blog.Services.Identity.API.Models;
 using Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 using Microsoft.AspNetCore.Authentication;
@@ -26,9 +27,7 @@ public class IdentityService : IIdentityService
     public UserId? UserId
     {
         get => IsAuthenticated
-                ? (Guid.TryParse(User.FindFirstValue(IdentityConstants.UserClaimTypes.Subject), out Guid userId)
-                    ? UserId.FromGuid(userId)
-                    : throw new InvalidOperationException("Could not retrieve ID of an authenticated user."))
+                ? User.GetUserId() ?? throw new InvalidOperationException("Could not retrieve ID of an authenticated user.")
                 : null;
     }
 
@@ -36,7 +35,7 @@ public class IdentityService : IIdentityService
     {
         get
         {
-            var username = User.FindFirstValue(IdentityConstants.UserClaimTypes.Username);
+            var username = User.GetUsername();
             return IsAuthenticated
                 ? (string.IsNullOrWhiteSpace(username)
                     ? throw new InvalidOperationException("Could not retrieve a username of an authenticated user.")
@@ -49,11 +48,9 @@ public class IdentityService : IIdentityService
     {
         get
         {
-            string role = User.FindFirstValue(IdentityConstants.UserClaimTypes.Role);
+            var role = User.GetUserRole();
             return IsAuthenticated
-                ? (string.IsNullOrWhiteSpace(role)
-                    ? throw new InvalidOperationException("Could not retrieve role of an authenticated user.")
-                    : UserRole.FromName(role))
+                ? role ?? throw new InvalidOperationException("Could not retrieve role of an authenticated user.")
                 : null;
         }
     }

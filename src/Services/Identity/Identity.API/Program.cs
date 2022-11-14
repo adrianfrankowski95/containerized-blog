@@ -35,7 +35,7 @@ services
     .AddGrpcDiscoveryService(config)
     .AddGrpcEmailingService()
     .AddConfiguredQuartz()
-    .AddConfiguredOpenIddict();
+    .AddConfiguredOpenIddict(env);
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 services.AddEndpointsApiExplorer();
@@ -200,32 +200,32 @@ internal static class ServiceCollectionExtensions
                 opts.LoginPath = new PathString("/account/login");
                 opts.Cookie.IsEssential = true;
                 opts.Cookie.HttpOnly = true;
-            })
-            // .AddJwtBearer(IdentityConstants.AuthenticationScheme, opts =>
-            // {
-            //     opts.SaveToken = true;
-            //     opts.RequireHttpsMetadata = !env.IsDevelopment();
+            });
+        // .AddJwtBearer(IdentityConstants.AuthenticationScheme, opts =>
+        // {
+        //     opts.SaveToken = true;
+        //     opts.RequireHttpsMetadata = !env.IsDevelopment();
 
-            //     // Prevents changing claims names by the middleware
-            //     opts.MapInboundClaims = false;
+        //     // Prevents changing claims names by the middleware
+        //     opts.MapInboundClaims = false;
 
-            //     opts.TokenValidationParameters = new()
-            //     {
-            //         ValidateIssuerSigningKey = true,
-            //         ValidateLifetime = true,
-            //         ValidateIssuer = true,
-            //         ValidateAudience = true,
+        //     opts.TokenValidationParameters = new()
+        //     {
+        //         ValidateIssuerSigningKey = true,
+        //         ValidateLifetime = true,
+        //         ValidateIssuer = true,
+        //         ValidateAudience = true,
 
-            //         // Enables using in-built IsInRole() or [Authorize(Roles = ...)]
-            //         RoleClaimType = IdentityConstants.UserClaimTypes.Role,
-            //         NameClaimType = IdentityConstants.UserClaimTypes.Username,
-            //     };
+        //         // Enables using in-built IsInRole() or [Authorize(Roles = ...)]
+        //         RoleClaimType = IdentityConstants.UserClaimTypes.Role,
+        //         NameClaimType = IdentityConstants.UserClaimTypes.Username,
+        //     };
 
-            //     opts.Events = new()
-            //     {
+        //     opts.Events = new()
+        //     {
 
-            //     };
-            // });
+        //     };
+        // });
 
         return services;
     }

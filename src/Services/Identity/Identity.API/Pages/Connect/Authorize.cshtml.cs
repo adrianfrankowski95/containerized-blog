@@ -2,8 +2,10 @@
 
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
+using Blog.Services.Identity.API.Extensions;
 using Blog.Services.Identity.API.Infrastructure.Services;
 using Blog.Services.Identity.API.Models;
+using Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
@@ -14,17 +16,31 @@ using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
 using static OpenIddict.Abstractions.OpenIddictConstants;
 
-namespace Blog.Services.Identity.API.Pages.Account;
+namespace Blog.Services.Identity.API.Pages.Connect;
 
 [ValidateAntiForgeryToken]
 public class AuthorizeModel : PageModel
 {
     private readonly IIdentityService _identityService;
+    private readonly IUserRepository _userRepository;
+    private readonly IOpenIddictApplicationManager _applicationManager;
+    private readonly IOpenIddictAuthorizationManager _authorizationManager;
+    private readonly IOpenIddictScopeManager _scopeManager;
     private readonly ILogger<LogoutModel> _logger;
 
-    public AuthorizeModel(IIdentityService identityService, ILogger<LogoutModel> logger)
+    public AuthorizeModel(
+        IIdentityService identityService,
+        IUserRepository userRepository,
+        IOpenIddictApplicationManager applicationManager,
+        IOpenIddictAuthorizationManager authorizationManager,
+        IOpenIddictScopeManager scopeManager,
+        ILogger<LogoutModel> logger)
     {
         _identityService = identityService;
+        _userRepository = userRepository;
+        _applicationManager = applicationManager;
+        _authorizationManager = authorizationManager;
+        _scopeManager = scopeManager;
         _logger = logger;
     }
 
@@ -34,8 +50,8 @@ public class AuthorizeModel : PageModel
     [Display(Name = "Scope")]
     public string Scope { get; set; }
 
-    public Task<IActionResult> OnGet() => HandleAuthorizeAsync();
-    public Task<IActionResult> OnPost() => HandleAuthorizeAsync();
+    public Task<IActionResult> OnGetAsync() => HandleAuthorizeAsync();
+    public Task<IActionResult> OnPostAsync() => HandleAuthorizeAsync();
 
     private IActionResult HandleUnauthenticated(OpenIddictRequest request)
     {
@@ -90,7 +106,7 @@ public class AuthorizeModel : PageModel
         }
 
         // Retrieve the profile of the logged in user.
-        var user = await _userManager.GetUserAsync(result.Principal) ??
+        var user = await _userRepository.FindByIdAsync(result.Principal.GetUserId()) ??
             throw new InvalidOperationException("The user details cannot be retrieved.");
 
         // Retrieve the application details from the database.
@@ -99,7 +115,7 @@ public class AuthorizeModel : PageModel
 
         // Retrieve the permanent authorizations associated with the user and the calling client application.
         var authorizations = await _authorizationManager.FindAsync(
-            subject: await _userManager.GetUserIdAsync(user),
+            subject: user.Id.ToString(),
             client: await _applicationManager.GetIdAsync(application),
             status: Statuses.Valid,
             type: AuthorizationTypes.Permanent,
@@ -131,10 +147,10 @@ public class AuthorizeModel : PageModel
                     roleType: Claims.Role);
 
                 // Add the claims that will be persisted in the tokens.
-                identity.SetClaim(Claims.Subject, await _userManager.GetUserIdAsync(user))
-                        .SetClaim(Claims.Email, await _userManager.GetEmailAsync(user))
-                        .SetClaim(Claims.Name, await _userManager.GetUserNameAsync(user))
-                        .SetClaims(Claims.Role, (await _userManager.GetRolesAsync(user)).ToImmutableArray());
+                identity.SetClaim(Claims.Subject, user.Id.ToString())
+                        .SetClaim(Claims.Email, user.EmailAddress)
+                        .SetClaim(Claims.Name, user.Username)
+                        .SetClaims(Claims.Role, user.Role.ToString());
 
                 // Note: in this sample, the granted scopes match the requested scope
                 // but you may want to allow the user to uncheck specific scopes.
@@ -149,7 +165,7 @@ public class AuthorizeModel : PageModel
                 {
                     authorization = await _authorizationManager.CreateAsync(
                         principal: new ClaimsPrincipal(identity),
-                        subject: await _userManager.GetUserIdAsync(user),
+                        subject: user.Id.ToString(),
                         client: await _applicationManager.GetIdAsync(application),
                         type: AuthorizationTypes.Permanent,
                         scopes: identity.GetScopes());
@@ -175,7 +191,7 @@ public class AuthorizeModel : PageModel
 
             // In every other case, render the consent form.
             default:
-                ApplicationName = await _applicationManager.GetLocalizedDisplayNameAsync(application),
+                ApplicationName = await _applicationManager.GetLocalizedDisplayNameAsync(application);
                 Scope = request.Scope;
                 return Page();
         }
@@ -186,7 +202,7 @@ public class AuthorizeModel : PageModel
         var request = HttpContext.GetOpenIddictServerRequest() ??
             throw new InvalidOperationException("The OpenID Connect request cannot be retrieved.");
 
-        var result = await HttpContext.AuthenticateAsync(IdentityConstants.AuthenticationSchemes.IdentityServiceCookie);
+        var result = await HttpContext.AuthenticateAsync(IdentityConstants.AuthenticationScheme);
         if (result is null || !result.Succeeded || request.HasPrompt(Prompts.Login) ||
            (request.MaxAge is not null && result.Properties?.IssuedUtc is not null &&
             DateTimeOffset.UtcNow - result.Properties.IssuedUtc > TimeSpan.FromSeconds(request.MaxAge.Value)))
@@ -195,7 +211,7 @@ public class AuthorizeModel : PageModel
         }
 
         // Retrieve the profile of the logged in user.
-        var user = await _userManager.GetUserAsync(User) ??
+        var user = await _userRepository.FindByIdAsync(result.Principal.GetUserId()) ??
             throw new InvalidOperationException("The user details cannot be retrieved.");
 
         // Retrieve the application details from the database.
@@ -204,7 +220,7 @@ public class AuthorizeModel : PageModel
 
         // Retrieve the permanent authorizations associated with the user and the calling client application.
         var authorizations = await _authorizationManager.FindAsync(
-            subject: await _userManager.GetUserIdAsync(user),
+            subject: user.Id.ToString(),
             client: await _applicationManager.GetIdAsync(application),
             status: Statuses.Valid,
             type: AuthorizationTypes.Permanent,
@@ -232,10 +248,10 @@ public class AuthorizeModel : PageModel
             roleType: Claims.Role);
 
         // Add the claims that will be persisted in the tokens.
-        identity.SetClaim(Claims.Subject, await _userManager.GetUserIdAsync(user))
-                .SetClaim(Claims.Email, await _userManager.GetEmailAsync(user))
-                .SetClaim(Claims.Name, await _userManager.GetUserNameAsync(user))
-                .SetClaims(Claims.Role, (await _userManager.GetRolesAsync(user)).ToImmutableArray());
+        identity.SetClaim(Claims.Subject, user.Id.ToString())
+                .SetClaim(Claims.Email, user.EmailAddress)
+                .SetClaim(Claims.Name, user.Username)
+                .SetClaims(Claims.Role, user.Role.ToString());
 
         // Note: in this sample, the granted scopes match the requested scope
         // but you may want to allow the user to uncheck specific scopes.
@@ -250,7 +266,7 @@ public class AuthorizeModel : PageModel
         {
             authorization = await _authorizationManager.CreateAsync(
                 principal: new ClaimsPrincipal(identity),
-                subject: await _userManager.GetUserIdAsync(user),
+                subject: user.Id.ToString(),
                 client: await _applicationManager.GetIdAsync(application),
                 type: AuthorizationTypes.Permanent,
                 scopes: identity.GetScopes());
@@ -270,7 +286,7 @@ public class AuthorizeModel : PageModel
         var request = HttpContext.GetOpenIddictServerRequest() ??
             throw new InvalidOperationException("The OpenID Connect request cannot be retrieved.");
 
-        var result = await HttpContext.AuthenticateAsync(IdentityConstants.AuthenticationSchemes.IdentityServiceCookie);
+        var result = await HttpContext.AuthenticateAsync(IdentityConstants.AuthenticationScheme);
         if (result is null || !result.Succeeded || request.HasPrompt(Prompts.Login) ||
            (request.MaxAge is not null && result.Properties?.IssuedUtc is not null &&
             DateTimeOffset.UtcNow - result.Properties.IssuedUtc > TimeSpan.FromSeconds(request.MaxAge.Value)))
