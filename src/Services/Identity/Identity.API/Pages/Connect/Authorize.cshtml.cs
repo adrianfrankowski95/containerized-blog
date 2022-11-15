@@ -53,7 +53,7 @@ public class AuthorizeModel : PageModel
     public Task<IActionResult> OnGetAsync() => HandleAuthorizeAsync();
     public Task<IActionResult> OnPostAsync() => HandleAuthorizeAsync();
 
-    private async Task<IActionResult> IssueTokensAsync(
+    private async Task<IActionResult> IssueAuthorizationCodeAsync(
         OpenIddictRequest request,
         User user,
         object application,
@@ -93,7 +93,7 @@ public class AuthorizeModel : PageModel
         identity.SetAuthorizationId(await _authorizationManager.GetIdAsync(authorization));
         identity.SetDestinations(GetDestinations);
 
-        // Returning a SignInResult will ask OpenIddict to issue the appropriate access/identity tokens.
+        // Returning a SignInResult will ask OpenIddict to issue the appropriate code that can be exchanged for tokens.
         return SignIn(new ClaimsPrincipal(identity), OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
     }
 
@@ -185,8 +185,8 @@ public class AuthorizeModel : PageModel
             case ConsentTypes.Implicit:
             case ConsentTypes.External when authorizations.Any():
             case ConsentTypes.Explicit when authorizations.Any() && !request.HasPrompt(Prompts.Consent):
-                // Issue the appropriate access/identity tokens.
-                return await IssueTokensAsync(request, user, application, authorizations);
+                // Trigger OpenIddict to issue a code (which can be exchanged for tokens)
+                return await IssueAuthorizationCodeAsync(request, user, application, authorizations);
 
             // At this point, no authorization was found in the database and an error must be returned
             // if the client application specified prompt=none in the authorization request.
@@ -253,8 +253,8 @@ public class AuthorizeModel : PageModel
                 }));
         }
 
-        // Issue the appropriate access/identity tokens.
-        return await IssueTokensAsync(request, user, application, authorizations);
+        // Trigger OpenIddict to issue a code (which can be exchanged for tokens)
+        return await IssueAuthorizationCodeAsync(request, user, application, authorizations);
     }
 
     // Notify OpenIddict that the authorization grant has been denied by the resource owner
