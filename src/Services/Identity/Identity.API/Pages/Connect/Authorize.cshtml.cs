@@ -53,6 +53,50 @@ public class AuthorizeModel : PageModel
     public Task<IActionResult> OnGetAsync() => HandleAuthorizeAsync();
     public Task<IActionResult> OnPostAsync() => HandleAuthorizeAsync();
 
+    private async Task<IActionResult> IssueTokensAsync(
+        OpenIddictRequest request,
+        User user,
+        object application,
+        IEnumerable<object> authorizations)
+    {
+        // Create the claims-based identity that will be used by OpenIddict to generate tokens.
+        var identity = new ClaimsIdentity(
+            authenticationType: TokenValidationParameters.DefaultAuthenticationType,
+            nameType: Claims.Name,
+            roleType: Claims.Role);
+
+        // Add the claims that will be persisted in the tokens.
+        identity.SetClaim(Claims.Subject, user.Id.ToString())
+                .SetClaim(Claims.Email, user.EmailAddress)
+                .SetClaim(Claims.Name, user.Username)
+                .SetClaim(Claims.Role, user.Role.ToString());
+
+        // Note: in this sample, the granted scopes match the requested scope
+        // but you may want to allow the user to uncheck specific scopes.
+        // For that, simply restrict the list of scopes before calling SetScopes.
+        identity.SetScopes(request.GetScopes());
+        identity.SetResources(await _scopeManager.ListResourcesAsync(identity.GetScopes()).ToListAsync());
+
+        // Automatically create a permanent authorization to avoid requiring explicit consent
+        // for future authorization or token requests containing the same scopes.
+        var authorization = authorizations.LastOrDefault();
+        if (authorization is null)
+        {
+            authorization = await _authorizationManager.CreateAsync(
+                principal: new ClaimsPrincipal(identity),
+                subject: user.Id.ToString(),
+                client: await _applicationManager.GetIdAsync(application),
+                type: AuthorizationTypes.Permanent,
+                scopes: identity.GetScopes());
+        }
+
+        identity.SetAuthorizationId(await _authorizationManager.GetIdAsync(authorization));
+        identity.SetDestinations(GetDestinations);
+
+        // Returning a SignInResult will ask OpenIddict to issue the appropriate access/identity tokens.
+        return SignIn(new ClaimsPrincipal(identity), OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+    }
+
     private IActionResult HandleUnauthenticated(OpenIddictRequest request)
     {
         // If the client application requested promptless authentication,
@@ -78,6 +122,7 @@ public class AuthorizeModel : PageModel
 
         parameters.Add(KeyValuePair.Create(Parameters.Prompt, new StringValues(prompt)));
 
+        // Redirect user to login page.
         return Challenge(
             authenticationSchemes: IdentityConstants.AuthenticationScheme,
             properties: new AuthenticationProperties
@@ -140,41 +185,8 @@ public class AuthorizeModel : PageModel
             case ConsentTypes.Implicit:
             case ConsentTypes.External when authorizations.Any():
             case ConsentTypes.Explicit when authorizations.Any() && !request.HasPrompt(Prompts.Consent):
-                // Create the claims-based identity that will be used by OpenIddict to generate tokens.
-                var identity = new ClaimsIdentity(
-                    authenticationType: TokenValidationParameters.DefaultAuthenticationType,
-                    nameType: Claims.Name,
-                    roleType: Claims.Role);
-
-                // Add the claims that will be persisted in the tokens.
-                identity.SetClaim(Claims.Subject, user.Id.ToString())
-                        .SetClaim(Claims.Email, user.EmailAddress)
-                        .SetClaim(Claims.Name, user.Username)
-                        .SetClaims(Claims.Role, user.Role.ToString());
-
-                // Note: in this sample, the granted scopes match the requested scope
-                // but you may want to allow the user to uncheck specific scopes.
-                // For that, simply restrict the list of scopes before calling SetScopes.
-                identity.SetScopes(request.GetScopes());
-                identity.SetResources(await _scopeManager.ListResourcesAsync(identity.GetScopes()).ToListAsync());
-
-                // Automatically create a permanent authorization to avoid requiring explicit consent
-                // for future authorization or token requests containing the same scopes.
-                var authorization = authorizations.LastOrDefault();
-                if (authorization is null)
-                {
-                    authorization = await _authorizationManager.CreateAsync(
-                        principal: new ClaimsPrincipal(identity),
-                        subject: user.Id.ToString(),
-                        client: await _applicationManager.GetIdAsync(application),
-                        type: AuthorizationTypes.Permanent,
-                        scopes: identity.GetScopes());
-                }
-
-                identity.SetAuthorizationId(await _authorizationManager.GetIdAsync(authorization));
-                identity.SetDestinations(GetDestinations);
-
-                return SignIn(new ClaimsPrincipal(identity), OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+                // Issue the appropriate access/identity tokens.
+                return await IssueTokensAsync(request, user, application, authorizations);
 
             // At this point, no authorization was found in the database and an error must be returned
             // if the client application specified prompt=none in the authorization request.
@@ -241,42 +253,8 @@ public class AuthorizeModel : PageModel
                 }));
         }
 
-        // Create the claims-based identity that will be used by OpenIddict to generate tokens.
-        var identity = new ClaimsIdentity(
-            authenticationType: TokenValidationParameters.DefaultAuthenticationType,
-            nameType: Claims.Name,
-            roleType: Claims.Role);
-
-        // Add the claims that will be persisted in the tokens.
-        identity.SetClaim(Claims.Subject, user.Id.ToString())
-                .SetClaim(Claims.Email, user.EmailAddress)
-                .SetClaim(Claims.Name, user.Username)
-                .SetClaims(Claims.Role, user.Role.ToString());
-
-        // Note: in this sample, the granted scopes match the requested scope
-        // but you may want to allow the user to uncheck specific scopes.
-        // For that, simply restrict the list of scopes before calling SetScopes.
-        identity.SetScopes(request.GetScopes());
-        identity.SetResources(await _scopeManager.ListResourcesAsync(identity.GetScopes()).ToListAsync());
-
-        // Automatically create a permanent authorization to avoid requiring explicit consent
-        // for future authorization or token requests containing the same scopes.
-        var authorization = authorizations.LastOrDefault();
-        if (authorization is null)
-        {
-            authorization = await _authorizationManager.CreateAsync(
-                principal: new ClaimsPrincipal(identity),
-                subject: user.Id.ToString(),
-                client: await _applicationManager.GetIdAsync(application),
-                type: AuthorizationTypes.Permanent,
-                scopes: identity.GetScopes());
-        }
-
-        identity.SetAuthorizationId(await _authorizationManager.GetIdAsync(authorization));
-        identity.SetDestinations(GetDestinations);
-
-        // Returning a SignInResult will ask OpenIddict to issue the appropriate access/identity tokens.
-        return SignIn(new ClaimsPrincipal(identity), OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+        // Issue the appropriate access/identity tokens.
+        return await IssueTokensAsync(request, user, application, authorizations);
     }
 
     // Notify OpenIddict that the authorization grant has been denied by the resource owner
