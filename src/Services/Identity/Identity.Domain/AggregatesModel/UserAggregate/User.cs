@@ -150,7 +150,7 @@ public class User : Entity<UserId>, IAggregateRoot
         AddDomainEvent(new PasswordResetRequestedDomainEvent(Username, EmailAddress, PasswordResetCode));
     }
 
-    public void ResetPassword(PasswordHasher passwordHasher, NonEmptyString newPassword, NonEmptyString providedCode, Instant now)
+    public void ResetPassword(PasswordHasher passwordHasher, Password newPassword, NonEmptyString providedCode, Instant now)
     {
         if (passwordHasher is null)
             throw new IdentityDomainException("Password hash must not be null when resetting a password.");
@@ -218,7 +218,7 @@ public class User : Entity<UserId>, IAggregateRoot
 
     public LoginResult LogIn(
         LoginService loginService,
-        EmailAddress providedEmailAddress,
+        NonEmptyString providedEmailAddress,
         NonEmptyString providedPassword,
         PasswordHasher passwordHasher,
         Instant now)

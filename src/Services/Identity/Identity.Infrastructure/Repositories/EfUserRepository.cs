@@ -22,7 +22,7 @@ public class EfUserRepository : IUserRepository
     public ValueTask<User?> FindByIdAsync(UserId userId)
         => _users.FindAsync(userId.Value);
 
-    public Task<User?> FindByEmailAsync(EmailAddress emailAddress)
+    public Task<User?> FindByEmailAsync(NonEmptyString emailAddress)
         => _users.FirstOrDefaultAsync(x => x.EmailAddress.Equals(emailAddress));
 
     public Task<User?> FindByUsernameAsync(NonEmptyString username)

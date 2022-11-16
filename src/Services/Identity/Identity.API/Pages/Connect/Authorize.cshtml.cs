@@ -53,82 +53,70 @@ public class AuthorizeModel : PageModel
     public Task<IActionResult> OnGetAsync() => HandleAuthorizeAsync();
     public Task<IActionResult> OnPostAsync() => HandleAuthorizeAsync();
 
-    private async Task<IActionResult> IssueAuthorizationCodeAsync(
-        OpenIddictRequest request,
-        User user,
-        object application,
-        IEnumerable<object> authorizations)
+    public async Task<IActionResult> AcceptAsync()
     {
-        // Create the claims-based identity that will be used by OpenIddict to generate tokens.
-        var identity = new ClaimsIdentity(
-            authenticationType: TokenValidationParameters.DefaultAuthenticationType,
-            nameType: Claims.Name,
-            roleType: Claims.Role);
+        var request = HttpContext.GetOpenIddictServerRequest() ??
+            throw new InvalidOperationException("The OpenID Connect request cannot be retrieved.");
 
-        // Add the claims that will be persisted in the tokens.
-        identity.SetClaim(Claims.Subject, user.Id.ToString())
-                .SetClaim(Claims.Email, user.EmailAddress)
-                .SetClaim(Claims.Name, user.Username)
-                .SetClaim(Claims.Role, user.Role.ToString());
-
-        // Note: in this sample, the granted scopes match the requested scope
-        // but you may want to allow the user to uncheck specific scopes.
-        // For that, simply restrict the list of scopes before calling SetScopes.
-        identity.SetScopes(request.GetScopes());
-        identity.SetResources(await _scopeManager.ListResourcesAsync(identity.GetScopes()).ToListAsync());
-
-        // Automatically create a permanent authorization to avoid requiring explicit consent
-        // for future authorization or token requests containing the same scopes.
-        var authorization = authorizations.LastOrDefault();
-        if (authorization is null)
+        var result = await HttpContext.AuthenticateAsync(IdentityConstants.AuthenticationScheme);
+        if (result is null || !result.Succeeded || request.HasPrompt(Prompts.Login) ||
+           (request.MaxAge is not null && result.Properties?.IssuedUtc is not null &&
+            DateTimeOffset.UtcNow - result.Properties.IssuedUtc > TimeSpan.FromSeconds(request.MaxAge.Value)))
         {
-            authorization = await _authorizationManager.CreateAsync(
-                principal: new ClaimsPrincipal(identity),
-                subject: user.Id.ToString(),
-                client: await _applicationManager.GetIdAsync(application),
-                type: AuthorizationTypes.Permanent,
-                scopes: identity.GetScopes());
+            return HandleUnauthenticated(request);
         }
 
-        identity.SetAuthorizationId(await _authorizationManager.GetIdAsync(authorization));
-        identity.SetDestinations(GetDestinations);
+        // Retrieve the profile of the logged in user.
+        var user = await _userRepository.FindByIdAsync(result.Principal.GetUserId()) ??
+            throw new InvalidOperationException("The user details cannot be retrieved.");
 
-        // Returning a SignInResult will ask OpenIddict to issue the appropriate code that can be exchanged for tokens.
-        return SignIn(new ClaimsPrincipal(identity), OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
-    }
+        // Retrieve the application details from the database.
+        var application = await _applicationManager.FindByClientIdAsync(request.ClientId) ??
+            throw new InvalidOperationException("Details concerning the calling client application cannot be found.");
 
-    private IActionResult HandleUnauthenticated(OpenIddictRequest request)
-    {
-        // If the client application requested promptless authentication,
-        // return an error indicating that the user is not logged in.
-        if (request.HasPrompt(Prompts.None))
+        // Retrieve the permanent authorizations associated with the user and the calling client application.
+        var authorizations = await _authorizationManager.FindAsync(
+            subject: user.Id.ToString(),
+            client: await _applicationManager.GetIdAsync(application),
+            status: Statuses.Valid,
+            type: AuthorizationTypes.Permanent,
+            scopes: request.GetScopes()).ToListAsync();
+
+        // Note: the same check is already made in the other action but is repeated
+        // here to ensure a malicious user can't abuse this POST-only endpoint and
+        // force it to return a valid response without the external authorization.
+        if (!authorizations.Any() && await _applicationManager.HasConsentTypeAsync(application, ConsentTypes.External))
         {
             return Forbid(
                 authenticationSchemes: OpenIddictServerAspNetCoreDefaults.AuthenticationScheme,
                 properties: new AuthenticationProperties(new Dictionary<string, string>
                 {
-                    [OpenIddictServerAspNetCoreConstants.Properties.Error] = Errors.LoginRequired,
-                    [OpenIddictServerAspNetCoreConstants.Properties.ErrorDescription] = "The user is not logged in."
+                    [OpenIddictServerAspNetCoreConstants.Properties.Error] = Errors.ConsentRequired,
+                    [OpenIddictServerAspNetCoreConstants.Properties.ErrorDescription] =
+                        "The logged in user is not allowed to access this client application."
                 }));
         }
 
-        // To avoid endless login -> authorization redirects, the prompt=login flag
-        // is removed from the authorization request payload before redirecting the user.
-        var prompt = string.Join(" ", request.GetPrompts().Remove(Prompts.Login));
+        // Trigger OpenIddict to issue a code (which can be exchanged for tokens)
+        return await IssueAuthorizationCodeAsync(request, user, application, authorizations);
+    }
 
-        var parameters = Request.HasFormContentType
-            ? Request.Form.Where(parameter => parameter.Key != Parameters.Prompt).ToList()
-            : Request.Query.Where(parameter => parameter.Key != Parameters.Prompt).ToList();
+    // Notify OpenIddict that the authorization grant has been denied by the resource owner
+    // to redirect the user agent to the client application using the appropriate response_mode.
+    public async Task<IActionResult> DenyAsync()
+    {
+        var request = HttpContext.GetOpenIddictServerRequest() ??
+            throw new InvalidOperationException("The OpenID Connect request cannot be retrieved.");
 
-        parameters.Add(KeyValuePair.Create(Parameters.Prompt, new StringValues(prompt)));
+        var result = await HttpContext.AuthenticateAsync(IdentityConstants.AuthenticationScheme);
+        if (result is null || !result.Succeeded || request.HasPrompt(Prompts.Login) ||
+           (request.MaxAge is not null && result.Properties?.IssuedUtc is not null &&
+            DateTimeOffset.UtcNow - result.Properties.IssuedUtc > TimeSpan.FromSeconds(request.MaxAge.Value)))
+        {
+            return HandleUnauthenticated(request);
+        }
 
-        // Redirect user to login page.
-        return Challenge(
-            authenticationSchemes: IdentityConstants.AuthenticationScheme,
-            properties: new AuthenticationProperties
-            {
-                RedirectUri = Request.PathBase + Request.Path + QueryString.Create(parameters)
-            });
+        return Forbid(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
     }
 
     private async Task<IActionResult> HandleAuthorizeAsync()
@@ -209,70 +197,82 @@ public class AuthorizeModel : PageModel
         }
     }
 
-    public async Task<IActionResult> AcceptAsync()
+    private IActionResult HandleUnauthenticated(OpenIddictRequest request)
     {
-        var request = HttpContext.GetOpenIddictServerRequest() ??
-            throw new InvalidOperationException("The OpenID Connect request cannot be retrieved.");
-
-        var result = await HttpContext.AuthenticateAsync(IdentityConstants.AuthenticationScheme);
-        if (result is null || !result.Succeeded || request.HasPrompt(Prompts.Login) ||
-           (request.MaxAge is not null && result.Properties?.IssuedUtc is not null &&
-            DateTimeOffset.UtcNow - result.Properties.IssuedUtc > TimeSpan.FromSeconds(request.MaxAge.Value)))
-        {
-            return HandleUnauthenticated(request);
-        }
-
-        // Retrieve the profile of the logged in user.
-        var user = await _userRepository.FindByIdAsync(result.Principal.GetUserId()) ??
-            throw new InvalidOperationException("The user details cannot be retrieved.");
-
-        // Retrieve the application details from the database.
-        var application = await _applicationManager.FindByClientIdAsync(request.ClientId) ??
-            throw new InvalidOperationException("Details concerning the calling client application cannot be found.");
-
-        // Retrieve the permanent authorizations associated with the user and the calling client application.
-        var authorizations = await _authorizationManager.FindAsync(
-            subject: user.Id.ToString(),
-            client: await _applicationManager.GetIdAsync(application),
-            status: Statuses.Valid,
-            type: AuthorizationTypes.Permanent,
-            scopes: request.GetScopes()).ToListAsync();
-
-        // Note: the same check is already made in the other action but is repeated
-        // here to ensure a malicious user can't abuse this POST-only endpoint and
-        // force it to return a valid response without the external authorization.
-        if (!authorizations.Any() && await _applicationManager.HasConsentTypeAsync(application, ConsentTypes.External))
+        // If the client application requested promptless authentication,
+        // return an error indicating that the user is not logged in.
+        if (request.HasPrompt(Prompts.None))
         {
             return Forbid(
                 authenticationSchemes: OpenIddictServerAspNetCoreDefaults.AuthenticationScheme,
                 properties: new AuthenticationProperties(new Dictionary<string, string>
                 {
-                    [OpenIddictServerAspNetCoreConstants.Properties.Error] = Errors.ConsentRequired,
-                    [OpenIddictServerAspNetCoreConstants.Properties.ErrorDescription] =
-                        "The logged in user is not allowed to access this client application."
+                    [OpenIddictServerAspNetCoreConstants.Properties.Error] = Errors.LoginRequired,
+                    [OpenIddictServerAspNetCoreConstants.Properties.ErrorDescription] = "The user is not logged in."
                 }));
         }
 
-        // Trigger OpenIddict to issue a code (which can be exchanged for tokens)
-        return await IssueAuthorizationCodeAsync(request, user, application, authorizations);
+        // To avoid endless login -> authorization redirects, the prompt=login flag
+        // is removed from the authorization request payload before redirecting the user.
+        var prompt = string.Join(" ", request.GetPrompts().Remove(Prompts.Login));
+
+        var parameters = Request.HasFormContentType
+            ? Request.Form.Where(parameter => parameter.Key != Parameters.Prompt).ToList()
+            : Request.Query.Where(parameter => parameter.Key != Parameters.Prompt).ToList();
+
+        parameters.Add(KeyValuePair.Create(Parameters.Prompt, new StringValues(prompt)));
+
+        // Redirect user to login page.
+        return Challenge(
+            authenticationSchemes: IdentityConstants.AuthenticationScheme,
+            properties: new AuthenticationProperties
+            {
+                RedirectUri = Request.PathBase + Request.Path + QueryString.Create(parameters)
+            });
     }
 
-    // Notify OpenIddict that the authorization grant has been denied by the resource owner
-    // to redirect the user agent to the client application using the appropriate response_mode.
-    public async Task<IActionResult> DenyAsync()
+    private async Task<IActionResult> IssueAuthorizationCodeAsync(
+        OpenIddictRequest request,
+        User user,
+        object application,
+        IEnumerable<object> authorizations)
     {
-        var request = HttpContext.GetOpenIddictServerRequest() ??
-            throw new InvalidOperationException("The OpenID Connect request cannot be retrieved.");
+        // Create the claims-based identity that will be used by OpenIddict to generate tokens.
+        var identity = new ClaimsIdentity(
+            authenticationType: TokenValidationParameters.DefaultAuthenticationType,
+            nameType: Claims.Name,
+            roleType: Claims.Role);
 
-        var result = await HttpContext.AuthenticateAsync(IdentityConstants.AuthenticationScheme);
-        if (result is null || !result.Succeeded || request.HasPrompt(Prompts.Login) ||
-           (request.MaxAge is not null && result.Properties?.IssuedUtc is not null &&
-            DateTimeOffset.UtcNow - result.Properties.IssuedUtc > TimeSpan.FromSeconds(request.MaxAge.Value)))
+        // Add the claims that will be persisted in the tokens.
+        identity.SetClaim(Claims.Subject, user.Id.ToString())
+                .SetClaim(Claims.Email, user.EmailAddress)
+                .SetClaim(Claims.Name, user.Username)
+                .SetClaim(Claims.Role, user.Role.ToString());
+
+        // Note: in this sample, the granted scopes match the requested scope
+        // but you may want to allow the user to uncheck specific scopes.
+        // For that, simply restrict the list of scopes before calling SetScopes.
+        identity.SetScopes(request.GetScopes());
+        identity.SetResources(await _scopeManager.ListResourcesAsync(identity.GetScopes()).ToListAsync());
+
+        // Automatically create a permanent authorization to avoid requiring explicit consent
+        // for future authorization or token requests containing the same scopes.
+        var authorization = authorizations.LastOrDefault();
+        if (authorization is null)
         {
-            return HandleUnauthenticated(request);
+            authorization = await _authorizationManager.CreateAsync(
+                principal: new ClaimsPrincipal(identity),
+                subject: user.Id.ToString(),
+                client: await _applicationManager.GetIdAsync(application),
+                type: AuthorizationTypes.Permanent,
+                scopes: identity.GetScopes());
         }
 
-        return Forbid(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+        identity.SetAuthorizationId(await _authorizationManager.GetIdAsync(authorization));
+        identity.SetDestinations(GetDestinations);
+
+        // Returning a SignInResult will ask OpenIddict to issue the appropriate code that can be exchanged for tokens.
+        return SignIn(new ClaimsPrincipal(identity), OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
     }
 
     private static IEnumerable<string> GetDestinations(Claim claim)

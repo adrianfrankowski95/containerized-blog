@@ -1,12 +1,13 @@
 ﻿@page
 @namespace Blog.Services.Identity.API.Pages.Account
+@using Domain.AggregatesModel.UserAggregate
 @model RegisterModel
 @{
     ViewData["Title"] = "Register";
 }
 
 <h1>@ViewData["Title"]</h1>
-
+<partial name="_StatusMessage" model="Model.StatusMessage" />
 <div class="row">
     <div class="col-md-4">
         <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post">
@@ -44,12 +45,21 @@
                 <label asp-for="Input.LastName"></label>
                 <span asp-validation-for="Input.LastName" class="text-danger"></span>
             </div>
+           <div class="form-floating">     
+                <select class="form-select" asp-for="Input.Gender" aria-requred="true"
+                    asp-items="Gender.List().Select(g => new SelectListItem(g.Name, g.Name))">
+                    <option selected></option>
+                </select>
+                <label asp-for="Input.Gender"></label>
+                <span asp-validation-for="Input.Gender" class="text-danger"></span>
+            </div>
             <div class="checkbox">
                 <label asp-for="Input.ReceiveAdditionalEmails" class="form-label">
                     <input class="form-check-input" asp-for="Input.ReceiveAdditionalEmails" />
                     @Html.DisplayNameFor(m => m.Input.ReceiveAdditionalEmails)
                 </label>
             </div>
+            <input asp-for="Input.RequestId" type="hidden" />
             <button id="registerSubmit" type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
         </form>
     </div>

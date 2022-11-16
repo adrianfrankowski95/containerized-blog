@@ -6,7 +6,7 @@ public class LoginService
 {
     public LoginResult LogIn(
         User user,
-        EmailAddress providedEmailAddress,
+        NonEmptyString providedEmailAddress,
         NonEmptyString providedPassword,
         PasswordHasher passwordHasher,
         Instant now)

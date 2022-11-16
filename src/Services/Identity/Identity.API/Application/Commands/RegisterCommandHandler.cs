@@ -44,8 +44,8 @@ public class RegisterCommandHandler : IRequestHandler<RegisterCommand>
             new Username(request.Username),
             new FullName(request.FirstName, request.LastName),
             Gender.FromName(request.Gender),
-            request.EmailAddress,
-            _passwordHasher.HashPassword(request.Password),
+            new EmailAddress(request.EmailAddress),
+            _passwordHasher.HashPassword(new Password(request.Password)),
             request.ReceiveAdditionalEmails,
             _sysTime.Now);
 

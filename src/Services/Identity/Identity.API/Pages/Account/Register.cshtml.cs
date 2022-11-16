@@ -1,12 +1,11 @@
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
 #nullable disable
 
 using System.ComponentModel.DataAnnotations;
 using System.Text;
-using Blog.Services.Identity.API.Core;
-using Blog.Services.Identity.API.Models;
-using Blog.Services.Identity.API.Services;
+using Blog.Services.Identity.API.Application.Commands;
+using Blog.Services.Identity.API.Extensions;
+using Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
+using Blog.Services.Identity.Domain.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
@@ -45,6 +44,9 @@ public class RegisterModel : PageModel
 
     public string ReturnUrl { get; set; }
 
+    [TempData]
+    public string StatusMessage { get; set; }
+
     public class InputModel
     {
         [Required]
@@ -79,13 +81,21 @@ public class RegisterModel : PageModel
         [Display(Name = "Last name")]
         public string LastName { get; set; }
 
+        [Required]
+        [Display(Name = "Gender")]
+        public string Gender { get; set; }
+
         [Display(Name = "I would like to receive additional updates and announcements via email")]
         public bool ReceiveAdditionalEmails { get; set; }
+
+        [Required]
+        public Guid RequestId { get; set; }
     }
 
     public IActionResult OnGet(string returnUrl = null)
     {
         ReturnUrl = returnUrl;
+        Input.RequestId = Guid.NewGuid();
         return Page();
     }
 
@@ -93,51 +103,41 @@ public class RegisterModel : PageModel
     {
         returnUrl ??= Url.Content("~/");
 
-        if (ModelState.IsValid)
+        if (!ModelState.IsValid)
+            return Page();
+
+        IdentifiedCommand<RegisterCommand> command = null;
+        try
         {
-            var user = new User(Input.Email, Input.Username, Input.FirstName, Input.LastName, Input.ReceiveAdditionalEmails);
+            command = new IdentifiedCommand<RegisterCommand>(
+                Input.RequestId,
+                new RegisterCommand(
+                    Input.Username,
+                    Input.FirstName,
+                    Input.Gender,
+                    Input.LastName,
+                    Input.ReceiveAdditionalEmails,
+                    Input.Email,
+                    Input.Password));
+            _logger.LogSendingCommand(command);
+            await _mediator.Send(command);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "----- Error requesting a password reset, command: @Command", command);
 
-            var result = await _userManager.CreateUserAsync(user, Input.Password);
-            if (!result.Succeeded)
+            if (ex is EmailingServiceException)
             {
-                foreach (var error in result.Errors)
-                {
-                    ModelState.AddModelError(string.Empty, error.ErrorDescription);
-                }
-                return Page();
+                StatusMessage = "Error sending an email. Please try again later.";
+                return RedirectToPage();
             }
 
-            _logger.LogInformation("User created a new account with password.");
-            var code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(user.EmailConfirmationCode.ToString()!));
-            var callbackUrl = Url.Page(
-                "/Account/ConfirmEmail",
-                pageHandler: null,
-                values: new { userId = user.Id, code, returnUrl },
-                protocol: Request.Scheme);
-
-            var isSuccess = await _emailingService.SendEmailConfirmationEmailAsync(
-                    user.FullName,
-                    user.EmailAddress,
-                    callbackUrl,
-                    _sysTime.Now.Plus(Duration.FromTimeSpan(_emailOptions.CurrentValue.EmailConfirmationCodeValidityPeriod)));
-
-            if (!isSuccess)
-            {
-                return RedirectToPage("./EmailConfirmationSendError");
-            }
-
-            if (_emailOptions.CurrentValue.RequireConfirmed)
-            {
-                return RedirectToPage("RegisterConfirmation", new { email = Input.Email, returnUrl });
-            }
-            else
-            {
-                await _signInManager.SignInAsync(user, isPersistent: false);
-                return LocalRedirect(returnUrl);
-            }
+            ModelState.AddModelError(string.Empty, ex.Message);
+            StatusMessage = "Error registering your account.";
+            return Page();
         }
 
-        // If we got this far, something failed, redisplay form
-        return Page();
+        StatusMessage = "Account registered successfully.";
+        return LocalRedirect(returnUrl);
     }
 }

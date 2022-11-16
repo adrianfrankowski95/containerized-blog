@@ -26,7 +26,7 @@ public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand>
         if (user is null)
             throw new IdentityDomainException("Error resetting password.");
 
-        user.ResetPassword(_passwordHasher, request.NewPassword, request.PasswordResetCode, _sysTime.Now);
+        user.ResetPassword(_passwordHasher, new Password(request.NewPassword), request.PasswordResetCode, _sysTime.Now);
         await _userRepository.UnitOfWork.CommitChangesAsync(cancellationToken).ConfigureAwait(false);
 
         return Unit.Value;

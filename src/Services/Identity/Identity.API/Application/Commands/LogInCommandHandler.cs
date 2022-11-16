@@ -33,7 +33,6 @@ public class LogInCommandHandler : IRequestHandler<LogInCommand>
             throw new IdentityDomainException("User is already authenticated.");
 
         var user = await _userRepository.FindByEmailAsync(request.EmailAddress).ConfigureAwait(false);
-
         if (user is null)
             throw new IdentityDomainException("Invalid email address and/or password.");
 
