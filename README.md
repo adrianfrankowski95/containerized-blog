@@ -43,13 +43,14 @@ Blogging platform based on containerized microservices in ASP.NET Core
 - Implement authorization and authentication middleware
   - Skip verifying integrity, read user data
 - Refactor and style Razor Pages
+- Add avatar to profile pages
 - Finish adding OpenIddict as IdP
   - Think about user id in JWT
   - Add OIDC Razor Pages (authorize, signout, userinfo, token, etc.)
   - Seed clients db with frontend web client
   - Add scopes linked to the specific role and scopes management (?)
   - Add scopes of the frontend web client
-- Check forgery token validation in Razor Pages
+- Check anti forgery token validation in Razor Pages
 - Add Security Stamp validation on cookie reading
 - Read hostname and port from env variables
 - Add health checks
@@ -64,7 +65,7 @@ Blogging platform based on containerized microservices in ASP.NET Core
 
 - Add env variables in .env file consisting of service hostnames and ports
 - Expose only the port specified in env file, eg: `"${RABBITMQ_PORT}"`
-- Add links property for services, eg.: `"rabbitmq:${RABBITMQ_HOSTNAME}"`
+- Add links with aliases to other services defined in env and pass them as environment parameters to .NET containers
 - Pass hostnames and ports to the underlying Dotnet applications
 - Add several replicas per each service
 - Add multiple DB services

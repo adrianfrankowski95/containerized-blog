@@ -45,51 +45,58 @@ public class RabbitMqLifetimeIntegrationEventsPublisher : BackgroundService
             return;
         }
 
-        var addresses = GetAddresses();
+        var address = GetAddress();
 
-        using var registration = _lifetime.ApplicationStopping.Register(async () => await PublishStoppedEventAsync(addresses).ConfigureAwait(false));
+        using var registration = _lifetime.ApplicationStopping.Register(async () => await PublishStoppedEventAsync(address).ConfigureAwait(false));
 
-        await PublishStartedEventAsync(addresses, stoppingToken).ConfigureAwait(false);
+        await PublishStartedEventAsync(address, stoppingToken).ConfigureAwait(false);
 
         while (!stoppingToken.IsCancellationRequested)
         {
             await Task.Delay(config.HeartbeatInterval, stoppingToken).ConfigureAwait(false);
-            await PublishHeartbeatEvent(addresses, stoppingToken).ConfigureAwait(false);
+            await PublishHeartbeatEvent(address, stoppingToken).ConfigureAwait(false);
         }
     }
 
-    private Task PublishStartedEventAsync(HashSet<string> addresses, CancellationToken stoppingToken = default)
+    private Task PublishStartedEventAsync(string address, CancellationToken stoppingToken = default)
     {
         var config = _config.Value;
 
-        _logger.LogInformation("----- {Type} service instance started: {Id} - {Addresses}", config.ServiceType, config.InstanceId, string.Join("; ", addresses));
-        return _bus.Publish<ServiceInstanceStartedIntegrationEvent>(new(config.InstanceId, config.ServiceType, addresses), stoppingToken);
+        _logger.LogInformation("----- {Type} service instance started: {Id} - {Address}", config.ServiceType, config.InstanceId, address);
+        return _bus.Publish<ServiceInstanceStartedIntegrationEvent>(
+            new(config.InstanceId, config.ServiceType, new HashSet<string>(new[] { address })),
+            stoppingToken);
     }
 
-    private Task PublishStoppedEventAsync(HashSet<string> addresses, CancellationToken stoppingToken = default)
+    private Task PublishStoppedEventAsync(string address, CancellationToken stoppingToken = default)
     {
         var config = _config.Value;
 
-        _logger.LogInformation("----- {Type} service instance stopped: {Id} - {Addresses}", config.ServiceType, config.InstanceId, string.Join("; ", addresses));
-        return _bus.Publish<ServiceInstanceStoppedIntegrationEvent>(new(config.InstanceId, config.ServiceType, addresses), stoppingToken);
+        _logger.LogInformation("----- {Type} service instance stopped: {Id} - {Address}", config.ServiceType, config.InstanceId, address);
+        return _bus.Publish<ServiceInstanceStoppedIntegrationEvent>(
+            new(config.InstanceId, config.ServiceType, new HashSet<string>(new[] { address })),
+            stoppingToken);
     }
 
-    private Task PublishHeartbeatEvent(HashSet<string> addresses, CancellationToken stoppingToken = default)
+    private Task PublishHeartbeatEvent(string address, CancellationToken stoppingToken = default)
     {
         var config = _config.Value;
 
-        _logger.LogInformation("----- {Type} heartbeat: {Id} - {Addresses}", config.ServiceType, config.InstanceId, string.Join("; ", addresses));
-        return _bus.Publish<ServiceInstanceHeartbeatIntegrationEvent>(new(config.InstanceId, config.ServiceType, addresses), stoppingToken);
+        _logger.LogInformation("----- {Type} heartbeat: {Id} - {Address}", config.ServiceType, config.InstanceId, address);
+        return _bus.Publish<ServiceInstanceHeartbeatIntegrationEvent>(
+            new(config.InstanceId, config.ServiceType, new HashSet<string>(new[] { address })),
+            stoppingToken);
     }
 
-    private HashSet<string> GetAddresses()
+    private string GetAddress()
     {
         var addressFeature = _server.Features.Get<IServerAddressesFeature>();
 
         if (!(addressFeature?.Addresses?.Any() ?? false))
             throw new InvalidOperationException($"Error getting {_config.Value.ServiceType} Addresses.");
 
-        return addressFeature.Addresses.ToHashSet();
+        var cfg = _config.Value;
+        return addressFeature.Addresses.First().Split(':')[0] + cfg.Hostname + ":" + cfg.Port;
     }
 
     private static Task WaitForStartupOrCancellationAsync(

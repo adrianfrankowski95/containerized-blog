@@ -4,6 +4,9 @@ namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 
 public class LoginService
 {
+    public bool CanLogIn(User user, Instant now)
+        => user is not null && !user.IsSuspended(now) && user.HasActivePassword && user.HasConfirmedEmailAddress;
+
     public LoginResult LogIn(
         User user,
         NonEmptyString providedEmailAddress,

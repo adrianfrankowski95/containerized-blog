@@ -14,4 +14,10 @@ public class InstanceConfig
 
     [Required]
     public TimeSpan HeartbeatInterval { get; set; }
+
+    [Required]
+    public string Hostname { get; set; }
+
+    [Required]
+    public int Port { get; set; }
 }

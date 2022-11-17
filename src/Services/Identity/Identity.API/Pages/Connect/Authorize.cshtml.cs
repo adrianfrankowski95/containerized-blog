@@ -3,7 +3,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using Blog.Services.Identity.API.Extensions;
-using Blog.Services.Identity.API.Infrastructure.Services;
 using Blog.Services.Identity.API.Models;
 using Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 using Microsoft.AspNetCore;

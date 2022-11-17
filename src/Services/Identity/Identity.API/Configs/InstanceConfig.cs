@@ -1,3 +1,5 @@
+#nullable disable
+
 using System.ComponentModel.DataAnnotations;
 
 namespace Blog.Services.Identity.API.Configs;
@@ -12,4 +14,10 @@ public class InstanceConfig
 
     [Required]
     public TimeSpan HeartbeatInterval { get; set; }
+
+    [Required]
+    public string Hostname { get; set; }
+
+    [Required]
+    public int Port { get; set; }
 }

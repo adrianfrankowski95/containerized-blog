@@ -1,13 +1,9 @@
-// Licensed to the .NET Foundation under one or more agreements.
-// The .NET Foundation licenses this file to you under the MIT license.
 #nullable disable
 
 using System.ComponentModel.DataAnnotations;
 using System.Text;
-using Blog.Services.Identity.API.Core;
-using Blog.Services.Identity.API.Infrastructure.Validation;
-using Blog.Services.Identity.API.Models;
-using Blog.Services.Identity.API.Services;
+using Blog.Services.Identity.API.Infrastructure.Attributes;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
@@ -16,6 +12,7 @@ using NodaTime;
 
 namespace Blog.Services.Identity.API.Pages.Account.Manage;
 
+[Authorize]
 public class EmailModel : PageModel
 {
     private readonly UserManager<User> _userManager;
@@ -62,29 +59,8 @@ public class EmailModel : PageModel
         public string NewEmail { get; set; }
     }
 
-    private void LoadInput(User user)
+    public IActionResult OnGetAsync()
     {
-        Input = new InputModel
-        {
-            Email = user.EmailAddress,
-            NewEmail = user.EmailAddress
-        };
-
-        IsEmailConfirmed = !_userManager.IsConfirmingEmail(user);
-    }
-
-    private void SaveEmail(User user)
-    {
-        TempData["Email"] = user.EmailAddress;
-    }
-
-    public async Task<IActionResult> OnGetAsync()
-    {
-        var user = await _userManager.GetUserAsync(User);
-        if (user is null)
-            return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
-
-        LoadInput(user);
         return Page();
     }
 

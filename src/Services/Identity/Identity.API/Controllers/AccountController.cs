@@ -12,8 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Blog.Services.Identity.API.Controllers;
 
 [ApiController]
-[ApiVersion("1.0")]
-[Route("api/v{version:apiVersion}/[controller]")]
+[Route("[controller]")]
 public class AccountController : ControllerBase
 {
     private readonly IMediator _mediator;
