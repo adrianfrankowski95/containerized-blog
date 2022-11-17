@@ -6,6 +6,7 @@ using Blog.Services.Identity.API.Application.Commands;
 using Blog.Services.Identity.API.Extensions;
 using Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 using Blog.Services.Identity.Domain.Exceptions;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
@@ -16,25 +17,16 @@ namespace Blog.Services.Identity.API.Pages.Account;
 
 public class RegisterModel : PageModel
 {
-    private readonly UserManager<User> _userManager;
-    private readonly ISignInManager<User> _signInManager;
-    private readonly IOptionsMonitor<EmailOptions> _emailOptions;
-    private readonly IEmailingService _emailingService;
+    private readonly IMediator _mediator;
     private readonly ISysTime _sysTime;
     private readonly ILogger<RegisterModel> _logger;
 
     public RegisterModel(
-        UserManager<User> userManager,
-        ISignInManager<User> signInManager,
-        IOptionsMonitor<EmailOptions> emailOptions,
-        IEmailingService emailingService,
+        IMediator mediator,
         ISysTime sysTime,
         ILogger<RegisterModel> logger)
     {
-        _userManager = userManager;
-        _signInManager = signInManager;
-        _emailOptions = emailOptions;
-        _emailingService = emailingService;
+        _mediator = mediator;
         _sysTime = sysTime;
         _logger = logger;
     }
@@ -106,10 +98,7 @@ public class RegisterModel : PageModel
         if (!ModelState.IsValid)
             return Page();
 
-        IdentifiedCommand<RegisterCommand> command = null;
-        try
-        {
-            command = new IdentifiedCommand<RegisterCommand>(
+        var command = new IdentifiedCommand<RegisterCommand>(
                 Input.RequestId,
                 new RegisterCommand(
                     Input.Username,
@@ -119,7 +108,11 @@ public class RegisterModel : PageModel
                     Input.ReceiveAdditionalEmails,
                     Input.Email,
                     Input.Password));
-            _logger.LogSendingCommand(command);
+
+        _logger.LogSendingCommand(command);
+
+        try
+        {
             await _mediator.Send(command);
         }
         catch (Exception ex)

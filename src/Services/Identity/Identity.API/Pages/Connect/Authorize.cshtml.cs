@@ -21,7 +21,6 @@ namespace Blog.Services.Identity.API.Pages.Connect;
 [ValidateAntiForgeryToken]
 public class AuthorizeModel : PageModel
 {
-    private readonly IIdentityService _identityService;
     private readonly IUserRepository _userRepository;
     private readonly IOpenIddictApplicationManager _applicationManager;
     private readonly IOpenIddictAuthorizationManager _authorizationManager;
@@ -29,14 +28,12 @@ public class AuthorizeModel : PageModel
     private readonly ILogger<LogoutModel> _logger;
 
     public AuthorizeModel(
-        IIdentityService identityService,
         IUserRepository userRepository,
         IOpenIddictApplicationManager applicationManager,
         IOpenIddictAuthorizationManager authorizationManager,
         IOpenIddictScopeManager scopeManager,
         ILogger<LogoutModel> logger)
     {
-        _identityService = identityService;
         _userRepository = userRepository;
         _applicationManager = applicationManager;
         _authorizationManager = authorizationManager;
@@ -116,6 +113,9 @@ public class AuthorizeModel : PageModel
             return HandleUnauthenticated(request);
         }
 
+        _logger.LogInformation("----- User {Username} denied scopes {Scopes} for client {Client}",
+            result.Principal.GetUsername(), request.Scope, request.ClientId);
+
         return Forbid(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
     }
 
@@ -159,6 +159,8 @@ public class AuthorizeModel : PageModel
             // If the consent is external (e.g when authorizations are granted by a sysadmin),
             // immediately return an error if no authorization can be found in the database.
             case ConsentTypes.External when !authorizations.Any():
+                _logger.LogInformation("----- Could not find any authorizations consented externally for user {Username} and client ID {Client}.",
+                    result.Principal.GetUsername(), request.ClientId);
                 return Forbid(
                     authenticationSchemes: OpenIddictServerAspNetCoreDefaults.AuthenticationScheme,
                     properties: new AuthenticationProperties(new Dictionary<string, string>
@@ -180,6 +182,8 @@ public class AuthorizeModel : PageModel
             // if the client application specified prompt=none in the authorization request.
             case ConsentTypes.Explicit when request.HasPrompt(Prompts.None):
             case ConsentTypes.Systematic when request.HasPrompt(Prompts.None):
+                _logger.LogInformation("----- Could not find any authorizations for user {Username} and client ID {ClientId} while requested authorization is promptless",
+                    result.Principal.GetUsername(), request.ClientId);
                 return Forbid(
                     authenticationSchemes: OpenIddictServerAspNetCoreDefaults.AuthenticationScheme,
                     properties: new AuthenticationProperties(new Dictionary<string, string>
@@ -203,6 +207,7 @@ public class AuthorizeModel : PageModel
         // return an error indicating that the user is not logged in.
         if (request.HasPrompt(Prompts.None))
         {
+            _logger.LogInformation("----- Unauthenticated authorization request while requested authentication is promptless.");
             return Forbid(
                 authenticationSchemes: OpenIddictServerAspNetCoreDefaults.AuthenticationScheme,
                 properties: new AuthenticationProperties(new Dictionary<string, string>
@@ -221,6 +226,8 @@ public class AuthorizeModel : PageModel
             : Request.Query.Where(parameter => parameter.Key != Parameters.Prompt).ToList();
 
         parameters.Add(KeyValuePair.Create(Parameters.Prompt, new StringValues(prompt)));
+
+        _logger.LogInformation("----- Unauthenticated authorization request, redirecting to the login page.");
 
         // Redirect user to login page.
         return Challenge(
@@ -270,6 +277,9 @@ public class AuthorizeModel : PageModel
 
         identity.SetAuthorizationId(await _authorizationManager.GetIdAsync(authorization));
         identity.SetDestinations(GetDestinations);
+
+        _logger.LogInformation("----- {Username} successfully authorized {Client} with the following scopes: {Scopes}.",
+            user.Username, await _applicationManager.GetLocalizedDisplayNameAsync(application), String.Join(',', identity.GetScopes()));
 
         // Returning a SignInResult will ask OpenIddict to issue the appropriate code that can be exchanged for tokens.
         return SignIn(new ClaimsPrincipal(identity), OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);

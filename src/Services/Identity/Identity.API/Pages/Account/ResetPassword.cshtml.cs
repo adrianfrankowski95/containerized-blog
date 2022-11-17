@@ -71,11 +71,13 @@ public class ResetPasswordModel : PageModel
         if (!ModelState.IsValid)
             return Page();
 
-        IdentifiedCommand<ResetPasswordCommand> command = null;
+        var command = new IdentifiedCommand<ResetPasswordCommand>(
+            Input.RequestId,
+            new ResetPasswordCommand(Input.Email, Input.NewPassword, Input.Code));
+        _logger.LogSendingCommand(command);
+
         try
         {
-            command = new IdentifiedCommand<ResetPasswordCommand>(Input.RequestId, new ResetPasswordCommand(Input.Email, Input.NewPassword, Input.Code));
-            _logger.LogSendingCommand(command);
             await _mediator.Send(command);
         }
         catch (Exception ex)
