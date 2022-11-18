@@ -19,5 +19,6 @@ public class InstanceConfig
     public string Hostname { get; set; }
 
     [Required]
+    [Range(1, Int32.MaxValue)]
     public int Port { get; set; }
 }

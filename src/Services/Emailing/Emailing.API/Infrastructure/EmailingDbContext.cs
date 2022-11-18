@@ -8,7 +8,8 @@ public class EmailingDbContext : DbContext
     public const string DefaultSchema = "emailing";
 
     public EmailingDbContext(DbContextOptions<EmailingDbContext> options) : base(options)
-    { }
+    {
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -96,7 +96,7 @@ public class RabbitMqLifetimeIntegrationEventsPublisher : BackgroundService
             throw new InvalidOperationException($"Error getting {_config.Value.ServiceType} Addresses.");
 
         var cfg = _config.Value;
-        return addressFeature.Addresses.First().Split(':')[0] + cfg.Hostname + ":" + cfg.Port;
+        return addressFeature.Addresses.First().Split(':')[0] + "://" + cfg.Hostname + ":" + cfg.Port;
     }
 
     private static Task WaitForStartupOrCancellationAsync(

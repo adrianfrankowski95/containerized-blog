@@ -50,11 +50,16 @@ internal static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddInstanceConfig(this IServiceCollection services)
     {
+        var hostname = Environment.GetEnvironmentVariable("HOSTNAME");
+        int port = Int32.Parse(Environment.GetEnvironmentVariable("PORT") ?? "-1");
+
         services.AddOptions<InstanceConfig>().Configure(opts =>
         {
             opts.InstanceId = Guid.NewGuid();
             opts.ServiceType = "comments-api";
             opts.HeartbeatInterval = TimeSpan.FromSeconds(15);
+            opts.Hostname = hostname;
+            opts.Port = port;
         })
         .ValidateDataAnnotations()
         .ValidateOnStart();

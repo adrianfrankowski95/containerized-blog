@@ -1,8 +1,7 @@
 services:
-  etcd01:
+  etcd01: &etcd_base
     image: quay.io/coreos/etcd:latest
     restart: on-failure
-    hostname: etcd-01
     command:
       - etcd
       - --name=etcd01
@@ -20,9 +19,7 @@ services:
     networks:
       - etcd
   etcd02:
-    image: quay.io/coreos/etcd:latest
-    restart: on-failure
-    hostname: etcd02
+    <<: *etcd_base
     command:
       - etcd
       - --name=etcd02
@@ -37,12 +34,8 @@ services:
     volumes:
       - etcd02vol:/data.etcd:rw
       - ./certs:/certs:ro
-    networks:
-      - etcd
   etcd03:
-    image: quay.io/coreos/etcd:latest
-    restart: on-failure
-    hostname: etcd03
+    <<: *etcd_base
     command:
       - etcd
       - --name=etcd03
@@ -57,8 +50,6 @@ services:
     volumes:
       - etcd03vol:/data.etcd:rw
       - ./certs:/certs:ro
-    networks:
-      - etcd
 
 volumes:
   etcd01vol:

@@ -64,11 +64,9 @@ Blogging platform based on containerized microservices in ASP.NET Core
 #### Docker Compose
 
 - Add env variables in .env file consisting of service hostnames and ports
-- Expose only the port specified in env file, eg: `"${RABBITMQ_PORT}"`
-- Add links with aliases to other services defined in env and pass them as environment parameters to .NET containers
-- Pass hostnames and ports to the underlying Dotnet applications
-- Add several replicas per each service
 - Add multiple DB services
+- Add networks so the databases of the specific services are accessible from these services only
+- Pass connection strings as environment variables
 
 #### K8s
 

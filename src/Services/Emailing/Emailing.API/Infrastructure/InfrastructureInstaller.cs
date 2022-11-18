@@ -6,7 +6,7 @@ public static class InfrastructureInstaller
 {
     public static IServiceCollection AddEmailingInfrastructure(this IServiceCollection services, IConfiguration config)
     {
-        string connectionString = config.GetConnectionString("Postgres");
+        string connectionString = config.GetConnectionString("EmailingDb");
 
         services.AddDbContextPool<EmailingDbContext>(opts =>
         {
@@ -17,6 +17,8 @@ public static class InfrastructureInstaller
             });
             opts.UseSnakeCaseNamingConvention();
         });
+
+        //services.AddHostedService<EmailingDbMigrator>();
 
         return services;
     }

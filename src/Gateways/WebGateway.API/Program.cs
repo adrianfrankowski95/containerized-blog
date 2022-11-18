@@ -14,8 +14,12 @@ builder.Configuration.AddConfiguration(config);
 
 var services = builder.Services;
 
-services.AddSwaggerGen();
 services
+    .AddControllers();
+
+services
+    .AddEndpointsApiExplorer()
+    .AddSwaggerGen()
     .AddGrpcDiscoveryService(config)
     .AddYarp();
 

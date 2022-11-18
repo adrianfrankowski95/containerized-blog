@@ -1,70 +1,110 @@
 services:
-  rabbitmq:
+  rabbitmq1: &rabbitmq_base
     image: rabbitmq:management-alpine
+    container_name: ${RABBITMQ_HOSTNAME}
     restart: on-failure
-    deploy:
-      mode: replicated
-      replicas: 5
     ports:
       - ${RABBITMQ_PORT}
+  rabbitmq2:
+    <<: *rabbitmq_base
+    container_name: '${RABBITMQ_HOSTNAME}2'
+  rabbitmq3:
+    <<: *rabbitmq_base
+    container_name: '${RABBITMQ_HOSTNAME}3'
 
-  discovery-register:
+  discovery-register1: &discovery-register_base
     image: redis:alpine
+    container_name: '${DISCOVERY_REGISTER_HOSTNAME}1'
     restart: on-failure
-    deploy:
-      mode: global
     ports:
-      - '${DISCOVERY_REGISTER_PORT}:${DISCOVERY_REGISTER_PORT}'
+      - '${DISCOVERY_REGISTER_PORT}'
+  discovery-register2:
+    <<: *discovery-register_base
+    container_name: '${DISCOVERY_REGISTER_HOSTNAME}2'
+  discovery-register3:
+    <<: *discovery-register_base
+    container_name: '${DISCOVERY_REGISTER_HOSTNAME}3'
 
-  discovery-api:
+  discovery-api1: &discovery-api_base
     image: blog/discovery-api
+    container_name: '${DISCOVERY_API_HOSTNAME}1'
     restart: on-failure
     build:
       context: .
       dockerfile: Services/Discovery/Discovery.API/Dockerfile
-    links:
-      - 'discovery-register:${DISCOVERY_REGISTER_HOSTNAME}'
-    environment:
+    environment: &discovery-api_env
       ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_INSTANCECONFIG__HOSTNAME: ${DISCOVERY_API_HOSTNAME}
-      ASPNETCORE_INSTANCECONFIG__PORT: ${DISCOVERY_API_PORT}
-    deploy:
-      mode: replicated
-      replicas: 5
+      HOSTNAME: '${DISCOVERY_API_HOSTNAME}1'
+      PORT: ${DISCOVERY_API_PORT}
     depends_on:
-      - rabbitmq
-      - discovery-register
+      - rabbitmq1
+      - discovery-register1
     ports:
       - ${DISCOVERY_API_PORT}
+  discovery-api2:
+    <<: *discovery-api_base
+    container_name: '${DISCOVERY_API_HOSTNAME}2'
+    environment:
+      <<: *discovery-api_env
+      HOSTNAME: '${DISCOVERY_API_HOSTNAME}2'
+  discovery-api3:
+    <<: *discovery-api_base
+    container_name: '${DISCOVERY_API_HOSTNAME}3'
+    environment:
+      <<: *discovery-api_env
+      HOSTNAME: '${DISCOVERY_API_HOSTNAME}3'
 
-  emailing-api:
+  emailing-db:
+    image: postgres:alpine
+    container_name: ${EMAILING_DB_HOSTNAME}
+    restart: on-failure
+    deploy:
+      mode: global
+    environment:
+      POSTGRES_USER: '${EMAILING_DB_POSTGRES_USER}'
+      POSTGRES_PASSWORD: '${EMAILING_DB_POSTGRES_PASSWORD}'
+      PGPASSWORD: '${EMAILING_DB_PGPASSWORD}'
+    ports:
+      - ${EMAILING_DB_PORT}
+
+  emailing-api1: &emailing-api_base
     image: blog/emailing-api
+    container_name: '${EMAILING_API_HOSTNAME}1'
     restart: on-failure
     build:
       context: .
       dockerfile: Services/Emailing/Emailing.API/Dockerfile
-    links:
-      - 'emailing-api:${EMAILING_API_HOSTNAME}'
-    environment:
+    environment: &emailing-api_env
       ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_INSTANCECONFIG__HOSTNAME: ${EMAILING_API_HOSTNAME}
-      ASPNETCORE_INSTANCECONFIG__PORT: ${EMAILING_API_PORT}
-    deploy:
-      mode: replicated
-      replicas: 5
+      HOSTNAME: '${EMAILING_API_HOSTNAME}1'
+      PORT: ${EMAILING_API_PORT}
+      ASPNETCORE_CONNECTIONSTRINGS__EMAILINGDB: 'host=${EMAILING_DB_HOSTNAME};database=${EMAILING_DB_POSTGRES_USER};password=${EMAILING_DB_POSTGRES_PASSWORD};username=${EMAILING_DB_POSTGRES_USER}'
     depends_on:
-      - rabbitmq
-      - discovery-api
+      - rabbitmq1
+      - discovery-api1
+      - emailing-db
+
     ports:
       - ${EMAILING_API_PORT}
+  emailing-api2:
+    <<: *emailing-api_base
+    container_name: '${EMAILING_API_HOSTNAME}2'
+    environment:
+      <<: *emailing-api_env
+      HOSTNAME: '${EMAILING_API_HOSTNAME}2'
+  emailing-api3:
+    <<: *emailing-api_base
+    container_name: '${EMAILING_API_HOSTNAME}3'
+    environment:
+      <<: *emailing-api_env
+      HOSTNAME: '${EMAILING_API_HOSTNAME}3'
 
   # identity-db:
   #   image: postgres:alpine
+  #   container_name: ${IDENTITY_DB_HOSTNAME}
   #   restart: on-failure
   #   deploy:
   #     mode: global
-  #   links:
-  #     - 'identity-db:${IDENTITY_DB_HOSTNAME}'
   #   environment:
   #     POSTGRES_USER: '${IDENTITY_DB_POSTGRES_USER}'
   #     POSTGRES_PASSWORD: '${IDENTITY_DB_POSTGRES_PASSWORD}'
@@ -74,16 +114,15 @@ services:
 
   # identity-api:
   #   image: blog/identity-api
+  #   container_name: ${IDENTITY_API_HOSTNAME}
   #   restart: on-failure
   #   build:
   #     context: .
   #     dockerfile: Services/Identity/Identity.API/Dockerfile
-  #   links:
-  #     - 'identity-api:${IDENTITY_API_HOSTNAME}'
   #   environment:
   #     ASPNETCORE_ENVIRONMENT: Development
-  #     ASPNETCORE_INSTANCECONFIG__HOSTNAME: ${IDENTITY_API_HOSTNAME}
-  #     ASPNETCORE_INSTANCECONFIG__PORT: ${IDENTITY_API_PORT}
+  #     HOSTNAME: ${IDENTITY_API_HOSTNAME}
+  #     PORT: ${IDENTITY_API_PORT}
   #   deploy:
   #     mode: replicated
   #     replicas: 5
@@ -97,11 +136,10 @@ services:
 
   # blogging-db:
   #   image: postgres:alpine
+  #   container_name: ${BLOGGING_DB_HOSTNAME}
   #   restart: on-failure
   #   deploy:
   #     mode: global
-  #   links:
-  #     - 'blogging-db:${BLOGGING_DB_HOSTNAME}'
   #   environment:
   #     POSTGRES_USER: '${BLOGGING_DB_POSTGRES_USER}'
   #     POSTGRES_PASSWORD: '${BLOGGING_DB_POSTGRES_PASSWORD}'
@@ -111,16 +149,15 @@ services:
 
   # blogging-api:
   #   image: blog/blogging-api
+  #   container_name: ${BLOGGING_API_HOSTNAME}
   #   restart: on-failure
   #   build:
   #     context: .
   #     dockerfile: Services/Blogging/Blogging.API/Dockerfile
-  #   links:
-  #     - 'blogging-api:${BLOGGING_API_HOSTNAME}'
   #   environment:
   #     ASPNETCORE_ENVIRONMENT: Development
-  #     ASPNETCORE_INSTANCECONFIG__HOSTNAME: ${BLOGGING_API_HOSTNAME}
-  #     ASPNETCORE_INSTANCECONFIG__PORT: ${BLOGGING_API_PORT}
+  #     HOSTNAME: ${BLOGGING_API_HOSTNAME}
+  #     PORT: ${BLOGGING_API_PORT}
   #   deploy:
   #     mode: replicated
   #     replicas: 5
@@ -134,11 +171,10 @@ services:
 
   # comments-db:
   #   image: postgres:alpine
+  #   container_name: ${COMMENTS_DB_HOSTNAME}
   #   restart: on-failure
   #   deploy:
   #     mode: global
-  #   links:
-  #     - 'comments-db:${COMMENTS_DB_HOSTNAME}'
   #   environment:
   #     POSTGRES_USER: '${COMMENTS_DB_POSTGRES_USER}'
   #     POSTGRES_PASSWORD: '${COMMENTS_DB_POSTGRES_PASSWORD}'
@@ -149,13 +185,14 @@ services:
   # comments-api:
   #   image: blog/comments-api
   #   restart: on-failure
+  #   container_name: ${COMMENTS_API_HOSTNAME}
   #   build:
   #     context: .
   #     dockerfile: Services/Comments/Comments.API/Dockerfile
   #   environment:
   #     ASPNETCORE_ENVIRONMENT: Development
-  #     ASPNETCORE_INSTANCECONFIG__HOSTNAME: ${COMMENTS_API_HOSTNAME}
-  #     ASPNETCORE_INSTANCECONFIG__PORT: ${COMMENTS_API_PORT}
+  #     HOSTNAME: ${COMMENTS_API_HOSTNAME}
+  #     PORT: ${COMMENTS_API_PORT}
   #   deploy:
   #     mode: replicated
   #     replicas: 5
@@ -168,24 +205,23 @@ services:
   #   ports:
   #     - ${COMMENTS_API_PORT}
 
-  # webgateway-api:
-  #   image: blog/webgateway-api
-  #   restart: on-failure
-  #   build:
-  #     context: .
-  #     dockerfile: Gateways/WebGateway.API/Dockerfile
-  #   links:
-  #     - 'webgateway-api:${WEBGATEWAY_API_HOSTNAME}'
-  #   environment:
-  #     ASPNETCORE_ENVIRONMENT: Development
-  #   deploy:
-  #     mode: global
-  #   depends_on:
-  #     - rabbitmq
-  #     - discovery-api
-  #     - identity-api
-  #     - blogging-api
-  #     - comments-api
-  #     - emailing-api
-  #   ports:
-  #     - ${WEBGATEWAY_API_PORT}:${WEBGATEWAY_API_PORT}
+  webgateway-api:
+    image: blog/webgateway-api
+    restart: on-failure
+    container_name: ${WEBGATEWAY_API_HOSTNAME}
+    build:
+      context: .
+      dockerfile: Gateways/WebGateway.API/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+    deploy:
+      mode: global
+    depends_on:
+      - rabbitmq1
+      - discovery-api1
+      - identity-api1
+      - blogging-api1
+      - comments-api1
+      - emailing-api1
+    ports:
+      - ${WEBGATEWAY_API_PORT}:${WEBGATEWAY_API_PORT}
