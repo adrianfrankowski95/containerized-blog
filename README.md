@@ -70,6 +70,7 @@ Blogging platform based on containerized microservices in ASP.NET Core
 - Add networks so the databases of the specific services are accessible from these services only
 - Pass connection strings as environment variables
 - Add DB clusters, Redis clusters, RabbitMQ clusters
+- Delete discovery service in favor of NGINX/HAProxy on top of multiple services and pass static strings to web gateway (?)
 
 #### K8s
 
