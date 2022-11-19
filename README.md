@@ -19,17 +19,20 @@ Blogging platform based on containerized microservices in ASP.NET Core
 - Read hostname and port from env variables
 - Add health checks
 - Implement likes system
+- Add DB migration
 
 #### Comments Service
 
 - Implement models, logic, infrastructure... ;)
 - Read hostname and port from env variables
 - Add health checks
+- Add DB migration
 
 #### Discovery Service
 
 - Add health checks
 - Review `ServiceInstanceKey`
+- Add DB migration
 
 #### Emailing Service
 
@@ -47,14 +50,14 @@ Blogging platform based on containerized microservices in ASP.NET Core
 - Finish adding OpenIddict as IdP
   - Think about user id in JWT
   - Add OIDC Razor Pages (authorize, signout, userinfo, token, etc.)
-  - Seed clients db with frontend web client
+  - Seed clients DB with frontend web client
   - Add scopes linked to the specific role and scopes management (?)
   - Add scopes of the frontend web client
 - Check anti forgery token validation in Razor Pages
 - Add Security Stamp validation on cookie reading
 - Read hostname and port from env variables
 - Add health checks
-
+- Add DB migration and seed
 #### Frontend
 
 - Start working on it... ;)
@@ -64,9 +67,9 @@ Blogging platform based on containerized microservices in ASP.NET Core
 #### Docker Compose
 
 - Add env variables in .env file consisting of service hostnames and ports
-- Add multiple DB services
 - Add networks so the databases of the specific services are accessible from these services only
 - Pass connection strings as environment variables
+- Add DB clusters, Redis clusters, RabbitMQ clusters
 
 #### K8s
 
