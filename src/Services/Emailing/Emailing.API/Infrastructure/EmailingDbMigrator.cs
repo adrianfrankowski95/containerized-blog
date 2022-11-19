@@ -16,8 +16,6 @@ public class EmailingDbMigrator : IHostedService
         {
             var db = scope.ServiceProvider.GetRequiredService<EmailingDbContext>();
             db.Database.Migrate();
-            db.SaveChanges();
-            Console.WriteLine("migrated");
         }
 
         return Task.CompletedTask;

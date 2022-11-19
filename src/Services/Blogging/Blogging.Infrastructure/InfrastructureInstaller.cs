@@ -15,7 +15,7 @@ public static class InfrastructureInstaller
 {
     public static IServiceCollection AddBloggingInfrastructure(this IServiceCollection services, IConfiguration config)
     {
-        string connectionString = config.GetConnectionString("Postgres");
+        string connectionString = config.GetConnectionString("BloggingDb");
 
         services.AddDbContextPool<BloggingDbContext>(opts =>
         {

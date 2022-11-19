@@ -15,7 +15,7 @@ public static class InfrastructureInstaller
 {
     public static IServiceCollection AddIdentityInfrastructure(this IServiceCollection services, IConfiguration config)
     {
-        string connectionString = config.GetConnectionString("Postgres");
+        string connectionString = config.GetConnectionString("IdentityDb");
 
         services.AddDbContextPool<IdentityDbContext>(opts =>
         {

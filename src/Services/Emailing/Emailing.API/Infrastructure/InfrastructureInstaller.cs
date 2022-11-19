@@ -18,7 +18,7 @@ public static class InfrastructureInstaller
             opts.UseSnakeCaseNamingConvention();
         });
 
-        //services.AddHostedService<EmailingDbMigrator>();
+        services.AddHostedService<EmailingDbMigrator>();
 
         return services;
     }

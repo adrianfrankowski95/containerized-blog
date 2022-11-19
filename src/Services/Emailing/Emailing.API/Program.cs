@@ -1,14 +1,14 @@
 using Blog.Services.Emailing.API.Configs;
+using Blog.Services.Emailing.API.Controllers;
 using Blog.Services.Emailing.API.Factories;
 using Blog.Services.Emailing.API.Grpc;
-using Blog.Services.Emailing.API.Services;
-using Blog.Services.Emailing.API.Controllers;
 using Blog.Services.Emailing.API.Infrastructure;
+using Blog.Services.Emailing.API.Services;
 using FluentEmail.Core;
 using FluentEmail.MailKitSmtp;
 using MassTransit;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 var env = builder.Environment;
@@ -45,13 +45,6 @@ app.UseEndpoints(opts =>
     opts.MapGrpcService<EmailingService>();
 });
 
-using (var scope = app.Services.CreateScope())
-{
-
-    var db = scope.ServiceProvider.GetRequiredService<EmailingDbContext>();
-    db.Database.Migrate();
-    Console.WriteLine("migrated");
-}
 
 app.Run();
 
@@ -77,7 +70,7 @@ internal static class ServiceCollectionExtensions
             opts.ServiceType = "emailing-api";
             opts.HeartbeatInterval = TimeSpan.FromSeconds(15);
             opts.Hostname = hostname;
-            opts.Port = 1;
+            opts.Port = port;
         })
         .ValidateDataAnnotations()
         .ValidateOnStart();
