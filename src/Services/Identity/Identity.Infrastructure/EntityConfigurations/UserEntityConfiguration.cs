@@ -23,15 +23,19 @@ public class UserEntityConfiguration : IEntityTypeConfiguration<User>
             .HasConversion(v => v.Value, v => UserId.FromGuid(v));
 
         builder
-            .OwnsOne(x => x.EmailAddress, x =>
+            .OwnsOne(x => x.EmailAddress, u =>
             {
-                x.Property(x => x.Value).HasColumnName("email_address").HasMaxLength(MaxEmailAddressLength).IsRequired();
-                x.HasIndex("_value").HasMethod("hash").IsUnique();
-                x.Property(x => x.IsConfirmed).HasColumnName("email_address_confirmed").HasDefaultValue(false).IsRequired();
-                x.WithOwner();
-            })
-            .Navigation(x => x.EmailAddress)
-            .IsRequired();
+                u.Property("Value")
+                    .HasColumnName("email_address")
+                    .HasMaxLength(MaxEmailAddressLength)
+                    .IsRequired();
+
+                u.HasIndex("_value").HasMethod("hash").IsUnique();
+
+                u.Property(x => x.IsConfirmed).HasColumnName("email_address_confirmed").HasDefaultValue(false).IsRequired();
+            });
+            // .Navigation(x => x.EmailAddress)
+            // .IsRequired();
 
         builder
             .OwnsOne(x => x.EmailConfirmationCode, x =>

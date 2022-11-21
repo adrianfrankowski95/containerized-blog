@@ -15,7 +15,8 @@ public static class InfrastructureInstaller
 {
     public static IServiceCollection AddBloggingInfrastructure(this IServiceCollection services, IConfiguration config)
     {
-        string connectionString = config.GetConnectionString("BloggingDb");
+        string connectionString = config.GetConnectionString("BloggingDb")
+            ?? throw new InvalidOperationException("Could not find connection string to blogging db.");
 
         services.AddDbContextPool<BloggingDbContext>(opts =>
         {

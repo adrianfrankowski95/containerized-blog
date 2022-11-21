@@ -74,7 +74,7 @@ static class ServiceCollectionExtensions
     public static IServiceCollection AddInstanceConfig(this IServiceCollection services)
     {
         var hostname = Environment.GetEnvironmentVariable("HOSTNAME");
-        int port = Int32.Parse(Environment.GetEnvironmentVariable("PORT") ?? "-1");
+        int port = int.Parse(Environment.GetEnvironmentVariable("PORT") ?? "-1");
 
         services.AddOptions<InstanceConfig>().Configure(opts =>
         {
@@ -142,7 +142,7 @@ static class ServiceCollectionExtensions
             {
                 var rabbitMqConfig = config.GetRequiredSection(RabbitMqConfig.Section).Get<RabbitMqConfig>();
 
-                cfg.Host(rabbitMqConfig.Host, rabbitMqConfig.Port, rabbitMqConfig.VirtualHost, opts =>
+                cfg.Host(rabbitMqConfig!.Host, rabbitMqConfig.Port, rabbitMqConfig.VirtualHost, opts =>
                 {
                     opts.Username(rabbitMqConfig.Username);
                     opts.Password(rabbitMqConfig.Password);

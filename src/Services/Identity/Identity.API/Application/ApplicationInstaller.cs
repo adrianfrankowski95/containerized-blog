@@ -10,7 +10,8 @@ public static class ApplicationInstaller
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration config)
     {
-        var connectionString = config.GetConnectionString("IdentityDb");
+        var connectionString = config.GetConnectionString("IdentityDb")
+            ?? throw new InvalidOperationException("Could not get connection string for Identity db.");
 
         var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
         dataSourceBuilder.UseNodaTime();

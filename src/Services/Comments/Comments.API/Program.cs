@@ -51,7 +51,7 @@ internal static class ServiceCollectionExtensions
     public static IServiceCollection AddInstanceConfig(this IServiceCollection services)
     {
         var hostname = Environment.GetEnvironmentVariable("HOSTNAME");
-        int port = Int32.Parse(Environment.GetEnvironmentVariable("PORT") ?? "-1");
+        int port = int.Parse(Environment.GetEnvironmentVariable("PORT") ?? "-1");
 
         services.AddOptions<InstanceConfig>().Configure(opts =>
         {

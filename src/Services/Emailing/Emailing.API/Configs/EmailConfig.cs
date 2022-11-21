@@ -17,7 +17,7 @@ public class EmailConfig
     public string Host { get; set; }
 
     [Required]
-    [Range(1, Int32.MaxValue)]
+    [Range(1, int.MaxValue)]
     public int Port { get; set; }
 
     [Required]

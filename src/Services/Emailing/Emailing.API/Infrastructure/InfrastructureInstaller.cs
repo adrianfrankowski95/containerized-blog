@@ -6,7 +6,8 @@ public static class InfrastructureInstaller
 {
     public static IServiceCollection AddEmailingInfrastructure(this IServiceCollection services, IConfiguration config)
     {
-        string connectionString = config.GetConnectionString("EmailingDb");
+        string connectionString = config.GetConnectionString("EmailingDb")
+            ?? throw new InvalidOperationException("Could not get connection string for Emailing db.");
 
         services.AddDbContextPool<EmailingDbContext>(opts =>
         {

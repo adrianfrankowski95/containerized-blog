@@ -1,3 +1,5 @@
+#nullable disable
+
 using System.Data;
 using Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 using Blog.Services.Identity.Domain.SeedWork;
