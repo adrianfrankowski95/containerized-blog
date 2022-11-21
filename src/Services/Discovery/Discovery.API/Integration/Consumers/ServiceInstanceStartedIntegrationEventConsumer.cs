@@ -2,6 +2,7 @@ using Blog.Services.Discovery.API.Infrastructure;
 using Blog.Services.Discovery.API.Models;
 using Blog.Integration.Events;
 using MassTransit;
+using Blog.Services.Discovery.API.Extensions;
 
 namespace Blog.Services.Discovery.API.Integration.Consumers;
 
@@ -30,7 +31,7 @@ public class ServiceInstanceStartedIntegrationEventConsumer : IConsumer<ServiceI
         if (string.IsNullOrWhiteSpace(serviceType))
             throw new InvalidDataException($"{nameof(context.Message.ServiceType)} must not be null or empty");
 
-        if (!(addresses?.Any() ?? false))
+        if (addresses.IsNullOrEmpty())
             throw new InvalidDataException($"{nameof(context.Message.ServiceAddresses)} must not be null or empty");
 
         string AddressesString = string.Join("; ", addresses);

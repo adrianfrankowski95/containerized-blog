@@ -1,3 +1,5 @@
+#nullable disable
+
 using System.ComponentModel.DataAnnotations;
 
 namespace Blog.Gateways.WebGateway.API.Configs;

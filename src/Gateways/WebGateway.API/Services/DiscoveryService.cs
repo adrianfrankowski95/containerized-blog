@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using Blog.Gateways.WebGateway.API.Extensions;
 using Blog.Services.Discovery.API.Grpc;
 
 namespace Blog.Gateways.WebGateway.API.Services;
@@ -25,7 +26,10 @@ public class DiscoveryService : IDiscoveryService
             new GetServiceInstancesOfTypeRequest { ServiceType = serviceType })
             .ConfigureAwait(false);
 
-        if (!(response?.ServiceInstances?.Any() ?? false))
+        if (response is null)
+            throw new InvalidOperationException("Received a null response from Discovery service.");
+
+        if (response.ServiceInstances.IsNullOrEmpty())
             throw new InvalidDataException($"Error retrieving service instances of type {serviceType} from Discovery Grpc service.");
 
         _logger.LogInformation("----- Received grpc request get service type instances info response: {Response}.",
@@ -43,7 +47,10 @@ public class DiscoveryService : IDiscoveryService
         var response = await _client.GetAllServiceInstancesAsync(new Google.Protobuf.WellKnownTypes.Empty())
             .ConfigureAwait(false);
 
-        if (!(response?.ServiceInstances?.Any() ?? false))
+        if (response is null)
+            throw new InvalidOperationException("Received a null response from Discovery service.");
+
+        if (response.ServiceInstances.IsNullOrEmpty())
             throw new InvalidDataException($"Error retrieving all service instances from Discovery Grpc service.");
 
         _logger.LogInformation("----- Received grpc request get all service instances info response: {Response}.",

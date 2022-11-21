@@ -59,7 +59,8 @@ static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddGrpcDiscoveryService(this IServiceCollection services, IConfiguration config)
     {
-        var address = config.GetRequiredSection(UrlsConfig.Section).Get<UrlsConfig>().DiscoveryService;
+        var address = config.GetRequiredSection(UrlsConfig.Section).Get<UrlsConfig>()?.DiscoveryService
+            ?? throw new ArgumentNullException("Could not retrieve Discovery service URL.");
 
         if (string.IsNullOrWhiteSpace(address))
             throw new InvalidOperationException($"{nameof(UrlsConfig.DiscoveryService)} URL must not be null.");
@@ -103,7 +104,7 @@ static class ServiceCollectionExtensions
             {
                 var rabbitMqConfig = config.GetRequiredSection(RabbitMqConfig.Section).Get<RabbitMqConfig>();
 
-                cfg.Host(rabbitMqConfig.Host, rabbitMqConfig.VirtualHost, opts =>
+                cfg.Host(rabbitMqConfig!.Host, rabbitMqConfig.VirtualHost, opts =>
                 {
                     opts.Username(rabbitMqConfig.Username);
                     opts.Password(rabbitMqConfig.Password);

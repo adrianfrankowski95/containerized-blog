@@ -1,3 +1,5 @@
+using Blog.Services.Discovery.API.Extensions;
+
 namespace Blog.Services.Discovery.API.Models;
 
 public class ServiceInstance
@@ -18,7 +20,7 @@ public class ServiceInstance
         if (string.IsNullOrWhiteSpace(serviceType))
             throw new ArgumentNullException(nameof(serviceType));
 
-        if (!(serviceAddresses?.Any() ?? false))
+        if (serviceAddresses.IsNullOrEmpty())
             throw new ArgumentNullException(nameof(serviceAddresses));
 
         Key = new(serviceType, instanceId);

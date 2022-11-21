@@ -10,13 +10,7 @@ public record EmailAddressChangedDomainEvent : DomainEvent
     public EmailConfirmationCode EmailConfirmationCode { get; }
     public EmailAddressChangedDomainEvent(Username username, EmailAddress emailAddress, EmailConfirmationCode emailConfirmationCode)
     {
-        if (username is null)
-            throw new ArgumentNullException(nameof(username));
-
-        if (emailAddress is null)
-            throw new ArgumentNullException(nameof(emailAddress));
-
-        if (emailConfirmationCode is null || emailConfirmationCode.IsEmpty)
+        if (emailConfirmationCode.IsEmpty)
             throw new ArgumentNullException(nameof(emailConfirmationCode));
 
         Username = username;

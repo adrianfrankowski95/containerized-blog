@@ -10,12 +10,6 @@ public record PasswordResetDomainEvent : DomainEvent
 
     public PasswordResetDomainEvent(Username username, EmailAddress emailAddress)
     {
-        if (username is null)
-            throw new ArgumentNullException(nameof(username));
-
-        if (emailAddress is null)
-            throw new ArgumentNullException(nameof(emailAddress));
-
         Username = username;
         EmailAddress = emailAddress;
     }

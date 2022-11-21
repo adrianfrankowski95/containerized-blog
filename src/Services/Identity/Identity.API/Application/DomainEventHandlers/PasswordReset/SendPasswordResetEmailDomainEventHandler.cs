@@ -23,7 +23,7 @@ public class SendPasswordResetEmailDomainEventHandler : INotificationHandler<Pas
 
     public async Task Handle(PasswordResetRequestedDomainEvent notification, CancellationToken cancellationToken)
     {
-        var passwordResetCode = (notification.PasswordResetCode?.IsEmpty ?? true)
+        var passwordResetCode = notification.PasswordResetCode.IsEmpty
             ? throw new ArgumentException("Password reset code must not be empty.")
             : notification.PasswordResetCode;
 

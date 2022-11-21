@@ -1,3 +1,4 @@
+using Blog.Services.Discovery.API.Extensions;
 using Blog.Services.Discovery.API.Models;
 using Microsoft.Extensions.Options;
 using StackExchange.Redis;
@@ -41,7 +42,7 @@ public class RedisServiceRegistry : IServiceRegistry
         var keys = _redis.GetServer(_redis.GetEndPoints().Single()).Keys(
             pattern: ServiceInstanceKey.GetAllInstancesKeyPattern());
 
-        if (!(keys?.Any() ?? false))
+        if (keys.IsNullOrEmpty())
             return Array.Empty<ServiceInstance>();
 
         var entries = await _redisDb.StringGetAsync(keys.ToArray()).ConfigureAwait(false);
@@ -72,7 +73,7 @@ public class RedisServiceRegistry : IServiceRegistry
         var keys = _redis.GetServer(_redis.GetEndPoints().Single()).Keys(
             pattern: ServiceInstanceKey.GetServiceTypeKeyPattern(serviceType));
 
-        if (!(keys?.Any() ?? false))
+        if (keys.IsNullOrEmpty())
             return Array.Empty<ServiceInstance>();
 
         var entries = await _redisDb.StringGetAsync(keys.ToArray()).ConfigureAwait(false);

@@ -1,8 +1,6 @@
 #pragma warning disable CS8618
 
 using System.Diagnostics.CodeAnalysis;
-using Blog.Services.Identity.Domain.Exceptions;
-using Blog.Services.Identity.Domain.SeedWork;
 
 namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 

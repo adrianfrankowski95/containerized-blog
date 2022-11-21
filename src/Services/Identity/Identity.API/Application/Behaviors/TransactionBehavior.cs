@@ -16,7 +16,7 @@ public class TransactionBehavior<TRequest, TResponse> : IPipelineBehavior<TReque
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _identityDbContext = identityDbContext ?? throw new ArgumentNullException(nameof(identityDbContext));
     }
-    public async Task<TResponse> Handle(TRequest request, CancellationToken cancellationToken, RequestHandlerDelegate<TResponse> next)
+    public async Task<TResponse> Handle(TRequest request, RequestHandlerDelegate<TResponse> next, CancellationToken cancellationToken)
     {
         TResponse response = default!;
         string requestType = request.GetType().Name;

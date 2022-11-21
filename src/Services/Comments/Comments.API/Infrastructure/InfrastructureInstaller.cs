@@ -8,7 +8,8 @@ public static class InfrastructureInstaller
 {
     public static IServiceCollection AddCommentsInfrastructure(this IServiceCollection services, IConfiguration config)
     {
-        string connectionString = config.GetConnectionString("Postgres");
+        string connectionString = config.GetConnectionString("CommentsDb")
+            ?? throw new ArgumentNullException("Could not retrieve comments db connection string.");
 
         services.AddDbContextPool<CommentsDbContext>(opts =>
         {

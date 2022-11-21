@@ -4,6 +4,7 @@ using MassTransit;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.Options;
+using Blog.Services.Blogging.API.Extensions;
 
 namespace Blog.Services.Blogging.API.Infrastructure.Services;
 
@@ -91,7 +92,10 @@ public class RabbitMqLifetimeIntegrationEventsPublisher : BackgroundService
     {
         var addressFeature = _server.Features.Get<IServerAddressesFeature>();
 
-        if (!(addressFeature?.Addresses?.Any() ?? false))
+        if (addressFeature is null)
+            throw new InvalidOperationException("Could not get server addresses feature.");
+
+        if (addressFeature.Addresses.IsNullOrEmpty())
             throw new InvalidOperationException($"Error getting {_config.Value.ServiceType} Addresses.");
 
         var cfg = _config.Value;

@@ -74,4 +74,7 @@ public readonly struct PasswordResetCode
     }
 
     public override int GetHashCode() => _value?.GetHashCode() ?? 0;
+    public static implicit operator string(PasswordResetCode value) => value.IsEmpty
+        ? throw new InvalidOperationException("Password reset code must not be empty.")
+        : value._value!;
 }

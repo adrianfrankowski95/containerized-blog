@@ -1,5 +1,6 @@
 using Blog.Integration.Events;
 using Blog.Services.Comments.API.Configs;
+using Blog.Services.Comments.API.Extensions;
 using MassTransit;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
@@ -91,7 +92,10 @@ public class RabbitMqLifetimeIntegrationEventsPublisher : BackgroundService
     {
         var addressFeature = _server.Features.Get<IServerAddressesFeature>();
 
-        if (!(addressFeature?.Addresses?.Any() ?? false))
+        if (addressFeature is null)
+            throw new InvalidOperationException("Could not get a server addresses feature.");
+
+        if (addressFeature.Addresses.IsNullOrEmpty())
             throw new InvalidOperationException($"Error getting {_config.Value.ServiceType} Addresses.");
 
         var cfg = _config.Value;

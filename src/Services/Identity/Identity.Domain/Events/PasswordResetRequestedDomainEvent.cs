@@ -10,13 +10,7 @@ public record PasswordResetRequestedDomainEvent : DomainEvent
     public PasswordResetCode PasswordResetCode { get; }
     public PasswordResetRequestedDomainEvent(Username username, EmailAddress emailAddress, PasswordResetCode passwordResetCode)
     {
-        if (username is null)
-            throw new ArgumentNullException(nameof(username));
-
-        if (emailAddress is null)
-            throw new ArgumentNullException(nameof(emailAddress));
-
-        if (passwordResetCode is null || passwordResetCode.IsEmpty)
+        if (passwordResetCode.IsEmpty)
             throw new ArgumentNullException(nameof(passwordResetCode));
 
         Username = username;

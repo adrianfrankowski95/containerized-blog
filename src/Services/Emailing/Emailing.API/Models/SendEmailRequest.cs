@@ -1,3 +1,5 @@
+using Blog.Services.Emailing.API.Extensions;
+
 namespace Blog.Services.Emailing.API.Models;
 
 public record SendEmailRequest
@@ -20,10 +22,7 @@ public record SendEmailRequest
         Priority priority,
         IEnumerable<Attachment>? attachments)
     {
-        if (recipients is null)
-            throw new ArgumentNullException(nameof(recipients));
-
-        if (!recipients.Any())
+        if (recipients.IsNullOrEmpty())
             throw new ArgumentNullException(nameof(recipients));
 
         if (string.IsNullOrWhiteSpace(title))

@@ -10,8 +10,11 @@ public static class ApplicationInstaller
 {
     public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration config)
     {
-        string connectionString = config.GetConnectionString("Postgres");
-        NpgsqlConnection.GlobalTypeMapper.UseNodaTime();
+        var connectionString = config.GetConnectionString("IdentityDb");
+
+        var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
+        dataSourceBuilder.UseNodaTime();
+
         Dapper.SqlMapper.AddTypeHandler(new InstantTypeHandler());
 
         services

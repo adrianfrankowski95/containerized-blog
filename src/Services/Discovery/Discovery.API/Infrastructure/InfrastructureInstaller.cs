@@ -10,7 +10,8 @@ public static class InfrastructureInstaller
 {
     public static IServiceCollection AddDiscoveryInfrastructure(this IServiceCollection services, IConfiguration config)
     {
-        string connectionString = config.GetConnectionString("Postgres");
+        string connectionString = config.GetConnectionString("DiscoveryDb")
+            ?? throw new ArgumentNullException("Could not retrieve a connection string to Discovery db.");
 
         services.AddDbContextPool<DiscoveryDbContext>(opts =>
         {
@@ -24,7 +25,10 @@ public static class InfrastructureInstaller
 
         services.TryAddSingleton<IConnectionMultiplexer>(sp =>
         {
-            var redis = ConnectionMultiplexer.Connect(config.GetConnectionString("Redis"));
+            var redis = ConnectionMultiplexer.Connect(config.GetConnectionString("Redis")
+                ?? throw new ArgumentNullException("Could not retrieve a connection string to Redis db."));
+
+
             redis.GetServer(redis.GetEndPoints().Single()).ConfigSet("notify-keyspace-events", "Ex");
 
             return redis;

@@ -1,4 +1,5 @@
 using Blog.Gateways.WebGateway.API.Configs;
+using Blog.Gateways.WebGateway.API.Extensions;
 using Blog.Gateways.WebGateway.API.Models;
 using Yarp.ReverseProxy.Configuration;
 using static Blog.Gateways.WebGateway.API.Configs.GatewayConstants;
@@ -27,10 +28,10 @@ public class InMemoryProxyConfigProvider : IProxyConfigProvider, IDisposable
         var servicesWithoutAddresses = ServiceTypes
             .List()
             .Where(serviceType =>
-                (services[serviceType]?.Count ?? 0) == 0 ||
-                !(services[serviceType].SelectMany(instances => instances.Addresses)?.Any() ?? false));
+                services[serviceType].IsNullOrEmpty() ||
+                services[serviceType].SelectMany(instances => instances.Addresses).IsNullOrEmpty());
 
-        if (servicesWithoutAddresses.Any())
+        if (!servicesWithoutAddresses.IsNullOrEmpty())
             throw new InvalidOperationException($"Error getting addresses of the following services: {string.Join(", ", servicesWithoutAddresses)}.");
 
         List<RouteConfig> routes = new();
@@ -53,7 +54,7 @@ public class InMemoryProxyConfigProvider : IProxyConfigProvider, IDisposable
         if (string.IsNullOrWhiteSpace(serviceType))
             throw new ArgumentNullException(nameof(serviceType));
 
-        if (matchingPaths?.Any() ?? true)
+        if (matchingPaths.IsNullOrEmpty())
             throw new ArgumentNullException(nameof(matchingPaths));
 
         var routes = new List<RouteConfig>(matchingPaths.Count());

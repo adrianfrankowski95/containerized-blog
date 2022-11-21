@@ -25,7 +25,7 @@ public class UserEntityConfiguration : IEntityTypeConfiguration<User>
         builder
             .OwnsOne(x => x.EmailAddress, x =>
             {
-                x.Property<NonEmptyString>("_value").HasColumnName("email_address").HasMaxLength(MaxEmailAddressLength).IsRequired();
+                x.Property(x => x.Value).HasColumnName("email_address").HasMaxLength(MaxEmailAddressLength).IsRequired();
                 x.HasIndex("_value").HasMethod("hash").IsUnique();
                 x.Property(x => x.IsConfirmed).HasColumnName("email_address_confirmed").HasDefaultValue(false).IsRequired();
                 x.WithOwner();

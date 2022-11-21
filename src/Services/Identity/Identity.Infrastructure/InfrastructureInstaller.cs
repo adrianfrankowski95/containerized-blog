@@ -15,7 +15,8 @@ public static class InfrastructureInstaller
 {
     public static IServiceCollection AddIdentityInfrastructure(this IServiceCollection services, IConfiguration config)
     {
-        string connectionString = config.GetConnectionString("IdentityDb");
+        string connectionString = config.GetConnectionString("IdentityDb")
+            ?? throw new ArgumentNullException("Could not retrieve an Identity db connection string.");
 
         services.AddDbContextPool<IdentityDbContext>(opts =>
         {
