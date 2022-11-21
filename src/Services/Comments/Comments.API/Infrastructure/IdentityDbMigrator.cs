@@ -1,11 +1,12 @@
-using Blog.Services.Emailing.API.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
-public class EmailingDbMigrator : IHostedService
+namespace Blog.Services.Comments.API.Infrastructure;
+
+public class CommentsDbMigrator : IHostedService
 {
     private readonly IServiceProvider _services;
 
-    public EmailingDbMigrator(IServiceProvider services)
+    public CommentsDbMigrator(IServiceProvider services)
     {
         _services = services ?? throw new ArgumentNullException(nameof(services));
     }
@@ -14,7 +15,7 @@ public class EmailingDbMigrator : IHostedService
     {
         using (var scope = _services.CreateScope())
         {
-            var ctx = scope.ServiceProvider.GetRequiredService<EmailingDbContext>();
+            var ctx = scope.ServiceProvider.GetRequiredService<CommentsDbContext>();
             ctx.Database.Migrate();
         }
 

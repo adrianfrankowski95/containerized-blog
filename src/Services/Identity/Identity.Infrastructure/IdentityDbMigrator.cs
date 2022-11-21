@@ -1,11 +1,14 @@
-using Blog.Services.Emailing.API.Infrastructure;
+using Microsoft.Extensions.Hosting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
-public class EmailingDbMigrator : IHostedService
+namespace Blog.Services.Identity.Infrastructure;
+
+public class IdentityDbMigrator : IHostedService
 {
     private readonly IServiceProvider _services;
 
-    public EmailingDbMigrator(IServiceProvider services)
+    public IdentityDbMigrator(IServiceProvider services)
     {
         _services = services ?? throw new ArgumentNullException(nameof(services));
     }
@@ -14,7 +17,7 @@ public class EmailingDbMigrator : IHostedService
     {
         using (var scope = _services.CreateScope())
         {
-            var ctx = scope.ServiceProvider.GetRequiredService<EmailingDbContext>();
+            var ctx = scope.ServiceProvider.GetRequiredService<IdentityDbContext>();
             ctx.Database.Migrate();
         }
 

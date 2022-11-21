@@ -27,10 +27,13 @@ public static class InfrastructureInstaller
             });
             opts.UseSnakeCaseNamingConvention();
         });
+
         services.TryAddScoped<IRequestManager, RequestManager>();
         services.TryAddScoped<IAvatarManager, AvatarManager>();
         services.TryAddScoped<IUserRepository, EfUserRepository>();
         services.TryAddScoped<IUnitOfWork, EfUnitOfWork>();
+
+        services.AddHostedService<IdentityDbMigrator>();
 
         return services;
     }

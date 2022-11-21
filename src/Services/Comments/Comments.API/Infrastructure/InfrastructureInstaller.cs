@@ -20,6 +20,8 @@ public static class InfrastructureInstaller
             opts.UseSnakeCaseNamingConvention();
         });
 
+        services.AddHostedService<CommentsDbMigrator>();
+
         return services;
     }
 }

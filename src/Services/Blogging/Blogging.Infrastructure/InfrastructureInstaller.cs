@@ -33,6 +33,8 @@ public static class InfrastructureInstaller
         services.TryAddScoped<ITagRepository, EfTagRepository>();
         services.TryAddScoped<IUnitOfWork, EfUnitOfWork>();
 
+        services.AddHostedService<BloggingDbMigrator>();
+
         return services;
     }
 }
