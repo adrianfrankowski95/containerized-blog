@@ -1,38 +1,42 @@
-using Blog.Services.Identity.Domain.Exceptions;
-using Blog.Services.Identity.Domain.SeedWork;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 
-public class NonEmptyString : ValueObject<NonEmptyString>
+public readonly struct NonEmptyString
 {
-    private readonly string _value;
-    public NonNegativeInt Length => _value.Length;
+    public required string Value { get; init; }
+    public NonNegativeInt Length => Value.Length;
     public char this[NonNegativeInt index]
     {
-        get => _value[index];
+        get => Value[index];
     }
 
+    [SetsRequiredMembers]
     public NonEmptyString(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
             throw new ArgumentNullException(nameof(value));
 
-        _value = value;
+        Value = value;
     }
 
-    public override string ToString() => _value;
-    public bool Contains(char value) => _value.Contains(value);
-    public bool Any(Func<char, bool> predicate) => _value.Any(predicate);
-    public IEnumerable<char> Where(Func<char, bool> selector) => _value.Where(selector);
-
-    protected override IEnumerable<object?> GetEqualityCheckAttributes()
+    public override bool Equals([NotNullWhen(true)] object? obj)
     {
-        yield return _value;
+        if (obj is null)
+            return false;
+
+        if (obj is not NonEmptyString second)
+            return false;
+
+        return string.Equals(this.Value, second.Value, StringComparison.Ordinal);
     }
 
-    public static implicit operator NonEmptyString(string value) => new(value);
-    public static implicit operator string(NonEmptyString value) =>
-        string.IsNullOrWhiteSpace(value?._value)
-            ? throw new ArgumentNullException(nameof(value))
-            : value._value;
+    public override int GetHashCode() => Value.GetHashCode();
+
+    public override string ToString() => Value;
+    public bool Contains(char value) => Value.Contains(value);
+    public bool Any(Func<char, bool> predicate) => Value.Any(predicate);
+    public IEnumerable<char> Where(Func<char, bool> selector) => Value.Where(selector);
+    public static implicit operator NonEmptyString(string value) => new NonEmptyString(value);
+    public static implicit operator string(NonEmptyString value) => value.Value;
 }

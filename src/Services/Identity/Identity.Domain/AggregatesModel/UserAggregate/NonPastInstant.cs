@@ -1,23 +1,33 @@
-using Blog.Services.Identity.Domain.SeedWork;
+using System.Diagnostics.CodeAnalysis;
 using NodaTime;
 
 namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 
-public class NonPastInstant : ValueObject<NonPastInstant>
+public readonly struct NonPastInstant
 {
-    private readonly Instant _value;
+    public Instant Value { get; init; }
 
+    [SetsRequiredMembers]
     public NonPastInstant(Instant value, Instant now)
     {
         if (value < now)
             throw new ArgumentNullException($"Value cannot be in the past.");
 
-        _value = value;
+        Value = value;
     }
 
-    protected override IEnumerable<object?> GetEqualityCheckAttributes()
+    public override bool Equals([NotNullWhen(true)] object? obj)
     {
-        yield return _value;
+        if (obj is null)
+            return false;
+
+        if (obj is not NonPastInstant second)
+            return false;
+
+        return this.Value.Equals(second.Value);
     }
-    public static implicit operator Instant(NonPastInstant value) => value?._value ?? throw new ArgumentNullException(nameof(value));
+
+    public override int GetHashCode() => Value.GetHashCode();
+
+    public static implicit operator Instant(NonPastInstant value) => value.Value;
 }

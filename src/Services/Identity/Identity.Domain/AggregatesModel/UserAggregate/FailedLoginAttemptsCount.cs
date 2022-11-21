@@ -1,52 +1,55 @@
+using System.Diagnostics.CodeAnalysis;
 using Blog.Services.Identity.Domain.Exceptions;
-using Blog.Services.Identity.Domain.SeedWork;
 using NodaTime;
 
 namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 
-public class FailedLoginAttemptsCount : ValueObject<FailedLoginAttemptsCount>
+public readonly struct FailedLoginAttemptsCount
 {
     private static readonly Duration _validityDuration = Duration.FromMinutes(5);
     private static readonly NonNegativeInt _maxAllowed = 5;
-    private readonly NonNegativeInt _count;
+    public required NonNegativeInt Count { get; init; }
     public Instant? LastFailAt { get; }
     public Instant? ValidUntil => LastFailAt?.Plus(_validityDuration);
     private static readonly FailedLoginAttemptsCount _none = new();
     public static FailedLoginAttemptsCount None => _none;
 
-    private FailedLoginAttemptsCount()
+    [SetsRequiredMembers]
+    public FailedLoginAttemptsCount()
     {
-        _count = 0;
+        Count = 0;
     }
 
+    [SetsRequiredMembers]
     private FailedLoginAttemptsCount(NonNegativeInt count, Instant now)
     {
-        if (count is null)
-            throw new IdentityDomainException("Login attempts count must not be null.");
-
-        _count = count;
+        Count = count;
         LastFailAt = now;
     }
 
-    public bool IsMaxAllowed() => _count == _maxAllowed;
+    public bool IsMaxAllowed() => Count == _maxAllowed;
     public FailedLoginAttemptsCount Increment(Instant now)
     {
         if (IsMaxAllowed())
             throw new IdentityDomainException($"Exceeded maximum allowed failed login attempts.");
 
-        return new(_count + 1, now);
+        return new(Count + 1, now);
     }
-    public bool IsEmpty => _count == 0;
+    public bool IsEmpty => Count == 0;
     public bool IsExpired(Instant now) => IsEmpty
         ? throw new IdentityDomainException("Failed login attempts count must not be empty.")
         : now > ValidUntil;
 
-    protected override IEnumerable<object?> GetEqualityCheckAttributes()
+    public override bool Equals([NotNullWhen(true)] object? obj)
     {
-        yield return _count;
+        if (obj is null)
+            return false;
+
+        if (obj is not FailedLoginAttemptsCount second)
+            return false;
+
+        return this.Count == second.Count;
     }
 
-    public override bool Equals(FailedLoginAttemptsCount? second) => base.Equals(second);
-    public override bool Equals(object? second) => base.Equals(second);
-    public override int GetHashCode() => base.GetHashCode();
+    public override int GetHashCode() => Count.GetHashCode();
 }

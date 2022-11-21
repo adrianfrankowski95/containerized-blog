@@ -1,35 +1,38 @@
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 using Blog.Services.Identity.Domain.Exceptions;
-using Blog.Services.Identity.Domain.SeedWork;
 
 namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 
-public class EmailAddress : ValueObject<EmailAddress>
+public readonly struct EmailAddress
 {
     private readonly NonEmptyString _value;
-    public bool IsConfirmed { get; private set; }
+    public bool IsConfirmed { get; init; }
 
     public EmailAddress(NonEmptyString value)
     {
-        if (value is null)
-            throw new IdentityDomainException("Email address must not be null.");
-
         if (!new EmailAddressAttribute().IsValid(value))
             throw new IdentityDomainException("Invalid email address format.");
 
         _value = value;
     }
 
-    public EmailAddress Confirm() => new(_value) { IsConfirmed = true };
-
-    protected override IEnumerable<object?> GetEqualityCheckAttributes()
+    public override bool Equals([NotNullWhen(true)] object? obj)
     {
-        yield return _value;
+        if (obj is null)
+            return false;
+
+        if (obj is not EmailAddress second)
+            return false;
+
+        return this._value.Equals(second._value) && this.IsConfirmed.Equals(second.IsConfirmed);
     }
 
-    public override string ToString() => _value;
+    public override int GetHashCode() => _value.GetHashCode();
 
+    public EmailAddress Confirm() => new(_value) { IsConfirmed = true };
+    public override string ToString() => _value;
     public static implicit operator EmailAddress(NonEmptyString value) => new(value);
     public static implicit operator string(EmailAddress value)
-        => value?._value ?? throw new IdentityDomainException("Email address must not be null.");
+        => value._value;
 }

@@ -1,19 +1,19 @@
+using System.Diagnostics.CodeAnalysis;
 using Blog.Services.Identity.Domain.Exceptions;
-using Blog.Services.Identity.Domain.SeedWork;
 
 namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 
-public class Username : ValueObject<Username>
+public readonly struct Username
 {
     public const int MinLength = 3;
     public const int MaxLength = 20;
     public const string AllowedCharacters = "aąbcćdeęfghijklłmnńopqrsśtuóvwxyzźż.-_1234567890";
-    private readonly NonEmptyString _value;
+    public required NonEmptyString Value { get; init; }
     private static bool IsLongEnough(NonEmptyString input) => input.Length >= MinLength;
     private static bool IsShortEnough(NonEmptyString input) => input.Length >= MaxLength;
     private static bool IsAllowedChar(char c) => AllowedCharacters.Contains(c);
 
-    // TODO: check if username is unique in application layer using IUserRepository
+    [SetsRequiredMembers]
     public Username(NonEmptyString value)
     {
         if (!IsLongEnough(value))
@@ -25,12 +25,21 @@ public class Username : ValueObject<Username>
         if (value.Any(c => !IsAllowedChar(c)))
             throw new IdentityDomainException($"Username contains forbidden characters: {string.Join(", ", value.Where(c => !IsAllowedChar(c)))}");
 
-        _value = value;
+        Value = value;
     }
 
-    protected override IEnumerable<object?> GetEqualityCheckAttributes()
+    public override bool Equals([NotNullWhen(true)] object? obj)
     {
-        yield return _value;
+        if (obj is null)
+            return false;
+
+        if (obj is not Username second)
+            return false;
+
+        return this.Value.Equals(second.Value);
     }
-    public static implicit operator string(Username value) => value?._value ?? throw new IdentityDomainException("Username must not be null.");
+
+    public override int GetHashCode() => Value.GetHashCode();
+
+    public static implicit operator string(Username value) => value.Value;
 }

@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
+		<TargetFramework>net7.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<RootNamespace>Blog.Services.Discovery.API</RootNamespace>
@@ -9,15 +9,15 @@
 		<Protobuf Include="Protos\discovery.proto" GrpcServices="Server" />
 	</ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="MassTransit.RabbitMQ" Version="8.0.6" />
-		<PackageReference Include="MassTransit" Version="8.0.6" />
-		<PackageReference Include="Grpc.AspNetCore" Version="2.49.0" />
-		<PackageReference Include="StackExchange.Redis" Version="2.6.66" />
-		<PackageReference Include="EFCore.NamingConventions" Version="6.0.0" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.9" />
-		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="6.0.7" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.9" />
-		<PackageReference Include="MassTransit.EntityFrameworkCore" Version="8.0.6" />
-		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime" Version="6.0.7" />
+		<PackageReference Include="MassTransit.RabbitMQ" Version="8.0.8" />
+		<PackageReference Include="MassTransit" Version="8.0.8" />
+		<PackageReference Include="Grpc.AspNetCore" Version="2.50.0" />
+		<PackageReference Include="StackExchange.Redis" Version="2.6.80" />
+		<PackageReference Include="EFCore.NamingConventions" Version="7.0.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.0" />
+		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.0" />
+		<PackageReference Include="MassTransit.EntityFrameworkCore" Version="8.0.8" />
+		<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL.NodaTime" Version="7.0.0" />
 	</ItemGroup>
 </Project>

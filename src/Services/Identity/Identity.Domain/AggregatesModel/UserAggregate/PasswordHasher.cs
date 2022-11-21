@@ -1,5 +1,6 @@
 #pragma warning disable CS8618
 
+using System.Diagnostics.CodeAnalysis;
 using Blog.Services.Identity.Domain.Exceptions;
 using Blog.Services.Identity.Domain.SeedWork;
 
@@ -13,7 +14,7 @@ public abstract class PasswordHasher
     public abstract PasswordHash HashPassword(Password password);
     public abstract bool VerifyPasswordHash(NonEmptyString password, PasswordHash? passwordHash);
 
-    public class PasswordHash : ValueObject<PasswordHash>
+    public readonly struct PasswordHash
     {
         private readonly NonEmptyString _value;
 
@@ -22,18 +23,26 @@ public abstract class PasswordHasher
             NewHash = value => new PasswordHash(value);
         }
 
+        [SetsRequiredMembers]
         private PasswordHash(NonEmptyString value)
         {
-            if (value is null)
-                throw new IdentityDomainException("Password hash must not be null.");
-
             _value = value;
         }
 
-        public static implicit operator string(PasswordHash value) => value?._value ?? throw new IdentityDomainException("Password hash must not be null.");
-        protected override IEnumerable<object?> GetEqualityCheckAttributes()
+        public override bool Equals([NotNullWhen(true)] object? obj)
         {
-            yield return _value;
+            if (obj is null)
+                return false;
+
+            if (obj is not PasswordHash second)
+                return false;
+
+            return this._value.Equals(second._value);
         }
+
+        public override int GetHashCode() => _value.GetHashCode();
+
+        public static implicit operator string(PasswordHash value) => value._value;
+        public static implicit operator PasswordHash(NonEmptyString value) => new(value);
     }
 }

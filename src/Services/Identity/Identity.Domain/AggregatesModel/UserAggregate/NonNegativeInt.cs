@@ -1,27 +1,35 @@
-using Blog.Services.Identity.Domain.SeedWork;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 
-public class NonNegativeInt : ValueObject<NonNegativeInt>
+public readonly struct NonNegativeInt
 {
-    private readonly int _value;
+    public required int Value { get; init; }
 
+    [SetsRequiredMembers]
     public NonNegativeInt(int value)
     {
         if (value < 0)
             throw new ArgumentException($"Value cannot be negative.");
 
-        _value = value;
+        Value = value;
     }
 
-    protected override IEnumerable<object?> GetEqualityCheckAttributes()
+    public override bool Equals([NotNullWhen(true)] object? obj)
     {
-        yield return _value;
+        if (obj is null)
+            return false;
+
+        if (obj is not NonNegativeInt second)
+            return false;
+
+        return this.Value == second.Value;
     }
 
+    public override int GetHashCode() => Value.GetHashCode();
     public static implicit operator NonNegativeInt(int value) => new(value);
-    public static implicit operator int(NonNegativeInt value) => value?._value ?? throw new ArgumentNullException(nameof(value));
-    public static NonNegativeInt operator ++(NonNegativeInt a) => new(a._value + 1);
-    public static bool operator >=(NonNegativeInt a, int b) => a._value >= b;
-    public static bool operator <=(NonNegativeInt a, int b) => a._value <= b;
+    public static implicit operator int(NonNegativeInt value) => value.Value;
+    public static NonNegativeInt operator ++(NonNegativeInt a) => new(a.Value + 1);
+    public static bool operator >=(NonNegativeInt a, int b) => a.Value >= b;
+    public static bool operator <=(NonNegativeInt a, int b) => a.Value <= b;
 }

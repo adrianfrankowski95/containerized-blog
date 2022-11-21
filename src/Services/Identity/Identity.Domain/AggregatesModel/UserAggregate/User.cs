@@ -40,15 +40,6 @@ public class User : Entity<UserId>, IAggregateRoot
         UserRole? userRole = null
     )
     {
-        if (username is null)
-            throw new ArgumentNullException($"{nameof(Username)} must not be null.");
-
-        if (fullName is null)
-            throw new ArgumentNullException($"{nameof(FullName)} must not be null.");
-
-        if (emailAddress is null)
-            throw new ArgumentNullException($"{nameof(EmailAddress)} must not be null.");
-
         if (gender is null)
             throw new IdentityDomainException($"{nameof(Gender)} must not be null.");
 
@@ -133,9 +124,6 @@ public class User : Entity<UserId>, IAggregateRoot
 
     public void ConfirmEmailAddress(NonEmptyString providedCode, Instant now)
     {
-        if (providedCode is null)
-            throw new IdentityDomainException("Missing email confirmation code.");
-
         EmailConfirmationCode.Verify(providedCode, now);
         ConfirmEmailAddress();
         ClearEmailConfirmationCode();
@@ -203,7 +191,7 @@ public class User : Entity<UserId>, IAggregateRoot
 
         if (fullName is not null && !FullName.Equals(fullName))
         {
-            FullName = fullName;
+            FullName = fullName.Value;
             isUpdated = true;
         }
 

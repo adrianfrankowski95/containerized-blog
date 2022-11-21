@@ -1,9 +1,9 @@
+using System.Diagnostics.CodeAnalysis;
 using Blog.Services.Identity.Domain.Exceptions;
-using Blog.Services.Identity.Domain.SeedWork;
 
 namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 
-public class Password : ValueObject<Password>
+public readonly struct Password
 {
     public const int MinLength = 8;
     private readonly NonEmptyString _value;
@@ -13,35 +13,41 @@ public class Password : ValueObject<Password>
     private static bool IsLowercase(char c) => c is >= 'a' and <= 'z';
     private static bool IsNonAlphanumeric(char c) => !IsDigit(c) && !IsUppercase(c) && !IsLowercase(c);
 
-    public Password(NonEmptyString value)
+    [SetsRequiredMembers]
+    public Password(NonEmptyString password)
     {
-        if (value is null)
-            throw new IdentityDomainException("Password must not be null.");
-
-        if (!IsLongEnough(value))
+        if (!IsLongEnough(password))
             throw new IdentityDomainException($"Password must be at least {MinLength} characters long.");
 
-        if (value.Any(c => !IsDigit(c)))
+        if (password.Any(c => !IsDigit(c)))
             throw new IdentityDomainException("Password must contain at least one digit.");
 
-        if (value.Any(c => !IsUppercase(c)))
+        if (password.Any(c => !IsUppercase(c)))
             throw new IdentityDomainException("Password must contain at least one uppercase character.");
 
-        if (value.Any(c => !IsLowercase(c)))
+        if (password.Any(c => !IsLowercase(c)))
             throw new IdentityDomainException("Password must contain at least one lowercase character.");
 
-        if (value.Any(c => !IsNonAlphanumeric(c)))
+        if (password.Any(c => !IsNonAlphanumeric(c)))
             throw new IdentityDomainException("Password must contain at least one non-alphanumeric character.");
 
-        _value = value;
+        _value = password;
     }
+
+    public override bool Equals([NotNullWhen(true)] object? obj)
+    {
+        if (obj is null)
+            return false;
+
+        if (obj is not Password second)
+            return false;
+
+        return this._value.Equals(second._value);
+    }
+
+    public override int GetHashCode() => _value.GetHashCode();
 
     public static implicit operator Password(NonEmptyString value) => new(value);
-    public static implicit operator NonEmptyString(Password value) => value?._value ?? throw new IdentityDomainException("Password must not be null.");
-    public static implicit operator string(Password value) => value?._value ?? throw new IdentityDomainException("Password must not be null.");
-
-    protected override IEnumerable<object?> GetEqualityCheckAttributes()
-    {
-        yield return _value;
-    }
+    public static implicit operator NonEmptyString(Password value) => value._value;
+    public static implicit operator string(Password value) => value._value;
 }

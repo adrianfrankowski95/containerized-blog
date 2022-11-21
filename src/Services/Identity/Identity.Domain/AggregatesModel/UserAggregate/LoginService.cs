@@ -23,7 +23,7 @@ public class LoginService
         if (user.IsLockedOut(now))
             return LoginResult.Fail(LoginErrorCode.AccountLockedOut);
 
-        if (!(user.EmailAddress?.Equals(providedEmailAddress) ?? false))
+        if (user.EmailAddress.Equals(providedEmailAddress))
             return LoginResult.Fail(LoginErrorCode.InvalidEmail);
 
         if (!passwordHasher.VerifyPasswordHash(providedPassword, user.PasswordHash))

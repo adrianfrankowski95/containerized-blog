@@ -1,10 +1,10 @@
+using System.Diagnostics.CodeAnalysis;
 using Blog.Services.Identity.Domain.Exceptions;
-using Blog.Services.Identity.Domain.SeedWork;
 using NodaTime;
 
 namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 
-public class EmailConfirmationCode : ValueObject<EmailConfirmationCode>
+public readonly struct EmailConfirmationCode
 {
     private readonly static Duration _validityDuration = Duration.FromHours(1);
     private readonly Guid? _value;
@@ -13,7 +13,7 @@ public class EmailConfirmationCode : ValueObject<EmailConfirmationCode>
     private readonly static EmailConfirmationCode _empty = new();
     public static EmailConfirmationCode Empty => _empty;
 
-    private EmailConfirmationCode()
+    public EmailConfirmationCode()
     {
         _value = null;
         IssuedAt = null;
@@ -37,9 +37,6 @@ public class EmailConfirmationCode : ValueObject<EmailConfirmationCode>
 
     public void Verify(NonEmptyString providedCode, Instant now)
     {
-        if (providedCode is null)
-            throw new IdentityDomainException("Provided email confirmation code must not be empty.");
-
         // Don't reveal that the email confirmation code has not been requested
         if (IsEmpty)
             throw new IdentityDomainException("The email confirmation code is invalid.");
@@ -53,8 +50,16 @@ public class EmailConfirmationCode : ValueObject<EmailConfirmationCode>
 
     public override string ToString() => _value?.ToString() ?? "";
 
-    protected override IEnumerable<object?> GetEqualityCheckAttributes()
+    public override bool Equals([NotNullWhen(true)] object? obj)
     {
-        yield return _value;
+        if (obj is null)
+            return false;
+
+        if (obj is not EmailConfirmationCode second)
+            return false;
+
+        return this._value?.Equals(second._value) ?? second._value is null;
     }
+
+    public override int GetHashCode() => _value?.GetHashCode() ?? 0;
 }

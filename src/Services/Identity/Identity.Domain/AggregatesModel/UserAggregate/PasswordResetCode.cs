@@ -1,10 +1,10 @@
+using System.Diagnostics.CodeAnalysis;
 using Blog.Services.Identity.Domain.Exceptions;
-using Blog.Services.Identity.Domain.SeedWork;
 using NodaTime;
 
 namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 
-public class PasswordResetCode : ValueObject<PasswordResetCode>
+public readonly struct PasswordResetCode
 {
     // Without I,l for better legibility
     private const string AllowedCharacters = "ABCDEFGHJKLMNOPQRSTUVWXYZ1234567890!@$?_-/\\=abcdefghijkmnopqrstuvwxyz";
@@ -16,7 +16,7 @@ public class PasswordResetCode : ValueObject<PasswordResetCode>
     private readonly static PasswordResetCode _empty = new();
     public static PasswordResetCode Empty => _empty;
 
-    private PasswordResetCode()
+    public PasswordResetCode()
     {
         _value = null;
         IssuedAt = null;
@@ -24,9 +24,6 @@ public class PasswordResetCode : ValueObject<PasswordResetCode>
 
     private PasswordResetCode(NonEmptyString value, Instant now)
     {
-        if (value is null)
-            throw new ArgumentNullException("Password reset code must not be null.");
-
         if (value.Length != Length || value.Any(c => !AllowedCharacters.Contains(c)))
             throw new IdentityDomainException("Invalid password reset code format.");
 
@@ -54,9 +51,6 @@ public class PasswordResetCode : ValueObject<PasswordResetCode>
 
     public void Verify(NonEmptyString providedCode, Instant now)
     {
-        if (providedCode is null)
-            throw new ArgumentNullException("Provided password reset code must not be null.");
-
         // Don't reveal that the password reset code has not been requested
         if (IsEmpty)
             throw new IdentityDomainException("The password reset code is invalid.");
@@ -67,10 +61,17 @@ public class PasswordResetCode : ValueObject<PasswordResetCode>
         if (!string.Equals(ToString(), providedCode, StringComparison.Ordinal))
             throw new IdentityDomainException("The password reset code is invalid.");
     }
-    protected override IEnumerable<object?> GetEqualityCheckAttributes()
+
+    public override bool Equals([NotNullWhen(true)] object? obj)
     {
-        yield return _value;
+        if (obj is null)
+            return false;
+
+        if (obj is not PasswordResetCode second)
+            return false;
+
+        return string.Equals(this._value, second._value, StringComparison.Ordinal);
     }
 
-    public static implicit operator string(PasswordResetCode value) => value?._value ?? throw new IdentityDomainException("Password reset code must not be null");
+    public override int GetHashCode() => _value?.GetHashCode() ?? 0;
 }
