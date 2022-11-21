@@ -70,6 +70,6 @@ public class PostTranslationBaseEntityConfiguration : IEntityTypeConfiguration<P
             .HasMethod("btree")
             .IsUnique();
 
-        builder.UseXminAsConcurrencyToken();
+        builder.Property("row_version").IsRowVersion();
     }
 }

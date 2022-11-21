@@ -30,10 +30,7 @@ public class RestaurantReviewPostTranslationEntityConfiguration : IEntityTypeCon
                     .HasColumnName("review_restaurant_zipcode")
                     .HasColumnType("varchar(10)");
 
-                a.Property<uint>("xmin")
-                    .IsRowVersion()
-                    .HasColumnName("xmin")
-                    .HasColumnType("xid");
+                a.Property<uint>("row_version").IsRowVersion();
 
                 a.WithOwner();
             });

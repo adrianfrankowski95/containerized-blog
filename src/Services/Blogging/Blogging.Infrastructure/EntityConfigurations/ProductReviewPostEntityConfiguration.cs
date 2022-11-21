@@ -24,10 +24,7 @@ public class ProductReviewPostEntityConfiguration : IEntityTypeConfiguration<Pro
                     .HasColumnType("varchar(500)")
                     .IsRequired(false);
 
-                p.Property<uint>("xmin")
-                    .IsRowVersion()
-                    .HasColumnName("xmin")
-                    .HasColumnType("xid");
+                p.Property("row_version").IsRowVersion();
 
                 p.WithOwner();
             });

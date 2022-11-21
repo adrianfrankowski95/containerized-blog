@@ -122,19 +122,19 @@ public class PostBaseEntityConfiguration : IEntityTypeConfiguration<PostBase>
 
         builder
             .HasIndex(x => x.Category)
-            .HasSortOrder(SortOrder.Ascending)
+            .IsDescending(false)
             .HasMethod("hash");
 
         builder
             .HasIndex(x => new { x.Status, x.CreatedAt })
-            .HasSortOrder(SortOrder.Descending)
+            .IsDescending(true, true)
             .HasMethod("btree");
 
         builder
             .HasIndex(x => x.CreatedAt)
-            .HasSortOrder(SortOrder.Descending)
+            .IsDescending(true)
             .HasMethod("btree");
 
-        builder.UseXminAsConcurrencyToken();
+        builder.Property("row_version").IsRowVersion();
     }
 }

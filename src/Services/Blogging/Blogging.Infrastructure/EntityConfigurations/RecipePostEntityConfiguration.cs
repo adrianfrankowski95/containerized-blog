@@ -61,10 +61,7 @@ public class RecipePostEntityConfiguration : IEntityTypeConfiguration<RecipePost
                     .HasColumnName("recipe_cooking_minutes")
                     .HasColumnType("integer");
 
-                t.Property<uint>("xmin")
-                    .IsRowVersion()
-                    .HasColumnName("xmin")
-                    .HasColumnType("xid");
+                t.Property("row_version").IsRowVersion(); ;
 
                 t.Ignore(x => x.TotalTime);
 

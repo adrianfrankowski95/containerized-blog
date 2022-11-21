@@ -94,6 +94,6 @@ public class UserEntityConfiguration : IEntityTypeConfiguration<User>
             .Navigation(x => x.SecurityStamp)
             .IsRequired();
 
-        builder.UseXminAsConcurrencyToken();
+        builder.Property("row_version").IsRowVersion();
     }
 }

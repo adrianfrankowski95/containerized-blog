@@ -43,6 +43,6 @@ public class TagEntityConfiguration : IEntityTypeConfiguration<Tag>
             .HasIndex(x => new { x.Language, x.Value })
             .IsUnique();
 
-        builder.UseXminAsConcurrencyToken();
+        builder.Property("row_version").IsRowVersion();
     }
 }
