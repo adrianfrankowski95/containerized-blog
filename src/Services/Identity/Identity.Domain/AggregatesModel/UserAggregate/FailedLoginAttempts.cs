@@ -4,31 +4,31 @@ using NodaTime;
 
 namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 
-public readonly struct FailedLoginAttemptsCount
+public readonly struct FailedLoginAttempts
 {
     private static readonly Duration _validityDuration = Duration.FromMinutes(5);
     private static readonly NonNegativeInt _maxAllowed = 5;
     public required NonNegativeInt Count { get; init; }
     public Instant? LastFailAt { get; }
     public Instant? ValidUntil => LastFailAt?.Plus(_validityDuration);
-    private static readonly FailedLoginAttemptsCount _none = new();
-    public static FailedLoginAttemptsCount None => _none;
+    private static readonly FailedLoginAttempts _none = new();
+    public static FailedLoginAttempts None => _none;
 
     [SetsRequiredMembers]
-    public FailedLoginAttemptsCount()
+    public FailedLoginAttempts()
     {
         Count = 0;
     }
 
     [SetsRequiredMembers]
-    private FailedLoginAttemptsCount(NonNegativeInt count, Instant now)
+    private FailedLoginAttempts(NonNegativeInt count, Instant now)
     {
         Count = count;
         LastFailAt = now;
     }
 
     public bool IsMaxAllowed() => Count == _maxAllowed;
-    public FailedLoginAttemptsCount Increment(Instant now)
+    public FailedLoginAttempts Increment(Instant now)
     {
         if (IsMaxAllowed())
             throw new IdentityDomainException($"Exceeded maximum allowed failed login attempts.");
@@ -45,7 +45,7 @@ public readonly struct FailedLoginAttemptsCount
         if (obj is null)
             return false;
 
-        if (obj is not FailedLoginAttemptsCount second)
+        if (obj is not FailedLoginAttempts second)
             return false;
 
         return this.Count == second.Count;

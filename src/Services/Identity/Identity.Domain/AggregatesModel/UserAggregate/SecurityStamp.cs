@@ -1,5 +1,4 @@
 using System.Diagnostics.CodeAnalysis;
-using Blog.Services.Identity.Domain.SeedWork;
 using NodaTime;
 
 namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;

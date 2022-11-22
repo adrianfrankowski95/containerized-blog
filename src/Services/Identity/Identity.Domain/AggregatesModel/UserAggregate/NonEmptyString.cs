@@ -34,6 +34,8 @@ public readonly struct NonEmptyString
     public override int GetHashCode() => Value.GetHashCode();
 
     public override string ToString() => Value;
+    public string[] Split(char separator, StringSplitOptions options = StringSplitOptions.None)
+        => Value.Split(separator, options);
     public bool Contains(char value) => Value.Contains(value);
     public bool Any(Func<char, bool> predicate) => Value.Any(predicate);
     public IEnumerable<char> Where(Func<char, bool> selector) => Value.Where(selector);

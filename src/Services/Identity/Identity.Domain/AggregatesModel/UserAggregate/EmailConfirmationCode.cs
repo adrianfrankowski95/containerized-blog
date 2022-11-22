@@ -7,30 +7,32 @@ namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 public readonly struct EmailConfirmationCode
 {
     private readonly static Duration _validityDuration = Duration.FromHours(1);
-    private readonly Guid? _value;
+    public required Guid? Value { get; init; }
     public Instant? IssuedAt { get; }
     public Instant? ValidUntil => IssuedAt?.Plus(_validityDuration);
     private readonly static EmailConfirmationCode _empty = new();
     public static EmailConfirmationCode Empty => _empty;
 
+    [SetsRequiredMembers]
     public EmailConfirmationCode()
     {
-        _value = null;
+        Value = null;
         IssuedAt = null;
     }
 
+    [SetsRequiredMembers]
     private EmailConfirmationCode(Guid value, Instant now)
     {
         if (value.Equals(Guid.Empty))
             throw new ArgumentException("Email confirmation code must not be empty.");
 
-        _value = value;
+        Value = value;
         IssuedAt = now;
     }
 
     public static EmailConfirmationCode NewCode(Instant now) => new(Guid.NewGuid(), now);
 
-    public bool IsEmpty => _value is null;
+    public bool IsEmpty => Value is null;
     private bool IsExpired(Instant now) => IsEmpty
         ? throw new IdentityDomainException("Email confirmation code must not be empty.")
         : now > ValidUntil;
@@ -48,7 +50,7 @@ public readonly struct EmailConfirmationCode
             throw new IdentityDomainException("The email confirmation code is invalid.");
     }
 
-    public override string ToString() => _value?.ToString() ?? "";
+    public override string ToString() => Value?.ToString() ?? "";
 
     public override bool Equals([NotNullWhen(true)] object? obj)
     {
@@ -58,8 +60,8 @@ public readonly struct EmailConfirmationCode
         if (obj is not EmailConfirmationCode second)
             return false;
 
-        return this._value?.Equals(second._value) ?? second._value is null;
+        return this.Value?.Equals(second.Value) ?? second.Value is null;
     }
 
-    public override int GetHashCode() => _value?.GetHashCode() ?? 0;
+    public override int GetHashCode() => Value?.GetHashCode() ?? 0;
 }

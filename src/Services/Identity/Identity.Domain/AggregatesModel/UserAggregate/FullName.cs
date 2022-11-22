@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using Blog.Services.Identity.Domain.Exceptions;
 
 namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 
@@ -15,6 +16,15 @@ public readonly struct FullName
     }
 
     public override string ToString() => FirstName + " " + LastName;
+    public static FullName FromString(NonEmptyString fullName)
+    {
+        var nameSplit = fullName.Split(' ');
+
+        if (nameSplit.Length != 2)
+            throw new IdentityDomainException("Invalid full name format.");
+
+        return new FullName(nameSplit[0], nameSplit[1]);
+    }
 
     public override bool Equals([NotNullWhen(true)] object? obj)
     {

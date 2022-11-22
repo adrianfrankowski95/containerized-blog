@@ -6,15 +6,16 @@ namespace Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 
 public readonly struct EmailAddress
 {
-    private readonly NonEmptyString _value;
+    public required NonEmptyString Value { get; init; }
     public bool IsConfirmed { get; init; }
 
+    [SetsRequiredMembers]
     public EmailAddress(NonEmptyString value)
     {
         if (!new EmailAddressAttribute().IsValid(value))
             throw new IdentityDomainException("Invalid email address format.");
 
-        _value = value;
+        Value = value;
     }
 
     public override bool Equals([NotNullWhen(true)] object? obj)
@@ -25,14 +26,14 @@ public readonly struct EmailAddress
         if (obj is not EmailAddress second)
             return false;
 
-        return this._value.Equals(second._value) && this.IsConfirmed.Equals(second.IsConfirmed);
+        return this.Value.Equals(second.Value);
     }
 
-    public override int GetHashCode() => _value.GetHashCode();
+    public override int GetHashCode() => Value.GetHashCode();
 
-    public EmailAddress Confirm() => new(_value) { IsConfirmed = true };
-    public override string ToString() => _value;
+    public EmailAddress Confirm() => new(Value) { IsConfirmed = true };
+    public override string ToString() => Value;
     public static implicit operator EmailAddress(NonEmptyString value) => new(value);
     public static implicit operator string(EmailAddress value)
-        => value._value;
+        => value.Value;
 }

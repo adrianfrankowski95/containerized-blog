@@ -3,12 +3,12 @@
 using System.Data;
 using Blog.Services.Identity.Domain.AggregatesModel.UserAggregate;
 using Blog.Services.Identity.Domain.SeedWork;
+using Blog.Services.Identity.Infrastructure.Converters;
 using Blog.Services.Identity.Infrastructure.EntityConfigurations;
 using MassTransit;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
-using NodaTime;
 
 namespace Blog.Services.Identity.Infrastructure;
 
@@ -29,9 +29,12 @@ public class IdentityDbContext : DbContext
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         configurationBuilder.IgnoreAny<IReadOnlyList<DomainEvent>>();
-        configurationBuilder.Properties<NonEmptyString>().HaveConversion<string>();
-        configurationBuilder.Properties<NonNegativeInt>().HaveConversion<int>();
-        configurationBuilder.Properties<NonPastInstant>().HaveConversion<Instant>();
+        configurationBuilder.Properties<NonPastInstant>().HaveConversion<NonPastInstantConverter>();
+
+        // These conversions may not be needed as EF Core has a built-in support.
+        // TODO: confirm this
+        // configurationBuilder.Properties<NonEmptyString>().HaveConversion<NonEmptyStringConverter>();
+        // configurationBuilder.Properties<NonNegativeInt>().HaveConversion<NonNegativeIntConverter>();
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
