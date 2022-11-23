@@ -1,4 +1,3 @@
-using Blog.Services.Discovery.API.Configs;
 using Blog.Services.Discovery.API.Grpc;
 using Blog.Services.Discovery.API.Infrastructure;
 using Blog.Services.Discovery.API.Integration.Consumers;
@@ -35,12 +34,6 @@ internal static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddMassTransitRabbitMqBus(this IServiceCollection services, IConfiguration config)
     {
-        services
-            .AddOptions<RabbitMqConfig>()
-            .Bind(config.GetRequiredSection(RabbitMqConfig.Section))
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
-
         services.AddMassTransit(x =>
         {
             x.AddConsumersFromNamespaceContaining<ServiceInstanceStartedIntegrationEventConsumer>();
@@ -53,15 +46,12 @@ internal static class ServiceCollectionExtensions
 
             x.UsingRabbitMq((context, cfg) =>
             {
-                var rabbitMqConfig = config.GetRequiredSection(RabbitMqConfig.Section).Get<RabbitMqConfig>();
+                var connectionString = config.GetConnectionString("EventBus")
+                    ?? throw new InvalidOperationException("Could not get a connection string for RabbitMq");
 
-                cfg.Host(rabbitMqConfig!.Host, rabbitMqConfig.Port, rabbitMqConfig.VirtualHost, opts =>
-                {
-                    opts.Username(rabbitMqConfig.Username);
-                    opts.Password(rabbitMqConfig.Password);
-                });
+                cfg.Host(new Uri(connectionString));
 
-                cfg.ReceiveEndpoint(RabbitMqConfig.QueueName, opts =>
+                cfg.ReceiveEndpoint("discovery-api", opts =>
                 {
                     opts.UseMessageRetry(r => r.Intervals(100, 200, 500, 800, 1000));
                     opts.ConfigureConsumers(context);

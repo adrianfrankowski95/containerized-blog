@@ -25,8 +25,8 @@ public static class InfrastructureInstaller
 
         services.TryAddSingleton<IConnectionMultiplexer>(sp =>
         {
-            var redis = ConnectionMultiplexer.Connect(config.GetConnectionString("Redis")
-                ?? throw new ArgumentNullException("Could not retrieve a connection string to Redis db."));
+            var redis = ConnectionMultiplexer.Connect(config.GetConnectionString("DiscoveryRegister")
+                ?? throw new ArgumentNullException("Could not retrieve a connection string to a Discovery register."));
 
 
             redis.GetServer(redis.GetEndPoints().Single()).ConfigSet("notify-keyspace-events", "Ex");

@@ -1,20 +1,26 @@
 services:
-  rabbitmq1:
-    &rabbitmq_base
+  rabbitmq1: &rabbitmq_base
     image: rabbitmq:management-alpine
     container_name: ${RABBITMQ_HOSTNAME}
     restart: on-failure
+    environment: &rabbitmq_env
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
+      RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST}
     ports:
       - ${RABBITMQ_PORT}
   rabbitmq2:
     <<: *rabbitmq_base
     container_name: '${RABBITMQ_HOSTNAME}2'
+    environment:
+      <<: *rabbitmq_env
   rabbitmq3:
     <<: *rabbitmq_base
     container_name: '${RABBITMQ_HOSTNAME}3'
+    environment:
+      <<: *rabbitmq_env
 
-  discovery-register1:
-    &discovery-register_base
+  discovery-register1: &discovery-register_base
     image: redis:alpine
     container_name: '${DISCOVERY_REGISTER_HOSTNAME}1'
     restart: on-failure
@@ -27,19 +33,18 @@ services:
     <<: *discovery-register_base
     container_name: '${DISCOVERY_REGISTER_HOSTNAME}3'
 
-  discovery-api1:
-    &discovery-api_base
+  discovery-api1: &discovery-api_base
     image: blog/discovery-api
     container_name: '${DISCOVERY_API_HOSTNAME}1'
     restart: on-failure
     build:
       context: .
       dockerfile: Services/Discovery/Discovery.API/Dockerfile
-    environment:
-      &discovery-api_env
+    environment: &discovery-api_env
       ASPNETCORE_ENVIRONMENT: Development
       HOSTNAME: '${DISCOVERY_API_HOSTNAME}1'
       PORT: ${DISCOVERY_API_PORT}
+      CONNECTIONSTRINGS__EVENTBUS: 'rabbitmq://${RABBITMQ_USERNAME}:${RABBITMQ_PASSWORD}@${RABBITMQ_HOSTNAME}:5672/${RABBITMQ_VIRTUAL_HOST}'
     depends_on:
       - rabbitmq1
       - discovery-register1
@@ -70,19 +75,18 @@ services:
     ports:
       - ${EMAILING_DB_PORT}
 
-  emailing-api1:
-    &emailing-api_base
+  emailing-api1: &emailing-api_base
     image: blog/emailing-api
     container_name: '${EMAILING_API_HOSTNAME}1'
     restart: on-failure
     build:
       context: .
       dockerfile: Services/Emailing/Emailing.API/Dockerfile
-    environment:
-      &emailing-api_env
+    environment: &emailing-api_env
       ASPNETCORE_ENVIRONMENT: Development
       HOSTNAME: '${EMAILING_API_HOSTNAME}1'
       PORT: ${EMAILING_API_PORT}
+      CONNECTIONSTRINGS__EVENTBUS: 'rabbitmq://${RABBITMQ_USERNAME}:${RABBITMQ_PASSWORD}@${RABBITMQ_HOSTNAME}:5672/${RABBITMQ_VIRTUAL_HOST}'
       CONNECTIONSTRINGS__EMAILINGDB: 'host=${EMAILING_DB_HOSTNAME};port=5432;database=${EMAILING_DB_HOSTNAME};password=${EMAILING_DB_POSTGRES_PASSWORD};username=${EMAILING_DB_POSTGRES_USER}'
     depends_on:
       - rabbitmq1
@@ -115,20 +119,19 @@ services:
     ports:
       - ${IDENTITY_DB_PORT}
 
-  identity-api:
-    &identity-api_base
+  identity-api: &identity-api_base
     image: blog/identity-api
     container_name: ${IDENTITY_API_HOSTNAME}
     restart: on-failure
     build:
       context: .
       dockerfile: Services/Identity/Identity.API/Dockerfile
-    environment:
-      &identity-api_env
+    environment: &identity-api_env
       ASPNETCORE_ENVIRONMENT: Development
       HOSTNAME: ${IDENTITY_API_HOSTNAME}
       PORT: ${IDENTITY_API_PORT}
       CONNECTIONSTRINGS__IDENTITYDB: 'host=${IDENTITY_DB_HOSTNAME};port=5432;database=${IDENTITY_DB_HOSTNAME};password=${IDENTITY_DB_POSTGRES_PASSWORD};username=${IDENTITY_DB_POSTGRES_USER}'
+      CONNECTIONSTRINGS__EVENTBUS: 'rabbitmq://${RABBITMQ_USERNAME}:${RABBITMQ_PASSWORD}@${RABBITMQ_HOSTNAME}:5672/${RABBITMQ_VIRTUAL_HOST}'
     depends_on:
       - rabbitmq
       - identity-db
@@ -161,20 +164,19 @@ services:
     ports:
       - ${BLOGGING_DB_PORT}
 
-  blogging-api:
-    &blogging-api_base
+  blogging-api: &blogging-api_base
     image: blog/blogging-api
     container_name: ${BLOGGING_API_HOSTNAME}
     restart: on-failure
     build:
       context: .
       dockerfile: Services/Blogging/Blogging.API/Dockerfile
-    environment:
-      &blogging-api_env
+    environment: &blogging-api_env
       ASPNETCORE_ENVIRONMENT: Development
       HOSTNAME: ${BLOGGING_API_HOSTNAME}
       PORT: ${BLOGGING_API_PORT}
       CONNECTIONSTRINGS__BLOGGINGDB: 'host=${BLOGGING_DB_HOSTNAME};port=5432;database=${BLOGGING_DB_HOSTNAME};password=${BLOGGING_DB_POSTGRES_PASSWORD};username=${BLOGGING_DB_POSTGRES_USER}'
+      CONNECTIONSTRINGS__EVENTBUS: 'rabbitmq://${RABBITMQ_USERNAME}:${RABBITMQ_PASSWORD}@${RABBITMQ_HOSTNAME}:5672/${RABBITMQ_VIRTUAL_HOST}'
     depends_on:
       - rabbitmq
       - blogging-db
@@ -207,19 +209,18 @@ services:
     ports:
       - ${COMMENTS_DB_PORT}
 
-  comments-api:
-    &comments-api_base
+  comments-api: &comments-api_base
     image: blog/comments-api
     restart: on-failure
     container_name: ${COMMENTS_API_HOSTNAME}
     build:
       context: .
       dockerfile: Services/Comments/Comments.API/Dockerfile
-    environment:
-      &comments-api_env
+    environment: &comments-api_env
       ASPNETCORE_ENVIRONMENT: Development
       HOSTNAME: ${COMMENTS_API_HOSTNAME}
       PORT: ${COMMENTS_API_PORT}
+      CONNECTIONSTRINGS__EVENTBUS: 'rabbitmq://${RABBITMQ_USERNAME}:${RABBITMQ_PASSWORD}@${RABBITMQ_HOSTNAME}:5672/${RABBITMQ_VIRTUAL_HOST}'
       CONNECTIONSTRINGS__COMMENTSDB: 'host=${COMMENTS_DB_HOSTNAME};port=5432;database=${COMMENTS_DB_HOSTNAME};password=${COMMENTS_DB_POSTGRES_PASSWORD};username=${COMMENTS_DB_POSTGRES_USER}'
     depends_on:
       - rabbitmq
@@ -251,6 +252,7 @@ services:
       dockerfile: Gateways/WebGateway.API/Dockerfile
     environment:
       ASPNETCORE_ENVIRONMENT: Development
+      CONNECTIONSTRINGS__EVENTBUS: 'rabbitmq://${RABBITMQ_USERNAME}:${RABBITMQ_PASSWORD}@${RABBITMQ_HOSTNAME}:5672/${RABBITMQ_VIRTUAL_HOST}'
     deploy:
       mode: global
     depends_on:
