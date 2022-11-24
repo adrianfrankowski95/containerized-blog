@@ -51,12 +51,20 @@ public class PostBaseEntityConfiguration : IEntityTypeConfiguration<PostBase>
                 a.Property(x => x.Id)
                     .HasConversion(x => x.Value, x => new UserId(x))
                     .HasColumnName("author_id");
+
                 a.HasIndex(x => x.Id)
                     .HasMethod("hash");
+
                 a.Property(x => x.Name)
                     .HasColumnName("author_name")
                     .HasColumnType("varchar(32)");
+
                 a.Ignore(x => x.Role);
+
+                a.Property<byte[]>("row_version")
+                    .HasColumnName("row_version")
+                    .IsRowVersion();
+
                 a.WithOwner();
             });
 
@@ -66,10 +74,17 @@ public class PostBaseEntityConfiguration : IEntityTypeConfiguration<PostBase>
                 e.Property(x => x.Id)
                     .HasConversion(x => x.Value, x => new UserId(x))
                     .HasColumnName("editor_id");
+
                 e.Property(x => x.Name)
                     .HasColumnName("editor_name")
                     .HasColumnType("varchar(32)");
+
                 e.Ignore(x => x.Role);
+
+                e.Property<byte[]>("row_version")
+                    .HasColumnName("row_version")
+                    .IsRowVersion();
+
                 e.WithOwner();
             });
 
@@ -135,6 +150,9 @@ public class PostBaseEntityConfiguration : IEntityTypeConfiguration<PostBase>
             .IsDescending(true)
             .HasMethod("btree");
 
-        builder.Property("row_version").IsRowVersion();
+        builder
+            .Property<byte[]>("row_version")
+            .HasColumnName("row_version")
+            .IsRowVersion();
     }
 }

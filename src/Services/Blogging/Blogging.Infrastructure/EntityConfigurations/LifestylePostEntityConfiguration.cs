@@ -11,5 +11,10 @@ public class LifestylePostEntityConfiguration : IEntityTypeConfiguration<Lifesty
     {
         builder
             .HasBaseType<PostBase>();
+
+        builder
+            .Property<byte[]>("row_version")
+            .HasColumnName("row_version")
+            .IsRowVersion();
     }
 }

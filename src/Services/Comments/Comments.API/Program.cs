@@ -15,6 +15,7 @@ var services = builder.Services;
 services
     .AddInstanceConfig()
     .AddControllers(env)
+    .AddCommentsInfrastructure(config)
     .AddMassTransitRabbitMqBus(config);
 
 services.AddEndpointsApiExplorer();

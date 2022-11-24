@@ -17,6 +17,9 @@ public class RecipePost : PostBase
     public IReadOnlyList<PreparationMethod> PreparationMethods => _preparationMethods;
     public string SongUrl { get; private set; }
 
+    // EF Core
+    private RecipePost() { }
+
     public RecipePost(
         User author,
         IEnumerable<RecipePostTranslation> translations,

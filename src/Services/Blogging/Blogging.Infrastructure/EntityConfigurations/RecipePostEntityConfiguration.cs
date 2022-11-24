@@ -1,6 +1,9 @@
 using Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate;
 using Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate.RecipePostAggregate;
+using Blog.Services.Blogging.Infrastructure.Comparers;
+using Blog.Services.Blogging.Infrastructure.Extensions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using TimeSpan = Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate.RecipePostAggregate.TimeSpan;
 
@@ -59,9 +62,11 @@ public class RecipePostEntityConfiguration : IEntityTypeConfiguration<RecipePost
                     .HasColumnName("recipe_cooking_minutes")
                     .HasColumnType("integer");
 
-                t.Property("row_version").IsRowVersion(); ;
-
                 t.Ignore(x => x.TotalTime);
+
+                t.Property<byte[]>("row_version")
+                    .HasColumnName("row_version")
+                    .IsRowVersion();
 
                 t.WithOwner();
             });
@@ -69,12 +74,14 @@ public class RecipePostEntityConfiguration : IEntityTypeConfiguration<RecipePost
         //A workaround for keeping encapsulation in a Domain
         //and mapping to an array column type in Postgresql
         builder
-            .Ignore(x => x.Tastes); //property of type IReadOnlyList<Taste>
+            .Ignore(x => x.Tastes); //property of type IReadOnlyList<Taste>d
+
         builder
             .Property<List<Taste>>("_tastes") //backing field of type List<Taste>
             .HasPostgresArrayConversion(x => x.Name, x => Taste.FromName(x))
             .HasColumnName("recipe_tastes")
-            .HasColumnType("text[]");
+            .HasColumnType("text[]")
+            .Metadata.SetValueComparer(new EnumerationComparer<Taste>());
 
         //A workaround for keeping encapsulation in a Domain
         //and mapping to an array column type in Postgresql
@@ -84,7 +91,8 @@ public class RecipePostEntityConfiguration : IEntityTypeConfiguration<RecipePost
             .Property<List<PreparationMethod>>("_preparationMethods") //backing field of type List<PreparationMethod>
             .HasPostgresArrayConversion(x => x.Name, x => PreparationMethod.FromName(x))
             .HasColumnName("recipe_preparation_methods")
-            .HasColumnType("text[]");
+            .HasColumnType("text[]")
+            .Metadata.SetValueComparer(new EnumerationComparer<PreparationMethod>());
 
     }
 }

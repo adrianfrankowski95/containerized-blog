@@ -8,11 +8,11 @@ public static class EnumerableExtensions
             return true;
 
         if (source is ICollection<T> list)
-            return list.Count > 0;
+            return list.Count == 0;
 
         if (source is Array array)
-            return array.Length > 0;
+            return array.Length == 0;
 
-        return source.Any();
+        return !source.Any();
     }
 }

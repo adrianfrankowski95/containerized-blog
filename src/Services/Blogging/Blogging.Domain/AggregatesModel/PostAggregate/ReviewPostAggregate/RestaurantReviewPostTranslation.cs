@@ -10,6 +10,9 @@ public class RestaurantReviewPostTranslation : ReviewPostTranslationBase
     private readonly List<string> _restaurantCuisines;
     public IReadOnlyList<string> RestaurantCuisines => _restaurantCuisines;
 
+    // EF Core
+    private RestaurantReviewPostTranslation() { }
+
     public RestaurantReviewPostTranslation(
         Language language,
         string title,

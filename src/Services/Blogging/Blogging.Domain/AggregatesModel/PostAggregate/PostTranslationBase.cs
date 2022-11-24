@@ -15,6 +15,9 @@ public abstract class PostTranslationBase : ValueObject<PostTranslationBase>, IT
     private readonly HashSet<Tag> _tags;
     public IReadOnlySet<Tag> Tags => _tags;
 
+    // EF Core
+    protected PostTranslationBase() { }
+
     protected PostTranslationBase(
         Language language,
         string title,

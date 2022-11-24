@@ -40,6 +40,7 @@ public static class InfrastructureInstaller
 
         services.TryAddScoped<IServiceRegistry, RedisServiceRegistry>();
         services.AddHostedService<RedisKeyExpiredEventHandler>();
+        services.AddHostedService<DiscoveryDbMigrator>();
 
         return services;
     }

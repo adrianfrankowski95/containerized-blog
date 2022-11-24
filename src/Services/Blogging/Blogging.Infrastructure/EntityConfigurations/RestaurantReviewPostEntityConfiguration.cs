@@ -23,7 +23,9 @@ public class RestaurantReviewPostEntityConfiguration : IEntityTypeConfiguration<
                     .HasColumnType("varchar(500)")
                     .IsRequired(false);
 
-                r.Property("row_version").IsRowVersion();
+                r.Property<byte[]>("row_version")
+                    .HasColumnName("row_version")
+                    .IsRowVersion();
 
                 r.WithOwner();
             });

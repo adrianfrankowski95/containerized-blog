@@ -22,47 +22,60 @@ services:
 
   discovery-register1: &discovery-register_base
     image: redis:alpine
-    container_name: '${DISCOVERY_REGISTER_HOSTNAME}1'
+    container_name: '${DISCOVERY_REGISTER_HOSTNAME}'
     restart: on-failure
     ports:
       - ${DISCOVERY_REGISTER_PORT}
-  discovery-register2:
-    <<: *discovery-register_base
-    container_name: '${DISCOVERY_REGISTER_HOSTNAME}2'
-  discovery-register3:
-    <<: *discovery-register_base
-    container_name: '${DISCOVERY_REGISTER_HOSTNAME}3'
+  # discovery-register2:
+  #   <<: *discovery-register_base
+  #   container_name: '${DISCOVERY_REGISTER_HOSTNAME}2'
+  # discovery-register3:
+  #   <<: *discovery-register_base
+  #   container_name: '${DISCOVERY_REGISTER_HOSTNAME}3'
+
+  discovery-db:
+    image: postgres:alpine
+    container_name: ${DISCOVERY_DB_HOSTNAME}
+    restart: on-failure
+    deploy:
+      mode: global
+    environment:
+      POSTGRES_USER: '${DISCOVERY_DB_POSTGRES_USER}'
+      POSTGRES_PASSWORD: '${DISCOVERY_DB_POSTGRES_PASSWORD}'
+    ports:
+      - ${DISCOVERY_DB_PORT}
 
   discovery-api1: &discovery-api_base
     image: blog/discovery-api
-    container_name: '${DISCOVERY_API_HOSTNAME}1'
+    container_name: ${DISCOVERY_API_HOSTNAME}
     restart: on-failure
     build:
       context: .
       dockerfile: Services/Discovery/Discovery.API/Dockerfile
     environment: &discovery-api_env
       ASPNETCORE_ENVIRONMENT: Development
-      HOSTNAME: '${DISCOVERY_API_HOSTNAME}1'
+      HOSTNAME: ${DISCOVERY_API_HOSTNAME}
       PORT: ${DISCOVERY_API_PORT}
       CONNECTIONSTRINGS__EVENTBUS: 'rabbitmq://${RABBITMQ_USER}:${RABBITMQ_PASS}@${RABBITMQ_HOSTNAME}:5672/${RABBITMQ_VHOST}'
-      CONNECTIONSTRINGS__DISCOVERYREGISTER: '${DISCOVERY_REGISTER_HOSTNAME}:${DISCOVERY_REGISTER_PORT},allowAdmin=true'
+      CONNECTIONSTRINGS__DISCOVERYREGISTER: '${DISCOVERY_REGISTER_HOSTNAME}:6379,allowAdmin=true'
+      CONNECTIONSTRINGS__DISCOVERYDB: 'host=${DISCOVERY_DB_HOSTNAME};port=5432;database=${DISCOVERY_DB_HOSTNAME};password=${DISCOVERY_DB_POSTGRES_PASSWORD};username=${DISCOVERY_DB_POSTGRES_USER}'
     depends_on:
       - rabbitmq1
       - discovery-register1
     ports:
       - ${DISCOVERY_API_PORT}
-  discovery-api2:
-    <<: *discovery-api_base
-    container_name: '${DISCOVERY_API_HOSTNAME}2'
-    environment:
-      <<: *discovery-api_env
-      HOSTNAME: '${DISCOVERY_API_HOSTNAME}2'
-  discovery-api3:
-    <<: *discovery-api_base
-    container_name: '${DISCOVERY_API_HOSTNAME}3'
-    environment:
-      <<: *discovery-api_env
-      HOSTNAME: '${DISCOVERY_API_HOSTNAME}3'
+  # discovery-api2:
+  #   <<: *discovery-api_base
+  #   container_name: '${DISCOVERY_API_HOSTNAME}2'
+  #   environment:
+  #     <<: *discovery-api_env
+  #     HOSTNAME: '${DISCOVERY_API_HOSTNAME}2'
+  # discovery-api3:
+  #   <<: *discovery-api_base
+  #   container_name: '${DISCOVERY_API_HOSTNAME}3'
+  #   environment:
+  #     <<: *discovery-api_env
+  #     HOSTNAME: '${DISCOVERY_API_HOSTNAME}3'
 
   emailing-db:
     image: postgres:alpine
@@ -78,14 +91,14 @@ services:
 
   emailing-api1: &emailing-api_base
     image: blog/emailing-api
-    container_name: '${EMAILING_API_HOSTNAME}1'
+    container_name: ${EMAILING_API_HOSTNAME}
     restart: on-failure
     build:
       context: .
       dockerfile: Services/Emailing/Emailing.API/Dockerfile
     environment: &emailing-api_env
       ASPNETCORE_ENVIRONMENT: Development
-      HOSTNAME: '${EMAILING_API_HOSTNAME}1'
+      HOSTNAME: ${EMAILING_API_HOSTNAME}
       PORT: ${EMAILING_API_PORT}
       CONNECTIONSTRINGS__EVENTBUS: 'rabbitmq://${RABBITMQ_USER}:${RABBITMQ_PASS}@${RABBITMQ_HOSTNAME}:5672/${RABBITMQ_VHOST}'
       CONNECTIONSTRINGS__EMAILINGDB: 'host=${EMAILING_DB_HOSTNAME};port=5432;database=${EMAILING_DB_HOSTNAME};password=${EMAILING_DB_POSTGRES_PASSWORD};username=${EMAILING_DB_POSTGRES_USER}'
@@ -108,50 +121,50 @@ services:
       <<: *emailing-api_env
       HOSTNAME: '${EMAILING_API_HOSTNAME}3'
 
-  identity-db:
-    image: postgres:alpine
-    container_name: ${IDENTITY_DB_HOSTNAME}
-    restart: on-failure
-    deploy:
-      mode: global
-    environment:
-      POSTGRES_USER: '${IDENTITY_DB_POSTGRES_USER}'
-      POSTGRES_PASSWORD: '${IDENTITY_DB_POSTGRES_PASSWORD}'
-    ports:
-      - ${IDENTITY_DB_PORT}
+  # identity-db:
+  #   image: postgres:alpine
+  #   container_name: ${IDENTITY_DB_HOSTNAME}
+  #   restart: on-failure
+  #   deploy:
+  #     mode: global
+  #   environment:
+  #     POSTGRES_USER: '${IDENTITY_DB_POSTGRES_USER}'
+  #     POSTGRES_PASSWORD: '${IDENTITY_DB_POSTGRES_PASSWORD}'
+  #   ports:
+  #     - ${IDENTITY_DB_PORT}
 
-  identity-api: &identity-api_base
-    image: blog/identity-api
-    container_name: ${IDENTITY_API_HOSTNAME}
-    restart: on-failure
-    build:
-      context: .
-      dockerfile: Services/Identity/Identity.API/Dockerfile
-    environment: &identity-api_env
-      ASPNETCORE_ENVIRONMENT: Development
-      HOSTNAME: ${IDENTITY_API_HOSTNAME}
-      PORT: ${IDENTITY_API_PORT}
-      CONNECTIONSTRINGS__IDENTITYDB: 'host=${IDENTITY_DB_HOSTNAME};port=5432;database=${IDENTITY_DB_HOSTNAME};password=${IDENTITY_DB_POSTGRES_PASSWORD};username=${IDENTITY_DB_POSTGRES_USER}'
-      CONNECTIONSTRINGS__EVENTBUS: 'rabbitmq://${RABBITMQ_USER}:${RABBITMQ_PASS}@${RABBITMQ_HOSTNAME}:5672/${RABBITMQ_VHOST}'
-    depends_on:
-      - rabbitmq
-      - identity-db
-      - discovery-api1
-      - emailing-api1
-    ports:
-      - ${IDENTITY_API_PORT}
-  identity-api2:
-    <<: *identity-api_base
-    container_name: '${IDENTITY_API_HOSTNAME}2'
-    environment:
-      <<: *identity-api_env
-      HOSTNAME: '${IDENTITY_API_HOSTNAME}2'
-  identity-api3:
-    <<: *identity-api_base
-    container_name: '${IDENTITY_API_HOSTNAME}3'
-    environment:
-      <<: *identity-api_env
-      HOSTNAME: '${IDENTITY_API_HOSTNAME}3'
+  # identity-api1: &identity-api_base
+  #   image: blog/identity-api
+  #   container_name: ${IDENTITY_API_HOSTNAME}
+  #   restart: on-failure
+  #   build:
+  #     context: .
+  #     dockerfile: Services/Identity/Identity.API/Dockerfile
+  #   environment: &identity-api_env
+  #     ASPNETCORE_ENVIRONMENT: Development
+  #     HOSTNAME: ${IDENTITY_API_HOSTNAME}
+  #     PORT: ${IDENTITY_API_PORT}
+  #     CONNECTIONSTRINGS__IDENTITYDB: 'host=${IDENTITY_DB_HOSTNAME};port=5432;database=${IDENTITY_DB_HOSTNAME};password=${IDENTITY_DB_POSTGRES_PASSWORD};username=${IDENTITY_DB_POSTGRES_USER}'
+  #     CONNECTIONSTRINGS__EVENTBUS: 'rabbitmq://${RABBITMQ_USER}:${RABBITMQ_PASS}@${RABBITMQ_HOSTNAME}:5672/${RABBITMQ_VHOST}'
+  #   depends_on:
+  #     - rabbitmq
+  #     - identity-db
+  #     - discovery-api1
+  #     - emailing-api1
+  #   ports:
+  #     - ${IDENTITY_API_PORT}
+  # identity-api2:
+  #   <<: *identity-api_base
+  #   container_name: '${IDENTITY_API_HOSTNAME}2'
+  #   environment:
+  #     <<: *identity-api_env
+  #     HOSTNAME: '${IDENTITY_API_HOSTNAME}2'
+  # identity-api3:
+  #   <<: *identity-api_base
+  #   container_name: '${IDENTITY_API_HOSTNAME}3'
+  #   environment:
+  #     <<: *identity-api_env
+  #     HOSTNAME: '${IDENTITY_API_HOSTNAME}3'
 
   blogging-db:
     image: postgres:alpine
@@ -165,7 +178,7 @@ services:
     ports:
       - ${BLOGGING_DB_PORT}
 
-  blogging-api: &blogging-api_base
+  blogging-api1: &blogging-api_base
     image: blog/blogging-api
     container_name: ${BLOGGING_API_HOSTNAME}
     restart: on-failure
@@ -210,7 +223,7 @@ services:
     ports:
       - ${COMMENTS_DB_PORT}
 
-  comments-api: &comments-api_base
+  comments-api1: &comments-api_base
     image: blog/comments-api
     restart: on-failure
     container_name: ${COMMENTS_API_HOSTNAME}
@@ -254,12 +267,13 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       CONNECTIONSTRINGS__EVENTBUS: 'rabbitmq://${RABBITMQ_USER}:${RABBITMQ_PASS}@${RABBITMQ_HOSTNAME}:5672/${RABBITMQ_VHOST}'
+      URLS__DISCOVERYSERVICE: '${DISCOVERY_API_SCHEME}://${DISCOVERY_API_HOSTNAME}:${DISCOVERY_API_PORT}'
     deploy:
       mode: global
     depends_on:
       - rabbitmq1
       - discovery-api1
-      - identity-api1
+      # - identity-api1
       - blogging-api1
       - comments-api1
       - emailing-api1

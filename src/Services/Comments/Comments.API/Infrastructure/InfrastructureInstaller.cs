@@ -1,8 +1,6 @@
-
-using Blog.Services.Comments.API.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 
-namespace Blog.Services.Discovery.API.Infrastructure;
+namespace Blog.Services.Comments.API.Infrastructure;
 
 public static class InfrastructureInstaller
 {

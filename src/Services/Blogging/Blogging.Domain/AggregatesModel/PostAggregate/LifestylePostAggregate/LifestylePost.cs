@@ -2,6 +2,9 @@ namespace Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate.LifestyleP
 
 public class LifestylePost : PostBase
 {
+    // EF Core
+    private LifestylePost() { }
+
     public LifestylePost(
         User author,
         IEnumerable<LifestylePostTranslation> translations,

@@ -4,7 +4,6 @@ using Blog.Services.Blogging.API.Controllers;
 using Blog.Services.Blogging.API.Extensions;
 using Blog.Services.Blogging.API.Infrastructure.Services;
 using Blog.Services.Blogging.API.Models;
-using Blog.Services.Blogging.API.Options;
 using Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate;
 using Blog.Services.Blogging.Infrastructure;
 using MassTransit;
@@ -92,12 +91,12 @@ static class ServiceCollectionExtensions
 
     public static IServiceCollection AddCustomJwtAuthentication(this IServiceCollection services, IConfiguration config)
     {
-        services.AddOptions<JwtOptions>()
-            .Bind(config.GetRequiredSection(JwtOptions.Section))
+        services.AddOptions<JwtConfig>()
+            .Bind(config.GetRequiredSection(JwtConfig.Section))
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
-        var jwtConfig = config.GetRequiredSection(JwtOptions.Section);
+        var jwtConfig = config.GetRequiredSection(JwtConfig.Section);
 
         services
             .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

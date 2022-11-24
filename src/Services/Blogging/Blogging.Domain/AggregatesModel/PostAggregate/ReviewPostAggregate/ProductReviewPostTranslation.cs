@@ -1,11 +1,12 @@
 using Blog.Services.Blogging.Domain.AggregatesModel.Shared;
 using Blog.Services.Blogging.Domain.AggregatesModel.TagAggregate;
-using Blog.Services.Blogging.Domain.Exceptions;
 
 namespace Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate.ReviewPostAggregate;
 
 public class ProductReviewPostTranslation : ReviewPostTranslationBase
 {
+    // EF Core
+    private ProductReviewPostTranslation() { }
     public ProductReviewPostTranslation(
         Language language,
         string title,

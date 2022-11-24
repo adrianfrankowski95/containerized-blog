@@ -23,7 +23,7 @@ public class ServiceInstanceStartedIntegrationEventConsumer : IConsumer<ServiceI
     {
         Guid instanceId = context.Message.InstanceId;
         string serviceType = context.Message.ServiceType;
-        IReadOnlySet<string> addresses = context.Message.ServiceAddresses;
+        HashSet<string> addresses = context.Message.ServiceAddresses;
 
         if (instanceId.Equals(Guid.Empty))
             throw new InvalidDataException($"{nameof(context.Message.InstanceId)} must not be empty");

@@ -43,6 +43,6 @@ public class TagEntityConfiguration : IEntityTypeConfiguration<Tag>
             .HasIndex(x => new { x.Language, x.Value })
             .IsUnique();
 
-        builder.Property("row_version").IsRowVersion();
+        builder.Property<byte[]>("row_version").IsRowVersion();
     }
 }

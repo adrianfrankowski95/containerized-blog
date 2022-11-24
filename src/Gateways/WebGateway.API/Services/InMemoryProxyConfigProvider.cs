@@ -22,17 +22,23 @@ public class InMemoryProxyConfigProvider : IProxyConfigProvider, IDisposable
     {
         var services = discoveryService.GetServicesAsync().GetAwaiter().GetResult();
 
-        if (services is null)
+        if (services.IsNullOrEmpty())
             throw new InvalidOperationException("Error discovering services during reverse proxy initialization.");
 
-        var servicesWithoutAddresses = ServiceTypes
-            .List()
-            .Where(serviceType =>
-                services[serviceType].IsNullOrEmpty() ||
-                services[serviceType].SelectMany(instances => instances.Addresses).IsNullOrEmpty());
+        if (services.Keys.Any(type => !GatewayConstants.ServiceTypes.List().Contains(type)))
+            throw new InvalidOperationException($"Discovered unknown service types: {string.Join(',', services.Keys.Except(GatewayConstants.ServiceTypes.List()))}.");
 
-        if (!servicesWithoutAddresses.IsNullOrEmpty())
-            throw new InvalidOperationException($"Error getting addresses of the following services: {string.Join(", ", servicesWithoutAddresses)}.");
+        // if (services.Keys.Count() < GatewayConstants.ServiceTypes.List().Count())
+        //     throw new InvalidOperationException($"The following services could not be discovered: {string.Join(',', GatewayConstants.ServiceTypes.List().Except(services.Keys))}.");
+
+        // var servicesWithoutAddresses = ServiceTypes
+        //     .List()
+        //     .Where(serviceType =>
+        //         services[serviceType].IsNullOrEmpty() ||
+        //         services[serviceType].SelectMany(instances => instances.Addresses).IsNullOrEmpty());
+
+        // if (!servicesWithoutAddresses.IsNullOrEmpty())
+        //     throw new InvalidOperationException($"Error getting addresses of the following services: {string.Join(", ", servicesWithoutAddresses)}.");
 
         List<RouteConfig> routes = new();
         List<ClusterConfig> clusters = new();
@@ -40,9 +46,15 @@ public class InMemoryProxyConfigProvider : IProxyConfigProvider, IDisposable
         foreach (var serviceType in services.Keys)
         {
             var paths = PathsConfig.GetMatchingPaths(serviceType);
+            if (paths.IsNullOrEmpty())
+                throw new InvalidOperationException($"Could not find matching paths for a {serviceType} service.");
+
             routes.AddRange(GenerateRoutes(serviceType, paths));
 
             var destinations = GenerateDestinations(serviceType, services[serviceType]);
+            if (destinations.IsNullOrEmpty())
+                throw new InvalidOperationException($"Could not generate destinations for a {serviceType} service.");
+
             clusters.Add(GenerateCluster(serviceType, destinations));
         }
 

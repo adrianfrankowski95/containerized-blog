@@ -12,6 +12,9 @@ public class RecipePostTranslation : PostTranslationBase
     private readonly List<string> _ingredients;
     public IReadOnlyList<string> Ingredients => _ingredients;
 
+    // EF Core
+    private RecipePostTranslation() { }
+
     public RecipePostTranslation(
         Language language,
         string title,

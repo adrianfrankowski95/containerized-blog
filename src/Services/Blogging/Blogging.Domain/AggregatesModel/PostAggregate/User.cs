@@ -8,6 +8,9 @@ public sealed class User : Entity<UserId>
     public UserRole Role { get; }
     public string Name { get; }
 
+    // EF Core
+    private User() { }
+
     public User(UserId id, string name, string roleName)
     {
         if (id is null)

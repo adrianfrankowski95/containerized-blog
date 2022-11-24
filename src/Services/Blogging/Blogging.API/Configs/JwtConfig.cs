@@ -2,9 +2,9 @@
 
 using System.ComponentModel.DataAnnotations;
 
-namespace Blog.Services.Blogging.API.Options;
+namespace Blog.Services.Blogging.API.Configs;
 
-public class JwtOptions
+public class JwtConfig
 {
     public const string Section = "Jwt";
     [Required]

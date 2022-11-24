@@ -173,6 +173,6 @@ public class UserEntityConfiguration : IEntityTypeConfiguration<User>
         //     .Navigation(x => x.SecurityStamp)
         //     .IsRequired();
 
-        builder.Property("row_version").IsRowVersion();
+        builder.Property<byte[]>("row_version").IsRowVersion();
     }
 }

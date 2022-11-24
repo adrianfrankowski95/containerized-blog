@@ -6,6 +6,9 @@ public class RestaurantReviewPost : ReviewPostBase
 {
     public Restaurant Restaurant { get; private set; }
 
+    // EF Core
+    private RestaurantReviewPost() { }
+
     public RestaurantReviewPost(
         User author,
         IEnumerable<RestaurantReviewPostTranslation> translations,

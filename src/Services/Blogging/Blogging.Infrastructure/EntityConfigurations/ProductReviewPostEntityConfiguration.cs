@@ -24,7 +24,9 @@ public class ProductReviewPostEntityConfiguration : IEntityTypeConfiguration<Pro
                     .HasColumnType("varchar(500)")
                     .IsRequired(false);
 
-                p.Property("row_version").IsRowVersion();
+                p.Property<byte[]>("row_version")
+                    .HasColumnName("row_version")
+                    .IsRowVersion();
 
                 p.WithOwner();
             });

@@ -1,6 +1,7 @@
 using System.Data;
 using Blog.Services.Blogging.Domain.AggregatesModel.PostAggregate;
 using Blog.Services.Blogging.Domain.AggregatesModel.TagAggregate;
+using Blog.Services.Blogging.Domain.SeedWork;
 using Blog.Services.Blogging.Infrastructure.EntityConfigurations;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
@@ -19,6 +20,11 @@ public class BloggingDbContext : DbContext
 
     public BloggingDbContext(DbContextOptions<BloggingDbContext> options) : base(options)
     { }
+
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        configurationBuilder.IgnoreAny<IReadOnlyList<DomainEvent>>();
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

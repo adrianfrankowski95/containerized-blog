@@ -1,5 +1,5 @@
 # https://hub.docker.com/_/microsoft-dotnet
-FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /app
 
 # copy csproj and restore as distinct layers
@@ -15,7 +15,7 @@ WORKDIR "/src/Services/Identity/Identity.API"
 RUN dotnet publish "Identity.API.csproj" -c Release -o /app
 
 # final stage/image
-FROM mcr.microsoft.com/dotnet/aspnet:6.0
+FROM mcr.microsoft.com/dotnet/aspnet:7.0
 WORKDIR /app
 COPY --from=build /app .
 

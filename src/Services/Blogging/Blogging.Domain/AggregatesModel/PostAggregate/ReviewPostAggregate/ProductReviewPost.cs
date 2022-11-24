@@ -6,6 +6,8 @@ public class ProductReviewPost : ReviewPostBase
 {
     public Product Product { get; private set; }
 
+    // EF Core
+    private ProductReviewPost() { }
     public ProductReviewPost(
         User author,
         IEnumerable<ProductReviewPostTranslation> translations,

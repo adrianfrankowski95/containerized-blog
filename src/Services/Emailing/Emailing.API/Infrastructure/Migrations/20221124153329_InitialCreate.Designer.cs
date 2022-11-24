@@ -12,14 +12,15 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Blog.Services.Emailing.API.Infrastructure.Migrations
 {
     [DbContext(typeof(EmailingDbContext))]
-    [Migration("20221118145939_InitialCreate")]
+    [Migration("20221124153329_InitialCreate")]
     partial class InitialCreate
     {
+        /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "6.0.9")
+                .HasAnnotation("ProductVersion", "7.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -53,6 +54,10 @@ namespace Blog.Services.Emailing.API.Infrastructure.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("last_sequence_number");
 
+                    b.Property<Guid>("LockId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("lock_id");
+
                     b.Property<Guid>("MessageId")
                         .HasColumnType("uuid")
                         .HasColumnName("message_id");
@@ -65,15 +70,20 @@ namespace Blog.Services.Emailing.API.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("received");
 
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("bytea")
+                        .HasColumnName("row_version");
+
                     b.HasKey("Id")
                         .HasName("pk_inbox_state");
 
+                    b.HasAlternateKey("MessageId", "ConsumerId")
+                        .HasName("ak_inbox_state_message_id_consumer_id");
+
                     b.HasIndex("Delivered")
                         .HasDatabaseName("ix_inbox_state_delivered");
-
-                    b.HasIndex("MessageId", "ConsumerId")
-                        .IsUnique()
-                        .HasDatabaseName("ix_inbox_state_message_id_consumer_id");
 
                     b.ToTable("inbox_state", "outbox");
                 });
@@ -208,6 +218,16 @@ namespace Blog.Services.Emailing.API.Infrastructure.Migrations
                     b.Property<long?>("LastSequenceNumber")
                         .HasColumnType("bigint")
                         .HasColumnName("last_sequence_number");
+
+                    b.Property<Guid>("LockId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("lock_id");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("bytea")
+                        .HasColumnName("row_version");
 
                     b.HasKey("OutboxId")
                         .HasName("pk_outbox_state");
