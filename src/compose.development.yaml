@@ -1,37 +1,26 @@
+version: '3.9'
 services:
-  rabbitmq1: &rabbitmq_base
+  rabbitmq:
     image: rabbitmq:management-alpine
     container_name: ${RABBITMQ_HOSTNAME}
     restart: on-failure
-    environment: &rabbitmq_env
+    environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
       RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST}
     ports:
       - ${RABBITMQ_PORT}
-  rabbitmq2:
-    <<: *rabbitmq_base
-    container_name: '${RABBITMQ_HOSTNAME}2'
-    environment:
-      <<: *rabbitmq_env
-  rabbitmq3:
-    <<: *rabbitmq_base
-    container_name: '${RABBITMQ_HOSTNAME}3'
-    environment:
-      <<: *rabbitmq_env
+    networks:
+      - event-bus
 
-  discovery-register1: &discovery-register_base
+  discovery-register:
     image: redis:alpine
     container_name: '${DISCOVERY_REGISTER_HOSTNAME}'
     restart: on-failure
     ports:
       - ${DISCOVERY_REGISTER_PORT}
-  # discovery-register2:
-  #   <<: *discovery-register_base
-  #   container_name: '${DISCOVERY_REGISTER_HOSTNAME}2'
-  # discovery-register3:
-  #   <<: *discovery-register_base
-  #   container_name: '${DISCOVERY_REGISTER_HOSTNAME}3'
+    networks:
+      - discovery
 
   discovery-db:
     image: postgres:alpine
@@ -44,15 +33,40 @@ services:
       POSTGRES_PASSWORD: '${DISCOVERY_DB_POSTGRES_PASSWORD}'
     ports:
       - ${DISCOVERY_DB_PORT}
+    networks:
+      - discovery
 
-  discovery-api1: &discovery-api_base
-    image: blog/discovery-api
+  discovery-api-proxy:
+    image: nginx
+    volumes:
+      - ./nginx-conf.template:/etc/nginx/templates/default.conf.template
     container_name: ${DISCOVERY_API_HOSTNAME}
     restart: on-failure
+    deploy:
+      mode: global
+    links:
+      - 'discovery-api:${DISCOVERY_API_HOSTNAME}'
+    environment:
+      - NGINX_HOST=${DISCOVERY_API_HOSTNAME}
+      - NGINX_PORT=${DISCOVERY_API_PORT}
+    depends_on:
+      - discovery-api
+    ports:
+      - ${DISCOVERY_API_PORT}
+    networks:
+      - discovery
+      - webgateway
+
+  discovery-api:
+    image: blog/discovery-api
+    restart: on-failure
+    deploy:
+      mode: replicated
+      replicas: 3
     build:
       context: .
       dockerfile: Services/Discovery/Discovery.API/Dockerfile
-    environment: &discovery-api_env
+    environment:
       ASPNETCORE_ENVIRONMENT: Development
       HOSTNAME: ${DISCOVERY_API_HOSTNAME}
       PORT: ${DISCOVERY_API_PORT}
@@ -60,22 +74,13 @@ services:
       CONNECTIONSTRINGS__DISCOVERYREGISTER: '${DISCOVERY_REGISTER_HOSTNAME}:6379,allowAdmin=true'
       CONNECTIONSTRINGS__DISCOVERYDB: 'host=${DISCOVERY_DB_HOSTNAME};port=5432;database=${DISCOVERY_DB_HOSTNAME};password=${DISCOVERY_DB_POSTGRES_PASSWORD};username=${DISCOVERY_DB_POSTGRES_USER}'
     depends_on:
-      - rabbitmq1
-      - discovery-register1
+      - rabbitmq
+      - discovery-register
     ports:
       - ${DISCOVERY_API_PORT}
-  # discovery-api2:
-  #   <<: *discovery-api_base
-  #   container_name: '${DISCOVERY_API_HOSTNAME}2'
-  #   environment:
-  #     <<: *discovery-api_env
-  #     HOSTNAME: '${DISCOVERY_API_HOSTNAME}2'
-  # discovery-api3:
-  #   <<: *discovery-api_base
-  #   container_name: '${DISCOVERY_API_HOSTNAME}3'
-  #   environment:
-  #     <<: *discovery-api_env
-  #     HOSTNAME: '${DISCOVERY_API_HOSTNAME}3'
+    networks:
+      - discovery
+      - event-bus
 
   emailing-db:
     image: postgres:alpine
@@ -88,59 +93,98 @@ services:
       POSTGRES_PASSWORD: '${EMAILING_DB_POSTGRES_PASSWORD}'
     ports:
       - ${EMAILING_DB_PORT}
+    networks:
+      - emailing
 
-  emailing-api1: &emailing-api_base
-    image: blog/emailing-api
+  emailing-api-proxy:
+    image: nginx
+    volumes:
+      - ./nginx-conf.template:/etc/nginx/templates/default.conf.template
     container_name: ${EMAILING_API_HOSTNAME}
     restart: on-failure
+    deploy:
+      mode: global
+    links:
+      - 'emailing-api:${EMAILING_API_HOSTNAME}'
+    environment:
+      - NGINX_HOST=${EMAILING_API_HOSTNAME}
+      - NGINX_PORT=${EMAILING_API_PORT}
+    depends_on:
+      - emailing-api
+    ports:
+      - ${EMAILING_API_PORT}
+    networks:
+      - emailing
+      - webgateway
+
+  emailing-api:
+    image: blog/emailing-api
+    restart: on-failure
+    deploy:
+      mode: replicated
+      replicas: 3
     build:
       context: .
       dockerfile: Services/Emailing/Emailing.API/Dockerfile
-    environment: &emailing-api_env
+    environment:
       ASPNETCORE_ENVIRONMENT: Development
       HOSTNAME: ${EMAILING_API_HOSTNAME}
       PORT: ${EMAILING_API_PORT}
       CONNECTIONSTRINGS__EVENTBUS: 'rabbitmq://${RABBITMQ_USER}:${RABBITMQ_PASS}@${RABBITMQ_HOSTNAME}:5672/${RABBITMQ_VHOST}'
       CONNECTIONSTRINGS__EMAILINGDB: 'host=${EMAILING_DB_HOSTNAME};port=5432;database=${EMAILING_DB_HOSTNAME};password=${EMAILING_DB_POSTGRES_PASSWORD};username=${EMAILING_DB_POSTGRES_USER}'
     depends_on:
-      - rabbitmq1
-      - discovery-api1
+      - rabbitmq
+      - discovery-api
       - emailing-db
     ports:
       - ${EMAILING_API_PORT}
-  emailing-api2:
-    <<: *emailing-api_base
-    container_name: '${EMAILING_API_HOSTNAME}2'
-    environment:
-      <<: *emailing-api_env
-      HOSTNAME: '${EMAILING_API_HOSTNAME}2'
-  emailing-api3:
-    <<: *emailing-api_base
-    container_name: '${EMAILING_API_HOSTNAME}3'
-    environment:
-      <<: *emailing-api_env
-      HOSTNAME: '${EMAILING_API_HOSTNAME}3'
+    networks:
+      - emailing
+      - event-bus
 
   # identity-db:
   #   image: postgres:alpine
   #   container_name: ${IDENTITY_DB_HOSTNAME}
   #   restart: on-failure
-  #   deploy:
-  #     mode: global
   #   environment:
   #     POSTGRES_USER: '${IDENTITY_DB_POSTGRES_USER}'
   #     POSTGRES_PASSWORD: '${IDENTITY_DB_POSTGRES_PASSWORD}'
   #   ports:
   #     - ${IDENTITY_DB_PORT}
+  #   networks:
+  #     - identity
 
-  # identity-api1: &identity-api_base
-  #   image: blog/identity-api
+  # identity-api-proxy:
+  #   image: nginx
+  #   volumes:
+  #     - ./nginx-conf.template:/etc/nginx/templates/default.conf.template
   #   container_name: ${IDENTITY_API_HOSTNAME}
   #   restart: on-failure
+  #   deploy:
+  #     mode: global
+  #   links:
+  #     - 'identity-api:${IDENTITY_API_HOSTNAME}'
+  #   environment:
+  #     - NGINX_HOST=${IDENTITY_API_HOSTNAME}
+  #     - NGINX_PORT=${IDENTITY_API_PORT}
+  #   depends_on:
+  #     - identity-api
+  #   ports:
+  #     - ${IDENTITY_API_PORT}
+  #   networks:
+  #     - identity
+  #     - webgateway
+
+  # identity-api:
+  #   image: blog/identity-api
+  #   restart: on-failure
+  # deploy:
+  #   mode: replicated
+  #   replicas: 3
   #   build:
   #     context: .
   #     dockerfile: Services/Identity/Identity.API/Dockerfile
-  #   environment: &identity-api_env
+  #   environment:
   #     ASPNETCORE_ENVIRONMENT: Development
   #     HOSTNAME: ${IDENTITY_API_HOSTNAME}
   #     PORT: ${IDENTITY_API_PORT}
@@ -149,22 +193,13 @@ services:
   #   depends_on:
   #     - rabbitmq
   #     - identity-db
-  #     - discovery-api1
-  #     - emailing-api1
+  #     - discovery-api
+  #     - emailing-api
   #   ports:
   #     - ${IDENTITY_API_PORT}
-  # identity-api2:
-  #   <<: *identity-api_base
-  #   container_name: '${IDENTITY_API_HOSTNAME}2'
-  #   environment:
-  #     <<: *identity-api_env
-  #     HOSTNAME: '${IDENTITY_API_HOSTNAME}2'
-  # identity-api3:
-  #   <<: *identity-api_base
-  #   container_name: '${IDENTITY_API_HOSTNAME}3'
-  #   environment:
-  #     <<: *identity-api_env
-  #     HOSTNAME: '${IDENTITY_API_HOSTNAME}3'
+  #   networks:
+  #     - identity
+  #     - event-bus
 
   blogging-db:
     image: postgres:alpine
@@ -177,15 +212,40 @@ services:
       POSTGRES_PASSWORD: '${BLOGGING_DB_POSTGRES_PASSWORD}'
     ports:
       - ${BLOGGING_DB_PORT}
+    networks:
+      - blogging
 
-  blogging-api1: &blogging-api_base
-    image: blog/blogging-api
+  blogging-api-proxy:
+    image: nginx
+    volumes:
+      - ./nginx-conf.template:/etc/nginx/templates/default.conf.template
     container_name: ${BLOGGING_API_HOSTNAME}
     restart: on-failure
+    deploy:
+      mode: global
+    links:
+      - 'blogging-api:${BLOGGING_API_HOSTNAME}'
+    environment:
+      - NGINX_HOST=${BLOGGING_API_HOSTNAME}
+      - NGINX_PORT=${BLOGGING_API_PORT}
+    depends_on:
+      - blogging-api
+    ports:
+      - ${BLOGGING_API_PORT}
+    networks:
+      - blogging
+      - webgateway
+
+  blogging-api:
+    image: blog/blogging-api
+    restart: on-failure
+    deploy:
+      mode: replicated
+      replicas: 3
     build:
       context: .
       dockerfile: Services/Blogging/Blogging.API/Dockerfile
-    environment: &blogging-api_env
+    environment:
       ASPNETCORE_ENVIRONMENT: Development
       HOSTNAME: ${BLOGGING_API_HOSTNAME}
       PORT: ${BLOGGING_API_PORT}
@@ -194,22 +254,13 @@ services:
     depends_on:
       - rabbitmq
       - blogging-db
-      - discovery-api1
-      - emailing-api1
+      - discovery-ap
+      - emailing-ap
     ports:
       - ${BLOGGING_API_PORT}
-  blogging-api2:
-    <<: *blogging-api_base
-    container_name: '${BLOGGING_API_HOSTNAME}2'
-    environment:
-      <<: *blogging-api_env
-      HOSTNAME: '${BLOGGING_API_HOSTNAME}2'
-  blogging-api3:
-    <<: *blogging-api_base
-    container_name: '${BLOGGING_API_HOSTNAME}3'
-    environment:
-      <<: *blogging-api_env
-      HOSTNAME: '${BLOGGING_API_HOSTNAME}3'
+    networks:
+      - blogging
+      - event-bus
 
   comments-db:
     image: postgres:alpine
@@ -222,15 +273,40 @@ services:
       POSTGRES_PASSWORD: '${COMMENTS_DB_POSTGRES_PASSWORD}'
     ports:
       - ${COMMENTS_DB_PORT}
+    networks:
+      - comments
 
-  comments-api1: &comments-api_base
+  comments-api-proxy:
+    image: nginx
+    volumes:
+      - ./nginx-conf.template:/etc/nginx/templates/default.conf.template
+    container_name: ${COMMENTS_API_HOSTNAME}
+    restart: on-failure
+    deploy:
+      mode: global
+    links:
+      - 'comments-api:${COMMENTS_API_HOSTNAME}'
+    environment:
+      - NGINX_HOST=${COMMENTS_API_HOSTNAME}
+      - NGINX_PORT=${COMMENTS_API_PORT}
+    depends_on:
+      - comments-api
+    ports:
+      - ${COMMENTS_API_PORT}
+    networks:
+      - comments
+      - webgateway
+
+  comments-api:
     image: blog/comments-api
     restart: on-failure
-    container_name: ${COMMENTS_API_HOSTNAME}
+    deploy:
+      mode: replicated
+      replicas: 3
     build:
       context: .
       dockerfile: Services/Comments/Comments.API/Dockerfile
-    environment: &comments-api_env
+    environment:
       ASPNETCORE_ENVIRONMENT: Development
       HOSTNAME: ${COMMENTS_API_HOSTNAME}
       PORT: ${COMMENTS_API_PORT}
@@ -239,23 +315,14 @@ services:
     depends_on:
       - rabbitmq
       - comments-db
-      - discovery-api1
-      - emailing-api1
-      - blogging-api1
+      - discovery-api
+      - emailing-api
+      - blogging-api
     ports:
       - ${COMMENTS_API_PORT}
-  comments-api2:
-    <<: *comments-api_base
-    container_name: '${COMMENTS_API_HOSTNAME}2'
-    environment:
-      <<: *comments-api_env
-      HOSTNAME: '${COMMENTS_API_HOSTNAME}2'
-  comments-api3:
-    <<: *comments-api_base
-    container_name: '${COMMENTS_API_HOSTNAME}3'
-    environment:
-      <<: *comments-api_env
-      HOSTNAME: '${COMMENTS_API_HOSTNAME}3'
+    networks:
+      - comments
+      - event-bus
 
   webgateway-api:
     image: blog/webgateway-api
@@ -267,15 +334,27 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       CONNECTIONSTRINGS__EVENTBUS: 'rabbitmq://${RABBITMQ_USER}:${RABBITMQ_PASS}@${RABBITMQ_HOSTNAME}:5672/${RABBITMQ_VHOST}'
-      URLS__DISCOVERYSERVICE: '${DISCOVERY_API_SCHEME}://${DISCOVERY_API_HOSTNAME}:${DISCOVERY_API_PORT}'
+      URLS__DISCOVERYSERVICE: 'http://${DISCOVERY_API_HOSTNAME}:${DISCOVERY_API_PORT}'
     deploy:
       mode: global
     depends_on:
       - rabbitmq1
-      - discovery-api1
-      # - identity-api1
-      - blogging-api1
-      - comments-api1
-      - emailing-api1
+      - discovery-api-proxy
+      # - identity-api
+      - blogging-api-proxy
+      - comments-api-proxy
+      - emailing-api-proxy
     ports:
       - ${WEBGATEWAY_API_PORT}:${WEBGATEWAY_API_PORT}
+    networks:
+      - webgateway
+      - event-bus
+
+networks:
+  event-bus:
+  discovery:
+  emailing:
+  identity:
+  blogging:
+  comments:
+  webgateway:

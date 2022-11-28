@@ -2,9 +2,6 @@
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /app
 
-# serves only documentation purposes, indicates which port should be exposed
-EXPOSE 7001
-
 # copy csproj and restore as distinct layers
 WORKDIR /src
 COPY ["Services/Discovery/Discovery.API/Discovery.API.csproj", "Services/Discovery/Discovery.API/"]
