@@ -2,6 +2,7 @@ using Blog.Gateways.WebGateway.API.Configs;
 using Blog.Gateways.WebGateway.API.Integration.Consumers;
 using Blog.Gateways.WebGateway.API.Services;
 using Blog.Services.Discovery.API.Grpc;
+using Grpc.Net.Client;
 using MassTransit;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Yarp.ReverseProxy.Configuration;
@@ -20,7 +21,7 @@ services
 services
     .AddEndpointsApiExplorer()
     .AddSwaggerGen()
-    .AddGrpcDiscoveryService(config)
+    .AddGrpcDiscoveryService(config, env)
     .AddYarp();
 
 //await AuthContextSeed.SeedAsync(config);
@@ -57,7 +58,7 @@ static IConfiguration GetConfiguration(IWebHostEnvironment env)
 
 static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddGrpcDiscoveryService(this IServiceCollection services, IConfiguration config)
+    public static IServiceCollection AddGrpcDiscoveryService(this IServiceCollection services, IConfiguration config, IWebHostEnvironment env)
     {
         var address = config.GetRequiredSection(UrlsConfig.Section).Get<UrlsConfig>()?.DiscoveryService
             ?? throw new ArgumentNullException("Could not retrieve Discovery service URL.");
@@ -67,7 +68,10 @@ static class ServiceCollectionExtensions
 
         services.AddGrpcClient<GrpcDiscoveryService.GrpcDiscoveryServiceClient>(opts =>
         {
-            opts.Address = new Uri(address);
+            // This allows us just to use a container name and port without worrying about the scheme
+            opts.Address = new Uri("dns:///" + address);
+            opts.ChannelOptionsActions.Add(x => x.Credentials = env.IsDevelopment()
+                ? Grpc.Core.ChannelCredentials.Insecure : Grpc.Core.ChannelCredentials.SecureSsl);
         });
 
         services.TryAddTransient<IDiscoveryService, DiscoveryService>();
