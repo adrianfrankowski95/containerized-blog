@@ -3,7 +3,7 @@ server {
  resolver 127.0.0.11 valid=10s;
  resolver_timeout 5s; 
         
- # enable http2 to allow gRPC calls (e.g. from WebGateway to Discovery service)
+ # enable http2 to allow gRPC calls
  listen ${NGINX_PORT} http2;
  listen [::]:${NGINX_PORT} http2;
  server_name ${NGINX_HOST};
