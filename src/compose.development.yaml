@@ -8,26 +8,25 @@ services:
     restart: on-failure
     deploy:
       mode: global
-    links:
-      - 'rabbitmq:${RABBITMQ_HOSTNAME}'
     environment:
       - NGINX_HOST=${RABBITMQ_HOSTNAME}
-      - NGINX_PORT=${RABBITMQ_PORT}
+      - NGINX_PORT=5672
     depends_on:
-      - rabbitmq
+      - ${RABBITMQ_HOSTNAME}-1
+      - ${RABBITMQ_HOSTNAME}-2
+      - ${RABBITMQ_HOSTNAME}-3
     ports:
       - ${RABBITMQ_PORT}
     networks:
       - event-bus
       - rabbitmq
 
-  rabbitmq:
+  rabbitmq1: &rabbitmq_base
     image: rabbitmq:management-alpine
+    hostname: ${RABBITMQ_HOSTNAME}1
+    container_name: ${RABBITMQ_HOSTNAME}-1
     restart: on-failure
-    deploy:
-      mode: replicated
-      replicas: 3
-    environment:
+    environment: &rabbitmq_env
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS}
       RABBITMQ_DEFAULT_VHOST: ${RABBITMQ_VHOST}
@@ -35,18 +34,44 @@ services:
     ports:
       - ${RABBITMQ_PORT}
     networks:
-      - rabbitmq
+      rabbitmq:
+        aliases:
+          - ${RABBITMQ_HOSTNAME}
+
+  rabbitmq2: &rabbitmq_node
+    <<: *rabbitmq_base
+    hostname: ${RABBITMQ_HOSTNAME}2
+    container_name: ${RABBITMQ_HOSTNAME}-2
+    environment:
+      <<: *rabbitmq_env
+    depends_on:
+      - ${RABBITMQ_HOSTNAME}-1
     command:
       - /bin/bash
       - -c
       - |
-        /usr/local/bin/docker-entrypoint.sh rabbitmq-server -detached
-        sleep 15s
-        rabbitmqctl stop_app
-        rabbitmqctl join_cluster rabbit@${RABBITMQ_HOSTNAME}
-        rabbitmqctl stop
+        rabbitmq-server -detached
         sleep 5s
+        rabbitmqctl stop_app
+        rabbitmqctl join_cluster rabbit@${RABBITMQ_HOSTNAME}1
+        rabbitmqctl stop
+        sleep 2s
         rabbitmq-server
+    networks:
+      rabbitmq:
+        aliases:
+          - ${RABBITMQ_HOSTNAME}
+
+  rabbitmq3:
+    <<: *rabbitmq_node
+    hostname: ${RABBITMQ_HOSTNAME}3
+    container_name: ${RABBITMQ_HOSTNAME}-3
+    environment:
+      <<: *rabbitmq_env
+    networks:
+      rabbitmq:
+        aliases:
+          - ${RABBITMQ_HOSTNAME}
 
   discovery-register:
     image: redis:alpine
@@ -105,7 +130,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       HOSTNAME: ${DISCOVERY_API_HOSTNAME}
       PORT: ${DISCOVERY_API_PORT}
-      CONNECTIONSTRINGS__EVENTBUS: 'rabbitmq://${RABBITMQ_USER}:${RABBITMQ_PASS}@${RABBITMQ_HOSTNAME}1:5672/${RABBITMQ_VHOST}'
+      CONNECTIONSTRINGS__EVENTBUS: 'rabbitmq://${RABBITMQ_USER}:${RABBITMQ_PASS}@${RABBITMQ_HOSTNAME}:5672/${RABBITMQ_VHOST}'
       CONNECTIONSTRINGS__DISCOVERYREGISTER: '${DISCOVERY_REGISTER_HOSTNAME}:6379,allowAdmin=true'
       CONNECTIONSTRINGS__DISCOVERYDB: 'host=${DISCOVERY_DB_HOSTNAME};port=5432;database=${DISCOVERY_DB_HOSTNAME};password=${DISCOVERY_DB_POSTGRES_PASSWORD};username=${DISCOVERY_DB_POSTGRES_USER}'
     depends_on:
