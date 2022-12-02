@@ -10,7 +10,7 @@ services:
       mode: global
     environment:
       - NGINX_HOST=${RABBITMQ_HOSTNAME}
-      - NGINX_PORT=5672
+      - NGINX_PORT=${RABBITMQ_PORT}
     depends_on:
       - ${RABBITMQ_HOSTNAME}-1
       - ${RABBITMQ_HOSTNAME}-2
