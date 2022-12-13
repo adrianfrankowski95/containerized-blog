@@ -39,7 +39,7 @@ public class RedisServiceRegistry : IServiceRegistry
 
     public async Task<IList<ServiceInstance>> GetAllServiceInstances()
     {
-        var keys = _redis.GetServer(_redis.GetEndPoints().Single()).Keys(
+        var keys = _redis.GetServer(_redis.GetEndPoints().First()).Keys(
             pattern: ServiceInstanceKey.GetAllInstancesKeyPattern());
 
         if (keys.IsNullOrEmpty())

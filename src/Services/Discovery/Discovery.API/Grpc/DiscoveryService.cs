@@ -1,3 +1,4 @@
+using Blog.Services.Discovery.API.Extensions;
 using Blog.Services.Discovery.API.Infrastructure;
 using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
@@ -46,7 +47,7 @@ public class DiscoveryService : GrpcDiscoveryService.GrpcDiscoveryServiceBase
 
         var serviceInstances = await _serviceRegistry.GetAllServiceInstances().ConfigureAwait(false);
 
-        if ((serviceInstances?.Count ?? 0) == 0)
+        if (serviceInstances.IsNullOrEmpty())
             throw new InvalidDataException($"Error retreiving all service instances data.");
 
         _logger.LogInformation("----- Successfully fetched following service instances data: {Data}.",

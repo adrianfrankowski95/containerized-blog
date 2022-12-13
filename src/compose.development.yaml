@@ -1,26 +1,28 @@
 version: '3.9'
 services:
-  rabbitmq-proxy:
-    image: nginx
-    volumes:
-      - ./nginx-conf.template:/etc/nginx/templates/default.conf.template
-    container_name: ${RABBITMQ_HOSTNAME}
-    restart: on-failure
-    deploy:
-      mode: global
-    environment:
-      - NGINX_HOST=${RABBITMQ_HOSTNAME}
-      - NGINX_PORT=${RABBITMQ_PORT}
-    depends_on:
-      - ${RABBITMQ_HOSTNAME}-1
-      - ${RABBITMQ_HOSTNAME}-2
-      - ${RABBITMQ_HOSTNAME}-3
-    ports:
-      - ${RABBITMQ_PORT}
-    networks:
-      - event-bus
-      - rabbitmq
+  # rabbitmq-proxy:
+  #   image: nginx
+  #   volumes:
+  #     - ./nginx-conf.template:/etc/nginx/templates/default.conf.template
+  #   container_name: ${RABBITMQ_HOSTNAME}
+  #   restart: on-failure
+  #   deploy:
+  #     mode: global
+  #   environment:
+  #     - NGINX_HOST=${RABBITMQ_HOSTNAME}
+  #     - NGINX_PORT=${RABBITMQ_PORT}
+  #   depends_on:
+  #     - ${RABBITMQ_HOSTNAME}-1
+  #     - ${RABBITMQ_HOSTNAME}-2
+  #     - ${RABBITMQ_HOSTNAME}-3
+  #   ports:
+  #     - ${RABBITMQ_PORT}
+  #   networks:
+  #     - event-bus
+  #     - rabbitmq
 
+  # Cluster of 3 RabbitMQ nodes used as an event bus
+  # Each node is referenced by RABBITMQ_HOSTNAME, address is internally resolved by Docker DNS (Round Robin)
   rabbitmq1: &rabbitmq_base
     image: rabbitmq:management-alpine
     hostname: ${RABBITMQ_HOSTNAME}1
@@ -34,10 +36,9 @@ services:
     ports:
       - ${RABBITMQ_PORT}
     networks:
-      rabbitmq:
+      event-bus:
         aliases:
           - ${RABBITMQ_HOSTNAME}
-
   rabbitmq2: &rabbitmq_node
     <<: *rabbitmq_base
     hostname: ${RABBITMQ_HOSTNAME}2
@@ -58,10 +59,9 @@ services:
         sleep 2s
         rabbitmq-server
     networks:
-      rabbitmq:
+      event-bus:
         aliases:
           - ${RABBITMQ_HOSTNAME}
-
   rabbitmq3:
     <<: *rabbitmq_node
     hostname: ${RABBITMQ_HOSTNAME}3
@@ -69,18 +69,66 @@ services:
     environment:
       <<: *rabbitmq_env
     networks:
-      rabbitmq:
+      event-bus:
         aliases:
           - ${RABBITMQ_HOSTNAME}
 
-  discovery-register:
-    image: redis:alpine
-    container_name: '${DISCOVERY_REGISTER_HOSTNAME}'
+  # Cluster of 3 Redis nodes used as a discovery register
+  # Each node is referenced by DISCOVERY_REGISTER_HOSTNAME, address is internally resolved by Docker DNS (Round Robin)
+  discovery-register1: &discovery-register_node
+    image: redis:latest
+    hostname: ${DISCOVERY_REGISTER_HOSTNAME}1
+    container_name: ${DISCOVERY_REGISTER_HOSTNAME}-1
     restart: on-failure
+    command:
+      - redis-server
+      - --bind ${DISCOVERY_REGISTER_HOSTNAME}1
+      - --port ${DISCOVERY_REGISTER_PORT}
+      - --cluster-enabled yes
+      - --cluster-config-file nodes.confg
+      - --cluster-node-timeout 5000
+      - --appendonly yes
     ports:
       - ${DISCOVERY_REGISTER_PORT}
     networks:
-      - discovery
+      discovery:
+        aliases:
+          - ${DISCOVERY_REGISTER_HOSTNAME}
+  discovery-register2:
+    <<: *discovery-register_node
+    hostname: ${DISCOVERY_REGISTER_HOSTNAME}2
+    container_name: ${DISCOVERY_REGISTER_HOSTNAME}-2
+    command:
+      - redis-server
+      - --bind ${DISCOVERY_REGISTER_HOSTNAME}2
+      - --port ${DISCOVERY_REGISTER_PORT}
+      - --cluster-enabled yes
+      - --cluster-config-file nodes.confg
+      - --cluster-node-timeout 5000
+      - --appendonly yes
+    networks:
+      discovery:
+        aliases:
+          - ${DISCOVERY_REGISTER_HOSTNAME}
+  discovery-register3:
+    <<: *discovery-register_node
+    hostname: ${DISCOVERY_REGISTER_HOSTNAME}3
+    container_name: ${DISCOVERY_REGISTER_HOSTNAME}-3
+    depends_on:
+      - ${DISCOVERY_REGISTER_HOSTNAME}1
+      - ${DISCOVERY_REGISTER_HOSTNAME}2
+    command:
+      - /bin/bash
+      - -c
+      - |
+        set -m
+        redis-server --bind ${DISCOVERY_REGISTER_HOSTNAME}3 --port ${DISCOVERY_REGISTER_PORT} --cluster-enabled yes --cluster-config-file nodes.confg --cluster-node-timeout 5000 --appendonly yes &
+        redis-cli --cluster create ${DISCOVERY_REGISTER_HOSTNAME}1:${DISCOVERY_REGISTER_PORT} ${DISCOVERY_REGISTER_HOSTNAME}2:${DISCOVERY_REGISTER_PORT} ${DISCOVERY_REGISTER_HOSTNAME}3:${DISCOVERY_REGISTER_PORT} --cluster-yes
+        fg
+    networks:
+      discovery:
+        aliases:
+          - ${DISCOVERY_REGISTER_HOSTNAME}
 
   discovery-db:
     image: postgres:alpine
@@ -96,26 +144,26 @@ services:
     networks:
       - discovery
 
-  discovery-api-proxy:
-    image: nginx
-    volumes:
-      - ./nginx-conf.template:/etc/nginx/templates/default.conf.template
-    container_name: ${DISCOVERY_API_HOSTNAME}
-    restart: on-failure
-    deploy:
-      mode: global
-    links:
-      - 'discovery-api:${DISCOVERY_API_HOSTNAME}'
-    environment:
-      - NGINX_HOST=${DISCOVERY_API_HOSTNAME}
-      - NGINX_PORT=${DISCOVERY_API_PORT}
-    depends_on:
-      - discovery-api
-    ports:
-      - ${DISCOVERY_API_PORT}
-    networks:
-      - discovery
-      - webgateway
+  # discovery-api-proxy:
+  #   image: nginx
+  #   volumes:
+  #     - ./nginx-conf.template:/etc/nginx/templates/default.conf.template
+  #   container_name: ${DISCOVERY_API_HOSTNAME}
+  #   restart: on-failure
+  #   deploy:
+  #     mode: global
+  #   links:
+  #     - 'discovery-api:${DISCOVERY_API_HOSTNAME}'
+  #   environment:
+  #     - NGINX_HOST=${DISCOVERY_API_HOSTNAME}
+  #     - NGINX_PORT=${DISCOVERY_API_PORT}
+  #   depends_on:
+  #     - discovery-api
+  #   ports:
+  #     - ${DISCOVERY_API_PORT}
+  #   networks:
+  #     - discovery
+  #     - webgateway
 
   discovery-api:
     image: blog/discovery-api
@@ -131,7 +179,7 @@ services:
       HOSTNAME: ${DISCOVERY_API_HOSTNAME}
       PORT: ${DISCOVERY_API_PORT}
       CONNECTIONSTRINGS__EVENTBUS: 'rabbitmq://${RABBITMQ_USER}:${RABBITMQ_PASS}@${RABBITMQ_HOSTNAME}:5672/${RABBITMQ_VHOST}'
-      CONNECTIONSTRINGS__DISCOVERYREGISTER: '${DISCOVERY_REGISTER_HOSTNAME}:6379,allowAdmin=true'
+      CONNECTIONSTRINGS__DISCOVERYREGISTER: '${DISCOVERY_REGISTER_HOSTNAME}:${DISCOVERY_REGISTER_PORT},allowAdmin=true'
       CONNECTIONSTRINGS__DISCOVERYDB: 'host=${DISCOVERY_DB_HOSTNAME};port=5432;database=${DISCOVERY_DB_HOSTNAME};password=${DISCOVERY_DB_POSTGRES_PASSWORD};username=${DISCOVERY_DB_POSTGRES_USER}'
     depends_on:
       - rabbitmq
@@ -139,8 +187,11 @@ services:
     ports:
       - ${DISCOVERY_API_PORT}
     networks:
-      - discovery
-      - event-bus
+      webgateway:
+      event-bus:
+      discovery:
+        aliases:
+          - ${DISCOVERY_API_HOSTNAME}
 
   emailing-db:
     image: postgres:alpine
@@ -156,26 +207,26 @@ services:
     networks:
       - emailing
 
-  emailing-api-proxy:
-    image: nginx
-    volumes:
-      - ./nginx-conf.template:/etc/nginx/templates/default.conf.template
-    container_name: ${EMAILING_API_HOSTNAME}
-    restart: on-failure
-    deploy:
-      mode: global
-    links:
-      - 'emailing-api:${EMAILING_API_HOSTNAME}'
-    environment:
-      - NGINX_HOST=${EMAILING_API_HOSTNAME}
-      - NGINX_PORT=${EMAILING_API_PORT}
-    depends_on:
-      - emailing-api
-    ports:
-      - ${EMAILING_API_PORT}
-    networks:
-      - emailing
-      - webgateway
+  # emailing-api-proxy:
+  #   image: nginx
+  #   volumes:
+  #     - ./nginx-conf.template:/etc/nginx/templates/default.conf.template
+  #   container_name: ${EMAILING_API_HOSTNAME}
+  #   restart: on-failure
+  #   deploy:
+  #     mode: global
+  #   links:
+  #     - 'emailing-api:${EMAILING_API_HOSTNAME}'
+  #   environment:
+  #     - NGINX_HOST=${EMAILING_API_HOSTNAME}
+  #     - NGINX_PORT=${EMAILING_API_PORT}
+  #   depends_on:
+  #     - emailing-api
+  #   ports:
+  #     - ${EMAILING_API_PORT}
+  #   networks:
+  #     - emailing
+  #     - webgateway
 
   emailing-api:
     image: blog/emailing-api
@@ -199,8 +250,11 @@ services:
     ports:
       - ${EMAILING_API_PORT}
     networks:
-      - emailing
-      - event-bus
+      event-bus:
+      webgateway:
+      emailing:
+        aliases:
+          - ${EMAILING_API_HOSTNAME}
 
   # identity-db:
   #   image: postgres:alpine
@@ -275,26 +329,26 @@ services:
     networks:
       - blogging
 
-  blogging-api-proxy:
-    image: nginx
-    volumes:
-      - ./nginx-conf.template:/etc/nginx/templates/default.conf.template
-    container_name: ${BLOGGING_API_HOSTNAME}
-    restart: on-failure
-    deploy:
-      mode: global
-    links:
-      - 'blogging-api:${BLOGGING_API_HOSTNAME}'
-    environment:
-      - NGINX_HOST=${BLOGGING_API_HOSTNAME}
-      - NGINX_PORT=${BLOGGING_API_PORT}
-    depends_on:
-      - blogging-api
-    ports:
-      - ${BLOGGING_API_PORT}
-    networks:
-      - blogging
-      - webgateway
+  # blogging-api-proxy:
+  #   image: nginx
+  #   volumes:
+  #     - ./nginx-conf.template:/etc/nginx/templates/default.conf.template
+  #   container_name: ${BLOGGING_API_HOSTNAME}
+  #   restart: on-failure
+  #   deploy:
+  #     mode: global
+  #   links:
+  #     - 'blogging-api:${BLOGGING_API_HOSTNAME}'
+  #   environment:
+  #     - NGINX_HOST=${BLOGGING_API_HOSTNAME}
+  #     - NGINX_PORT=${BLOGGING_API_PORT}
+  #   depends_on:
+  #     - blogging-api
+  #   ports:
+  #     - ${BLOGGING_API_PORT}
+  #   networks:
+  #     - blogging
+  #     - webgateway
 
   blogging-api:
     image: blog/blogging-api
@@ -319,8 +373,11 @@ services:
     ports:
       - ${BLOGGING_API_PORT}
     networks:
-      - blogging
-      - event-bus
+      event-bus:
+      webgateway:
+      blogging:
+        aliases:
+          - ${BLOGGING_API_HOSTNAME}
 
   comments-db:
     image: postgres:alpine
@@ -336,26 +393,26 @@ services:
     networks:
       - comments
 
-  comments-api-proxy:
-    image: nginx
-    volumes:
-      - ./nginx-conf.template:/etc/nginx/templates/default.conf.template
-    container_name: ${COMMENTS_API_HOSTNAME}
-    restart: on-failure
-    deploy:
-      mode: global
-    links:
-      - 'comments-api:${COMMENTS_API_HOSTNAME}'
-    environment:
-      - NGINX_HOST=${COMMENTS_API_HOSTNAME}
-      - NGINX_PORT=${COMMENTS_API_PORT}
-    depends_on:
-      - comments-api
-    ports:
-      - ${COMMENTS_API_PORT}
-    networks:
-      - comments
-      - webgateway
+  # comments-api-proxy:
+  #   image: nginx
+  #   volumes:
+  #     - ./nginx-conf.template:/etc/nginx/templates/default.conf.template
+  #   container_name: ${COMMENTS_API_HOSTNAME}
+  #   restart: on-failure
+  #   deploy:
+  #     mode: global
+  #   links:
+  #     - 'comments-api:${COMMENTS_API_HOSTNAME}'
+  #   environment:
+  #     - NGINX_HOST=${COMMENTS_API_HOSTNAME}
+  #     - NGINX_PORT=${COMMENTS_API_PORT}
+  #   depends_on:
+  #     - comments-api
+  #   ports:
+  #     - ${COMMENTS_API_PORT}
+  #   networks:
+  #     - comments
+  #     - webgateway
 
   comments-api:
     image: blog/comments-api
@@ -381,13 +438,16 @@ services:
     ports:
       - ${COMMENTS_API_PORT}
     networks:
-      - comments
-      - event-bus
+      webgateway:
+      event-bus:
+      comments:
+        aliases:
+          - ${COMMENTS_API_HOSTNAME}
 
   webgateway-api:
     image: blog/webgateway-api
-    restart: on-failure
     container_name: ${WEBGATEWAY_API_HOSTNAME}
+    restart: on-failure
     build:
       context: .
       dockerfile: Gateways/WebGateway.API/Dockerfile
@@ -407,8 +467,10 @@ services:
     ports:
       - ${WEBGATEWAY_API_PORT}:${WEBGATEWAY_API_PORT}
     networks:
-      - webgateway
-      - event-bus
+      event-bus:
+      webgateway:
+        aliases:
+          - ${WEBGATEWAY_API_HOSTNAME}
 
 networks:
   event-bus:

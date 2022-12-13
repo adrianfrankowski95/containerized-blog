@@ -29,7 +29,10 @@ public static class InfrastructureInstaller
                 ?? throw new ArgumentNullException("Could not retrieve a connection string to a Discovery register."));
 
 
-            redis.GetServer(redis.GetEndPoints().Single()).ConfigSet("notify-keyspace-events", "Ex");
+            foreach (var endpoint in redis.GetEndPoints())
+            {
+                redis.GetServer(endpoint).ConfigSet("notify-keyspace-events", "Ex");
+            }
 
             return redis;
         });

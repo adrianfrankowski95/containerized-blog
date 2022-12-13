@@ -25,7 +25,7 @@ public class RedisKeyExpiredEventHandler : IHostedService
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        return _redis.GetSubscriber(_redis.GetServer(_redis.GetEndPoints().Single())).SubscribeAsync("__keyevent@0__:expired", async (channel, message) =>
+        return _redis.GetSubscriber(_redis.GetServer(_redis.GetEndPoints().First())).SubscribeAsync("__keyevent@0__:expired", async (channel, message) =>
         {
             _logger.LogInformation("----- Received key expired event from Redis, channel: {Channel}, message: {Message}.", channel, message);
 
