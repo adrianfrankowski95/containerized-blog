@@ -47,7 +47,7 @@ public class RedisServiceRegistry : IServiceRegistry
 
         var entries = await _redisDb.StringGetAsync(keys.ToArray()).ConfigureAwait(false);
 
-        if ((entries?.Length ?? 0) == 0)
+        if (entries.IsNullOrEmpty())
             return Array.Empty<ServiceInstance>();
 
         var services = new List<ServiceInstance>();
@@ -78,7 +78,7 @@ public class RedisServiceRegistry : IServiceRegistry
 
         var entries = await _redisDb.StringGetAsync(keys.ToArray()).ConfigureAwait(false);
 
-        if ((entries?.Length ?? 0) == 0)
+        if (entries.IsNullOrEmpty())
             return Array.Empty<ServiceInstance>();
 
         var services = new List<ServiceInstance>();
