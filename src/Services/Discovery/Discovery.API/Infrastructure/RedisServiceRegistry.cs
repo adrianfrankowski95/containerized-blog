@@ -15,7 +15,7 @@ public class RedisServiceRegistry : IServiceRegistry
     {
         _redis = redis ?? throw new ArgumentNullException(nameof(redis));
         _options = options ?? throw new ArgumentNullException(nameof(options));
-        _redisDb = redis.GetDatabase();
+        _redisDb = redis.GetDatabase() ?? throw new ArgumentNullException("database");
     }
 
     public Task<bool> RegisterServiceInstance(ServiceInstance serviceInstance)
